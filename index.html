@@ -18,7 +18,7 @@
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-05-beade0d">
+<meta name="range-rat-build" content="2026-11-05-8440e86">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
  * Pixelify Sans 600 = big headings and banners only (>= 18 CSS px). Both SIL OFL 1.1, licences in ui/fonts/. */
@@ -19711,6 +19711,16 @@ window.DIALOG = {
   function sprMeta(name) { const S = W.SPRITES; return S && S.sprites && S.sprites[name] || null; }
   function hexOK(h) { return typeof h === 'string' && /^#[0-9a-f]{3,8}$/i.test(h); }
   function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h); return c; }
+  /** perf (note 9): a logical-res layer kept at backing resolution (renderScale x), so the per-frame blit is 1:1 device px.
+   *  A scaled blit is several times dearer on a software canvas (Chromium without a GPU: 2-11x for a full-field layer, the
+   *  worst being a smoothed 'lighter' one). hiCopy(hi, src, x, y, w, h): nearest (or smooth) upscale of a rect of src into
+   *  it; the same pixels the scaled blit would produce. Returns the backing canvas, resized/created as needed. */
+  function hiCanvas(c, w, h) { if (!c || c.width !== w || c.height !== h) { c = makeCanvas(w, h); c._key = null; } return c; }
+  function hiCopy(hi, src, x, y, w, h, smooth) {
+    const q = hi.getContext('2d'), k = hi.width / src.width;
+    q.setTransform(1, 0, 0, 1, 0, 0); q.globalAlpha = 1; q.globalCompositeOperation = 'source-over'; q.imageSmoothingEnabled = !!smooth;
+    q.clearRect(x * k, y * k, w * k, h * k); q.drawImage(src, x, y, w, h, x * k, y * k, w * k, h * k); q.imageSmoothingEnabled = false;
+  }
   /** Render one sprite frame to an offscreen canvas, optional palette swap map {from: to}. */
   // hi-fi art (art/HIFI_STYLE.md): palette idx 32..63 use these extra chars; `res` N = rows carry N x N art px per logical px
   const ALPHA64 = ALPHA + 'wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#';
@@ -24827,7 +24837,7 @@ window.DIALOG = {
     if (rid === 'muni') { g.fillStyle = th.fence; for (let i = 0; i < 6; i++) { const p = G.toXY(rnd(), G.netD + 2); g.fillRect(Math.round(p.x), Math.round(p.y), 4, 5); } } // frayed holes
     for (let a = 0.02; a < 1; a += 0.16) { const p = G.toXY(a, G.endD - 1); drawSprite(g, 'net_post', p.x, p.y); }
     try { if (mode === 'game') drawRangeCosmeticsBg(g); } catch (e) { /* cosmetics never break the field */ }
-    bgDirty = false; bgSerial++; gfxWarm();
+    bgDirty = false; bgSerial++; gfxWarm(); if (AMB.skyC) AMB.skyC._ok = false; // the 30 Hz sky redraws now too
   }
 
   /** the dotted drop line under a ball in the air: dots every 3 px up from the ground (row DROP_H-1 = the ball's ground y) */
@@ -24859,12 +24869,103 @@ window.DIALOG = {
   function groundBallUnder(g) {
     let lit = false;
     g.fillStyle = 'rgba(42,28,22,0.45)'; g.beginPath();
-    for (const b of world.balls) if (groundDrawn(b)) { if (b.z <= 0.5) g.rect(Math.round(b.x) - 1, Math.round(b.y) + 1, 3, 1); if (b.lit) lit = true; }
+    for (const b of world.balls) if (groundDrawn(b)) { if (b.z <= 0.5 && (!b._rl || b.lit)) g.rect(Math.round(b.x) - 1, Math.round(b.y) + 1, 3, 1); if (b.lit && !b._rl) lit = true; }
     g.fill();
+    if (RL.has[1]) { g.globalCompositeOperation = 'lighter'; restLayerBlit(g, 1); g.globalCompositeOperation = 'source-over'; } // the cached lit balls' glow
     if (!lit) return;
     g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(232,137,44,0.35)'; g.beginPath();
-    for (const b of world.balls) if (b.lit && groundDrawn(b)) { const y = b.y - b.z; g.moveTo(b.x + 3, y - 1); g.arc(b.x, y - 1, 3, 0, 6.3); }
+    for (const b of world.balls) if (b.lit && groundDrawn(b) && !b._rl) { const y = b.y - b.z; g.moveTo(b.x + 3, y - 1); g.arc(b.x, y - 1, 3, 0, 6.3); }
     g.fill(); g.globalCompositeOperation = 'source-over';
+  }
+  // ---- perf (playtest r3 note 9): the resting-ball layer. A plain ball at rest looks the same every frame (one-frame res-1
+  // sprite + its contact shadow, at integer logical px), so those live in a logical-res layer that is blitted once a frame
+  // (nearest-neighbour under the scale transform: the same pixels as drawing each one). Only the rects of balls that land,
+  // move or go are cleared and redrawn (clipped), so a full field (90-190 balls, ~170 draw calls a frame) costs a blit plus
+  // a few small redraws (a glow ball's pulse is one when its frame flips). Everything else that animates (tip, special,
+  // trapped, wind-blown, rolling, belt, a glow ball in the dawn / dusk crossfade) is drawn live as before, and so is every
+  // ball in high-contrast mode (its ring). A lit ball (in a lantern pool) keeps its shadow and warm glow live, under the
+  // layer; only its sprite is cached.
+  // Three more layers share its records and dirty rects (perf, the night): 1 the lit balls' warm glow (one 'lighter' blit,
+  // was a path of ~90 arcs a frame on Firefly Bays), 2 the glow balls' ring over the night grade and 3 their green halo (one
+  // blit each, were a sprite + a light blob per glow ball). All four are kept at backing resolution: blitted 1:1.
+  const RL = { L: [], map: new Map(), gen: 0, full: true, D: [[], [], []], bb: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], rs: 0, on: false, redraws: 0, rebuilds: 0, has: [false, false, false] };
+  const restStatic = (b) => b.st === 'rest' && b.z <= 0.5 && !b.trapped && !b.tip && !b.blown && !b.belt && !SPECIAL_IDS.includes(b.type);
+  function restLayerReset() { RL.full = true; RL.map.clear(); }
+  // layer index -> which dirty list repaints it: 0 balls, 1 lit glows, 2 ring + halo (two canvases)
+  const RL_DL = [0, 1, 2, 2];
+  function restLayerUpdate() {
+    const on = !hcOn() && !RL.off;
+    if (!on) { if (RL.on) { RL.on = false; restLayerReset(); } for (const b of world.balls) b._rl = false; RL.has[0] = RL.has[1] = RL.has[2] = false; return false; }
+    RL.on = true;
+    const RS = renderScale;
+    if (!RL.L[0] || RL.L[0].width !== G.W * RS || RL.L[0].height !== G.H * RS) {
+      for (let k = 0; k < 4; k++) { const c = makeCanvas(G.W * RS, G.H * RS), q = c.getContext('2d'); q.imageSmoothingEnabled = false; RL.L[k] = c; c._g = q; }
+      restLayerReset();
+    }
+    const map = RL.map, gen = RL.gen = (RL.gen + 1) | 0, D = RL.D; D[0].length = D[1].length = D[2].length = 0;
+    const B = RL.bb.map((x) => { x[0] = x[1] = 1e9; x[2] = x[3] = -1e9; return x; });
+    const grow = (k, x, y, w, h) => { const o = B[k]; if (x < o[0]) o[0] = x; if (y < o[1]) o[1] = y; if (x + w > o[2]) o[2] = x + w; if (y + h > o[3]) o[3] = y + h; };
+    const ringE = getSprite(ballSprNow('glow')), ringImg = ringE && ringE.frames[0];
+    for (const b of world.balls) {
+      if (!restStatic(b)) { b._rl = false; continue; }
+      let name = ballSpr(b.type);
+      if (b.type === 'glow' && name === 'ball_glow') { const k = glowShow(); if (k <= 0.02) name = 'ball_range'; else if (k < 1) { b._rl = false; continue; } } // dawn / dusk crossfade: live
+      const e = getSprite(name); if (!e || (e.res || 1) !== 1) { b._rl = false; continue; }
+      // an animated ball (the glow pulse) is cached frame by frame: its rect is redrawn when its frame flips (drawBallBody's clock)
+      const nf = e.frames.length, fi = nf > 1 ? ((frameAt(e, renderMs + b.age * 1000) | 0) % nf + nf) % nf : 0;
+      const xr = Math.round(b.x), yr = Math.round(b.y), X = Math.round(b.x - e.ox), Y = Math.round(b.y - b.z - e.oy), img = e.frames[fi];
+      const sh = !b.lit, lit = !!b.lit, glow = b.type === 'glow' && !!ringImg, ax = b.x, ay = b.y - b.z - 1; // a lit ball's shadow stays live, under its warm glow
+      let r = map.get(b);
+      const moved = !r || r.X !== X || r.Y !== Y || r.xr !== xr || r.yr !== yr || r.sh !== sh || r.lit !== lit || r.glow !== glow || Math.abs(r.ax - ax) > 0.25 || Math.abs(r.ay - ay) > 0.25 || (glow && r.rimg !== ringImg);
+      if (moved || r.img !== img) {
+        if (r && moved) { D[0].push(...r.b0); if (r.lit) D[1].push(...r.b1); if (r.glow) D[2].push(...r.b2); } // its old spot
+        if (!r) { r = { b0: [0, 0, 0, 0], b1: [0, 0, 0, 0], b2: [0, 0, 0, 0] }; map.set(b, r); }
+        r.X = X; r.Y = Y; r.xr = xr; r.yr = yr; r.img = img; r.sh = sh; r.lit = lit; r.glow = glow; r.ax = ax; r.ay = ay; r.rimg = glow ? ringImg : null;
+        const b0 = r.b0; b0[0] = Math.min(X, xr - 1); b0[1] = Math.min(Y, yr + 1); b0[2] = Math.max(X + img.width, xr + 2) - b0[0]; b0[3] = Math.max(Y + img.height, yr + 2) - b0[1];
+        if (lit) { const b1 = r.b1; b1[0] = Math.floor(ax - 3) - 1; b1[1] = Math.floor(ay - 3) - 1; b1[2] = b1[3] = 8; }
+        if (glow) { const b2 = r.b2, RX = Math.round(b.x - ringE.ox), RY = Math.round(b.y - b.z - ringE.oy); r.RX = RX; r.RY = RY;
+          b2[0] = Math.min(Math.floor(ax - 6) - 1, RX); b2[1] = Math.min(Math.floor(ay - 6) - 1, RY); b2[2] = Math.max(Math.ceil(ax + 6) + 1, RX + ringImg.width) - b2[0]; b2[3] = Math.max(Math.ceil(ay + 6) + 1, RY + ringImg.height) - b2[1]; }
+        D[0].push(...r.b0); if (moved) { if (lit) D[1].push(...r.b1); if (glow) D[2].push(...r.b2); }
+      }
+      r.gen = gen; b._rl = true;
+      grow(0, r.b0[0], r.b0[1], r.b0[2], r.b0[3]); if (lit) grow(1, r.b1[0], r.b1[1], r.b1[2], r.b1[3]); if (glow) grow(2, r.b2[0], r.b2[1], r.b2[2], r.b2[3]);
+    }
+    for (const [b, r] of map) if (r.gen !== gen) { D[0].push(...r.b0); if (r.lit) D[1].push(...r.b1); if (r.glow) D[2].push(...r.b2); map.delete(b); }
+    let clip = null;
+    const hit = (o) => o[0] < clip[0] + clip[2] && o[0] + o[2] > clip[0] && o[1] < clip[1] + clip[3] && o[1] + o[3] > clip[1];
+    const paint = (k, q) => {
+      if (k === 0) { // shadows first, then the balls (the live path's order: every contact shadow before any ball)
+        q.fillStyle = 'rgba(42,28,22,0.45)'; q.beginPath();
+        for (const r of map.values()) if (r.sh && (!clip || hit(r.b0))) q.rect(r.xr - 1, r.yr + 1, 3, 1);
+        q.fill();
+        for (const r of map.values()) if (!clip || hit(r.b0)) q.drawImage(r.img, r.X, r.Y);
+      } else if (k === 1) { // the warm glow under lit balls: one union fill, as groundBallUnder's path (blitted 'lighter')
+        q.fillStyle = 'rgba(232,137,44,0.35)'; q.beginPath();
+        for (const r of map.values()) if (r.lit && (!clip || hit(r.b1))) { q.moveTo(r.ax + 3, r.ay); q.arc(r.ax, r.ay, 3, 0, 6.3); }
+        q.fill();
+      } else if (k === 2) { for (const r of map.values()) if (r.glow && (!clip || hit(r.b2))) q.drawImage(r.rimg, r.RX, r.RY); } // ring (frame 0, as ambientPass drew it)
+      else { q.globalCompositeOperation = 'lighter'; const ls = lightSprite('green'); for (const r of map.values()) if (r.glow && (!clip || hit(r.b2))) q.drawImage(ls, r.ax - 6, r.ay - 6, 12, 12); q.globalCompositeOperation = 'source-over'; } // halo at alpha 1 (the blit carries it)
+    };
+    const big = D[0].length + D[1].length + D[2].length > 4 * 32;
+    for (let k = 0; k < 4; k++) {
+      const c = RL.L[k], q = c._g, dl = D[RL_DL[k]];
+      q.setTransform(RS, 0, 0, RS, 0, 0);
+      if (RL.full || big) { clip = null; q.clearRect(0, 0, G.W, G.H); paint(k, q); }
+      else for (let i = 0; i < dl.length; i += 4) {
+        clip = [dl[i], dl[i + 1], dl[i + 2], dl[i + 3]];
+        q.save(); q.beginPath(); q.rect(clip[0], clip[1], clip[2], clip[3]); q.clip(); q.clearRect(clip[0], clip[1], clip[2], clip[3]); paint(k, q); q.restore();
+      }
+      clip = null; q.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    if (RL.full || big) RL.rebuilds++; else RL.redraws += (D[0].length + D[1].length + D[2].length) / 4;
+    RL.full = false;
+    for (let k = 0; k < 3; k++) { const o = B[k]; o[0] = Math.max(0, o[0]); o[1] = Math.max(0, o[1]); o[2] = Math.min(G.W, o[2]) - o[0]; o[3] = Math.min(G.H, o[3]) - o[1]; RL.has[k] = map.size > 0 && o[2] > 0 && o[3] > 0; }
+    return RL.has[0];
+  }
+  /** blit cached layer k (0 balls, 1 lit glow, 2 ring, 3 halo) under the current transform, 1:1 device px */
+  function restLayerBlit(g, k) {
+    const o = RL.bb[k === 3 ? 2 : k], c = RL.L[k], s = renderScale; if (!RL.has[k === 3 ? 2 : k] || !c) return false;
+    g.drawImage(c, o[0] * s, o[1] * s, o[2] * s, o[3] * s, o[0], o[1], o[2], o[3]); return true;
   }
   // night glow balls left on the field keep glowing only while it's dark (playtest r3 note 6): by day they look like plain
   // range balls, crossfading with the dawn / dusk fade. Only the look changes; a glow ball still pays its glow bonus.
@@ -24985,7 +25086,9 @@ window.DIALOG = {
     // perf: the cached background is blitted as is (a static canvas: no per-frame snapshot) and the tufts go on top as
     // ONE path fill (102 rects, same colour, opaque, pixel-aligned: identical pixels to the old per-rect fills). An
     // intermediate ground layer rebuilt ~11x/s cost a full-layer copy + snapshot each time (frame-time spikes).
-    g.drawImage(bgCanvas, 0, 0);
+    const RS = renderScale; // perf (note 9): the background kept at backing res, so this is a 1:1 blit (same pixels)
+    if (RS === 1) g.drawImage(bgCanvas, 0, 0);
+    else { const hi = AMB.bgHi = hiCanvas(AMB.bgHi, G.W * RS, G.H * RS); if (hi._key !== bgSerial) { hi._key = bgSerial; hiCopy(hi, bgCanvas, 0, 0, G.W, G.H); } g.drawImage(hi, 0, 0, G.W, G.H); }
     g.fillStyle = col; g.beginPath();
     for (const t of feelRT.tufts) { const lean = rm ? 0 : (Math.sin(wave + t.ph + t.x * 0.03) > 0.3 ? 1 : 0); g.rect(t.x, t.y - 2, 1, 2); g.rect(t.x + 1 + lean, t.y - 3, 1, 3 - lean); g.rect(t.x + 2, t.y - 1, 1, 1); }
     g.fill();
@@ -25152,8 +25255,10 @@ window.DIALOG = {
     // bay mats
     for (const gf of world.golfers) { if (gf.row) continue; drawMat(g, gf); }
     // grounded balls
-    groundBallUnder(g); ballBatch = true; // perf: the resting balls' shadows + lit glows in two fills
-    try { for (const b of world.balls) if (b.st !== 'air') drawBall(g, b); } finally { ballBatch = false; }
+    const restL = restLayerUpdate(); // perf (note 9): plain resting balls come from one cached layer
+    groundBallUnder(g); ballBatch = true; // perf: the other ground balls' shadows + lit glows in two fills
+    if (restL) restLayerBlit(g, 0);
+    try { for (const b of world.balls) if (b.st !== 'air' && !b._rl) drawBall(g, b); } finally { ballBatch = false; }
     // y-sorted sprites
     const list = [];
     for (const s of world.scenery) list.push({ y: s.y, d: () => { const e = getSprite(s.name); drawSprite(g, s.name, s.x, s.y, { frame: s.anim ? frameAt(e, renderMs + s.t0) : 0 }); } });
@@ -25372,11 +25477,20 @@ window.DIALOG = {
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
     return (ls[kind] = c);
   }
+  function lightSpriteA(kind, q) {
+    const m = AMB.lsA || (AMB.lsA = {}), L = m[kind] || (m[kind] = []); if (L[q]) return L[q];
+    if (q >= 64) return (L[q] = lightSprite(kind));
+    const c = makeCanvas(64, 64), cg = c.getContext('2d'); cg.globalAlpha = q / 64; cg.drawImage(lightSprite(kind), 0, 0); return (L[q] = c);
+  }
   function blob(g, kind, x, y, rx, ry, a) {
     if (!(a > 0.004)) return;
     const r2 = ry == null ? rx : ry; const ga = g.globalAlpha;
     if (g._rects) g._rects.push(x - rx, y - r2, rx * 2, r2 * 2); // perf: the night layer records where moving lights cut
-    g.globalAlpha = Math.min(1, a); g.drawImage(lightSprite(kind), x - rx, y - r2, rx * 2, r2 * 2); g.globalAlpha = ga;
+    // perf (note 9): the alpha is baked into the light sprite in 1/64 steps (a cached copy per step; faint ones stay live),
+    // so a night frame's ~100-200 light blobs skip the canvas's per-draw alpha modulation
+    const q = Math.round(Math.min(1, a) * 64);
+    if (q >= 4) { if (ga !== 1) g.globalAlpha = 1; g.drawImage(lightSpriteA(kind, q), x - rx, y - r2, rx * 2, r2 * 2); if (ga !== 1) g.globalAlpha = ga; }
+    else { g.globalAlpha = Math.min(1, a); g.drawImage(lightSprite(kind), x - rx, y - r2, rx * 2, r2 * 2); g.globalAlpha = ga; }
   }
 
   // ---- stars, clouds, birds, skyline windows ----
@@ -25429,9 +25543,11 @@ window.DIALOG = {
 
   function drawSky(g, k, dt) {
     const sc = AMB.skyC || (AMB.skyC = makeCanvas(G.W, SKY_H)); if (sc.width !== G.W) { sc.width = G.W; sc._ok = false; }
-    // Graphics level >= 2 (lite): the sky layer is redrawn every other frame (clouds/birds catch up on the skipped time)
-    if (GFX.lite && sc._ok && (AMB.skyFlip = !AMB.skyFlip)) { AMB.skyCarry = (AMB.skyCarry || 0) + dt; g.globalCompositeOperation = 'destination-over'; g.drawImage(sc, 0, 0); g.globalCompositeOperation = 'source-over'; return; }
-    dt += AMB.skyCarry || 0; AMB.skyCarry = 0; sc._ok = true;
+    // perf (note 9): the sky layer is redrawn at ~30 Hz (Graphics level >= 2, lite: ~15 Hz) and reused in between; clouds and
+    // birds catch up on the skipped time. Stars twinkle over seconds and clouds drift a pixel or two a second, so a 30 Hz sky
+    // looks the same as a 60 Hz one (it was ~50 draw calls every frame at night)
+    if (sc._ok && renderMs - (sc._at || 0) < (GFX.lite ? 64 : 31) && renderMs >= (sc._at || 0)) { AMB.skyCarry = (AMB.skyCarry || 0) + dt; g.globalCompositeOperation = 'destination-over'; g.drawImage(sc, 0, 0); g.globalCompositeOperation = 'source-over'; return; }
+    dt += AMB.skyCarry || 0; AMB.skyCarry = 0; sc._ok = true; sc._at = renderMs;
     const s = sc.getContext('2d'); s.globalCompositeOperation = 'source-over'; s.globalAlpha = 1;
     const rid = rangeId(), red = reducedMotion();
     { // banded gradient, cached per time-of-day colour step
@@ -25541,15 +25657,17 @@ window.DIALOG = {
     x0 = Math.max(0, Math.floor(x0) - pad); y0 = Math.max(0, Math.floor(y0) - pad); x1 = Math.min(G.W, Math.ceil(x1) + pad); y1 = Math.min(G.H, Math.ceil(y1) + pad);
     return x1 > x0 && y1 > y0 ? [x0, y0, x1 - x0, y1 - y0] : null;
   }
-  function blitLayer(g, c, op, bb) {
+  function blitLayer(g, c, op, bb, hi) {
+    // hi (perf, note 9): the same layer already upscaled to backing res (hiCopy): blitted 1:1, no filtering at draw time
+    const k = hi ? hi.width / c.width : 1, S = hi || c;
     if (bb && op !== 'grade') { // perf: only the part of a mostly-empty layer that holds anything. The pad keeps a ring of
       // transparent source pixels inside the rect, so smoothed sampling at its edge reads the same zeros as a full blit.
-      g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(c, bb[0], bb[1], bb[2], bb[3], bb[0], bb[1], bb[2], bb[3]); g.imageSmoothingEnabled = false; g.globalCompositeOperation = 'source-over'; return;
+      g.globalCompositeOperation = op; g.imageSmoothingEnabled = !hi; g.drawImage(S, bb[0] * k, bb[1] * k, bb[2] * k, bb[3] * k, bb[0], bb[1], bb[2], bb[3]); g.imageSmoothingEnabled = false; g.globalCompositeOperation = 'source-over'; return;
     }
     if (op === 'grade') {
-      g.globalCompositeOperation = 'source-atop'; g.drawImage(c, 0, 0, G.W, SKY_H, 0, 0, G.W, SKY_H);
-      g.globalCompositeOperation = 'source-over'; g.drawImage(c, 0, SKY_H, G.W, G.H - SKY_H, 0, SKY_H, G.W, G.H - SKY_H);
-    } else { g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(c, 0, 0); g.imageSmoothingEnabled = false; g.globalCompositeOperation = 'source-over'; }
+      g.globalCompositeOperation = 'source-atop'; g.drawImage(S, 0, 0, G.W * k, SKY_H * k, 0, 0, G.W, SKY_H);
+      g.globalCompositeOperation = 'source-over'; g.drawImage(S, 0, SKY_H * k, G.W * k, (G.H - SKY_H) * k, 0, SKY_H, G.W, G.H - SKY_H);
+    } else { g.globalCompositeOperation = op; g.imageSmoothingEnabled = !hi; g.drawImage(S, 0, 0, G.W, G.H); g.imageSmoothingEnabled = false; g.globalCompositeOperation = 'source-over'; }
   }
   function gradeFill(g, css) { // a flat colour over everything drawn (never the sky): atop for the sky rows, plain fill below
     g.fillStyle = css; g.globalCompositeOperation = 'source-atop'; g.fillRect(-4, -4, G.W + 8, SKY_H + 4);
@@ -25647,7 +25765,7 @@ window.DIALOG = {
       // 2) balls are never lost in the dark: a minimum brightness + an occasional glint
       g.globalAlpha = (th.night ? 0.62 : 0.5) * night;
       ballDots(g, (b) => !b.trapped && b.type !== 'glow'); // perf: one fill per ball type (was a sprite blit per ball, ~90-190 a frame)
-      for (const b of world.balls) if (b.type === 'glow' && !b.trapped) drawSprite(g, ballSprNow('glow'), b.x, b.y - b.z); // its own green ring, not a dot
+      restLayerBlit(g, 2); for (const b of world.balls) if (b.type === 'glow' && !b.trapped && !b._rl) drawSprite(g, ballSprNow('glow'), b.x, b.y - b.z); // its own green ring, not a dot (resting ones: the cached layer)
       g.globalAlpha = 1;
       if (p && game && TORCH.k > 0.05) { const T = torchGeo(p), red = reducedMotion(); for (const b of world.balls) if (!b.trapped && b.z < 1 && inTorch(b, p, T)) { // torch glint
         drawSprite(g, ballSpr(b.type), b.x, b.y); if (red || ((renderMs / 160 + b.x) | 0) % 4 === 0) { g.fillStyle = `rgba(255,250,214,${TORCH.k})`; g.fillRect(Math.round(b.x) + 1, Math.round(b.y) - 3, 1, 1); g.fillRect(Math.round(b.x) + 2, Math.round(b.y) - 2, 1, 1); } } }
@@ -25660,15 +25778,19 @@ window.DIALOG = {
         q.globalCompositeOperation = 'lighter';
         q._rects = []; lampGlows(q, true); gc._bb = rectsBBox(q._rects, 2); q._rects = null; // perf: where the glows are
         q.setTransform(1, 0, 0, 1, 0, 0); q.globalCompositeOperation = 'source-over';
+        // perf (note 9): upscaled once, smoothed, at backing res: a smoothed 'lighter' blit of the floodlit field was the single
+        // dearest draw at night on a software canvas (~3 ms at 1x CPU); the 1:1 'lighter' blit is ~10x cheaper
+        if (RS > 1) { const hi = AMB.glowHi = hiCanvas(AMB.glowHi, G.W * RS, G.H * RS); hi.getContext('2d').clearRect(0, 0, hi.width, hi.height); if (gc._bb) hiCopy(hi, gc, gc._bb[0], gc._bb[1], gc._bb[2], gc._bb[3], true); }
       }
-      if (gc._bb) blitLayer(g, gc, 'lighter', gc._bb);
+      if (gc._bb) blitLayer(g, gc, 'lighter', gc._bb, RS > 1 ? AMB.glowHi : null);
       g.globalCompositeOperation = 'lighter';
       lampGlows(g, false);
       for (const pl of world.pools || []) blob(g, pl.pw ? 'green' : 'amber', pl.x, pl.y - 8, 11, 11, 0.7 * night);
       if (world.pools) { g.fillStyle = `rgba(255,196,112,${0.4 * night})`; g.beginPath(); for (const b of world.balls) if (b.lit && !b.trapped && b.z < 1) g.rect(Math.round(b.x) - 2, Math.round(b.y) - 3, 5, 4); g.fill(); } // lit balls glow warm (perf: one fill)
       if (state.cos.equipped.decor === 'lanterns' && h) { const he = getSprite('ball_house'); const pts = (sprMeta('decor_lanterns') || {}).glow; const att = ((he.meta || {}).decor || {}).eave || { x: 14, y: 9 }; const de = getSprite('decor_lanterns'); for (const pt of (pts && pts.points) || []) blob(g, 'amber', h.x - he.ox + att.x - de.ox + pt[0], h.y - he.oy + att.y - de.oy + pt[1], 5, 5, 0.55 * night); }
       for (const s of world.scenery) if (s.lantern && lit) { const m = sprMeta('led_post'); const gl = (m && m.glow) || { x: 3, y: 3, r: 10 }; const e = getSprite('led_post'); const rr = (gl.r || 10) * (1 + 0.08 * Math.sin(renderMs / 160 + s.t0)); blob(g, 'amber', s.x - e.ox + gl.x, s.y - e.oy + gl.y, rr, rr, 0.5 * night); }
-      for (const b of world.balls) if (b.type === 'glow') blob(g, 'green', b.x, b.y - b.z - 1, 6, 6, 0.6 * night);
+      if (RL.has[2]) { const ga = g.globalAlpha; g.globalAlpha = Math.min(1, 0.6 * night); restLayerBlit(g, 3); g.globalAlpha = ga; } // resting glow balls' halos (cached)
+      for (const b of world.balls) if (b.type === 'glow' && !b._rl) blob(g, 'green', b.x, b.y - b.z - 1, 6, 6, 0.6 * night);
       { const lr = game ? swarmDef().lightRadius : 0; if (lr) for (const r of world.robots) blob(g, 'amber', r.x, r.y - 4, 6, 6, (0.4 + 0.15 * Math.sin(renderMs / 200 + r.id)) * night); }
       if (!GFX.lite) for (const f of world.fireflies || []) { // lite: fireflies keep their bright pixel (step 4), not the halo
         const x = f.x + Math.sin(renderMs / 1000 * f.sp + f.ph) * 6, y = f.y + Math.cos(renderMs / 1300 * f.sp + f.ph) * 4;
@@ -26967,15 +27089,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-shopbtn .fill{position:absolute;left:0;top:0;bottom:0;background:rgba(169,189,90,.35);transition:width .3s}
 .rr-shopbtn span{position:relative}
 .rr-shopbtn small{position:relative;display:block;font-weight:400;white-space:normal;font-size:calc(15px*var(--rr-fs));color:var(--rr-text2)}
-.rr-shopbtn.ready{border-color:var(--rr-green);animation:rr-pulse 1s infinite}
+.rr-shopbtn.ready{border-color:var(--rr-green);animation:rr-pulse 1s infinite;will-change:transform}
 .rr-row.rr-done{opacity:.55;filter:saturate(.25);min-height:0;padding-top:6px;padding-bottom:6px}.rr-row.rr-done .ic{width:28px;height:28px}
 .rr-donetag{flex:0 0 auto;font-weight:700;color:var(--rr-text2);padding:0 8px;white-space:nowrap}
 .rr-doneh{margin:14px 0 2px;color:var(--rr-text2)}
 .rr-amtbar{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap;justify-content:flex-end}.rr-amtbar>span[role=group]{display:inline-flex;flex-wrap:nowrap} /* ×1/×10/Max move to the next line together under a long heading (de) */.rr-amtbar h3{margin:0}
 .rr-amt{min-width:52px;min-height:40px;border:2px solid var(--rr-line);background:#33261d;border-radius:8px;font-weight:700;margin-left:4px}.rr-amt[aria-pressed=true]{background:#4d6a24;border-color:var(--rr-green)}
 .rr-sellrow{padding:0 8px}.rr-sellrow:empty{display:none}
-.rr-sellbtn{width:100%;margin-top:6px;font-weight:700;min-height:48px;line-height:1.1;border:2px solid var(--rr-gold);border-radius:10px;background:#5a3e14;color:var(--rr-gold)!important;font-family:var(--rr-font-label)!important;padding:0 10px;animation:rr-pulse 1.2s infinite}
-@keyframes rr-pulse{0%,100%{box-shadow:0 0 0 0 rgba(169,189,90,0)}50%{box-shadow:0 0 0 4px rgba(169,189,90,.55)}}
+.rr-sellbtn{width:100%;margin-top:6px;font-weight:700;min-height:48px;line-height:1.1;border:2px solid var(--rr-gold);border-radius:10px;background:#5a3e14;color:var(--rr-gold)!important;font-family:var(--rr-font-label)!important;padding:0 10px;animation:rr-pulse 1.2s infinite;will-change:transform}
+@keyframes rr-pulse{0%,100%{box-shadow:0 0 0 0 rgba(169,189,90,0)}50%{box-shadow:0 0 0 4px rgba(169,189,90,.55)}}/* perf (note 9): the pulsing buttons sit on their own layer (will-change), so the pulse repaints the button, not the whole HUD / panel around it */
 .rr-reduced .rr-shopbtn.ready,.rr-reduced .rr-sellbtn{animation:none}
 /* the shop introduction (playtest round 3 notes 16 + 17): the Shop glows until it's opened or used; the first buy glows in it */
 @keyframes rr-cta{0%,100%{box-shadow:0 0 0 0 rgba(242,198,65,0);transform:scale(1)}50%{box-shadow:0 0 0 3px rgba(242,198,65,.95),0 0 16px 6px rgba(242,198,65,.5);transform:scale(1.04)}}
@@ -28096,10 +28218,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       a.onfinish = () => { e.remove(); if (m && popMerge[o.merge] === m) delete popMerge[o.merge]; };
     } catch (er) { setTimeout(() => e.remove(), ms); }
   }
+  const coinFlyRects = { t: -1e9, tgt: null, sr: null, tr: null, scale: 0 };
   ui_.coinFly = (x, y, n) => {
     const fxl = els().fx, h = els().hud; if (!fxl || reducedMotion()) return;
     const tgt = h.querySelector('[data-h=cash]'); if (!tgt) return;
-    const sr = els().stage.getBoundingClientRect(), tr = tgt.getBoundingClientRect();
+    // perf (note 9): the two rects are kept for 400 ms (a busy stand pays out several times a second; each read forced a
+    // style + layout pass mid-frame, right after the popups' DOM writes)
+    const C = coinFlyRects, nowT = performance.now();
+    if (C.tgt !== tgt || nowT - C.t > 400 || C.scale !== layout.scale) { C.sr = els().stage.getBoundingClientRect(); C.tr = tgt.getBoundingClientRect(); C.tgt = tgt; C.t = nowT; C.scale = layout.scale; }
+    const sr = C.sr, tr = C.tr;
     const p0 = toPx(x, y), tx = tr.left - sr.left, ty = tr.top - sr.top + 4;
     const src = iconURL('coin', 2);
     for (let i = 0; i < n; i++) {
@@ -29308,8 +29435,19 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   // The first few are logged and emitted as `error {where, message}` for QA; the frame always reschedules.
   let frameErrs = 0;
   function frameError(where, e) { if (frameErrs++ < 5) { try { console.error('[RangeRat] ' + where, e); emit('error', { where, message: String(e && e.message || e) }); } catch (er) { /* ignore */ } } }
+  // perf (note 9): a 120 / 144 Hz display (a ProMotion Mac) fires rAF twice per 60 Hz sim step; those frames would redraw the
+  // same sim state at twice the cost. Above ~105 Hz every other callback is skipped (the sim and the animation clocks run on
+  // real time, so nothing changes speed); at 60-100 Hz every frame runs. HZ.ema: the display's frame interval (ms).
+  const HZ = { last: 0, ema: 16.7, run: 0, skipped: 0 };
+  function hzSkip(t) {
+    const iv = t - HZ.last; HZ.last = t;
+    if (iv > 0 && iv < 40) HZ.ema += (iv - HZ.ema) * 0.05;
+    if (HZ.ema < 9.5 && t - HZ.run < 11.5 && t >= HZ.run) { HZ.skipped++; return true; }
+    HZ.run = t; return false;
+  }
   function frame(t) {
     rafId = 0; loTimer = 0;
+    if (t && hzSkip(t)) { schedule(); return; }
     const t0 = nowMs();
     try { frameBody(t); } catch (e) { frameError('frame', e); } finally { schedule(); }
     try { const w = nowMs() - t0; perfPush('work', w); gfxMonitor(w, t0); fpsTick(w); } catch (e) { /* ignore */ }
@@ -29321,7 +29459,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   //   over budget = p95 engine work > GFX_WORK_MS (sim + HUD + render on the main thread), or more than 1 frame in 12
   //                 arrives late (interval > GFX_LATE_MS, a dropped 60 Hz vsync). A steady cadence with little work (a 40 Hz
   //                 or 30 Hz display / frame-limiter cap) is not counted as late.
-  //   3 windows over budget in a row -> one level down (3 s cooldown while caches rebuild).
+  //   3 windows over budget in a row -> one level down (2 s cooldown while caches rebuild); 2 in a row when clearly over
+  //   (p95 work > 2x GFX_WORK_MS, or a quarter of the frames late: a big stand on a slow machine, playtest r3 note 9).
   //   GFX.upNeed windows in a row with headroom (p95 work < GFX_HEAD_MS, nothing late) -> one level up. If the level we
   //   stepped up to falls back down within 15 s, upNeed doubles (~15 s -> 30 s -> ... -> ~4 min), so it never yo-yos.
   const GFX_WORK_MS = 10, GFX_HEAD_MS = 5, GFX_LATE_MS = 25, GFX_MAX = 3, GFX_WIN = 64;
@@ -29352,26 +29491,27 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     let late = 0; for (let i = 0; i < n; i++) if (gfxI[i] > GFX_LATE_MS) late++;
     if (late && i90 < i10 * 1.15 && p95 < GFX_HEAD_MS) late = 0; // a steady capped cadence (40 / 30 Hz display), not jank
     GFX.lastP95 = p95; GFX.lastLate = late / n;
-    const over = p95 > GFX_WORK_MS || late > n / 12, head = p95 < GFX_HEAD_MS && late === 0;
+    const over = p95 > GFX_WORK_MS || late > n / 12, head = p95 < GFX_HEAD_MS && late === 0, severe = p95 > 2 * GFX_WORK_MS || late > n / 4;
     GFX.over = over ? GFX.over + 1 : 0; GFX.under = head ? GFX.under + 1 : 0;
     const now = nowMs(); if (now < GFX.coolUntil) return;
-    if (GFX.over >= 3 && GFX.level < GFX_MAX) {
+    if ((GFX.over >= 3 || (severe && GFX.over >= 2)) && GFX.level < GFX_MAX) {
       if (now - GFX.upAt < 15000) GFX.upNeed = Math.min(240, GFX.upNeed * 2); // that step up didn't hold: wait longer next time
-      gfxSetLevel(GFX.level + 1, 'slow'); GFX.coolUntil = now + 3000;
+      gfxSetLevel(GFX.level + 1, 'slow'); GFX.coolUntil = now + 2000;
     } else if (GFX.under >= GFX.upNeed && GFX.level > 0) { gfxSetLevel(GFX.level - 1, 'fast'); GFX.upAt = now; GFX.coolUntil = now + 3000; }
   }
-  // optional on-field FPS counter (Settings > Graphics > Show FPS; off by default)
-  let fpsC = null, fpsCT = 0, fpsCN = 0, fpsCW = 0, fpsCLast = 0;
+  // optional on-field FPS counter (Settings > Display > Show FPS; off by default): "60 fps · 2.1 ms · max 18 ms" = frames a
+  // second, the engine's mean frame work (sim + HUD + render on the main thread), the longest frame-to-frame gap in that second
+  let fpsC = null, fpsCT = 0, fpsCN = 0, fpsCW = 0, fpsCLast = 0, fpsCMax = 0, fpsCP = 0;
   function fpsTick(w) {
     const on = !!(state && state.settings && state.settings.showFps) && mode === 'game';
     if (!on) { if (fpsC) { fpsC.remove(); fpsC = null; } return; }
     const fw = els().fieldwrap; if (!fw) return;
-    if (!fpsC || !fpsC.isConnected) { fpsC = el('div', 'rr-fpsc'); fpsC.setAttribute('aria-hidden', 'true'); fpsC.style.cssText = 'position:absolute;left:6px;top:6px;z-index:5;padding:1px 6px;border-radius:6px;background:rgba(26,17,12,.72);color:#fffaee;font:700 12px/1.4 system-ui,sans-serif;pointer-events:none'; fw.appendChild(fpsC); fpsCLast = nowMs(); fpsCN = 0; fpsCW = 0; }
-    fpsCN++; fpsCW += w; const now = nowMs();
-    if (now - fpsCLast >= 500) {
+    if (!fpsC || !fpsC.isConnected) { fpsC = el('div', 'rr-fpsc'); fpsC.setAttribute('aria-hidden', 'true'); fpsC.style.cssText = 'position:absolute;left:6px;top:6px;z-index:5;padding:1px 6px;border-radius:6px;background:rgba(26,17,12,.72);color:#fffaee;font:700 12px/1.4 system-ui,sans-serif;pointer-events:none'; fw.appendChild(fpsC); fpsCLast = nowMs(); fpsCN = 0; fpsCW = 0; fpsCMax = 0; fpsCP = 0; }
+    const now = nowMs(); fpsCN++; fpsCW += w; if (fpsCP) fpsCMax = Math.max(fpsCMax, now - fpsCP); fpsCP = now;
+    if (now - fpsCLast >= 1000) { // once a second: frames delivered, mean engine work per frame, the longest gap between two frames
       const n = Math.round(fpsCN * 1000 / (now - fpsCLast)), ms = (fpsCW / Math.max(1, fpsCN)).toFixed(1);
-      const t = tpl(GFX.level > 0 ? sl_('fpsReduced', '{n} fps (lite)') : sl_('fps', '{n} fps'), { n }) + ' · ' + ms + ' ms';
-      if (fpsC.textContent !== t) fpsC.textContent = t; fpsCLast = now; fpsCN = 0; fpsCW = 0;
+      const t = tpl(GFX.level > 0 ? sl_('fpsReduced', '{n} fps (lite)') : sl_('fps', '{n} fps'), { n }) + ' · ' + ms + ' ms · max ' + Math.round(fpsCMax) + ' ms' + (GFX.level > 0 ? ' · Q' + GFX.level : '');
+      if (fpsC.textContent !== t) fpsC.textContent = t; fpsCLast = now; fpsCN = 0; fpsCW = 0; fpsCMax = 0;
     }
   }
   function frameBody(t) {
@@ -30007,12 +30147,27 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       },
       /** sweep every loose ball off the field (as if collected; no pay): golfer tests whose field filled to the cap */
       clearBalls() { const A = world.balls, n = A.length; let k = 0; for (const b of A) if (b.demo) A[k++] = b; A.length = k; return n - k; },
+      /** perf QA (note 9): the resting-ball layer's counters, and a pixel check: the same frame (same clock) rendered with the
+       *  layer and without it, compared on the backing store. { balls, rebuilds, redraws, diff, diff8 } (diff = differing pixels, diff8 = by more than 8 in a channel; where
+       *  balls pile up, a live ball - tip, special, rolling - now sits on top of the plain ones it overlaps). check 2: both off */
+      restLayer(check) {
+        const out = { balls: RL.map.size, rebuilds: RL.rebuilds, redraws: RL.redraws, diff: null };
+        if (check && ctx) {
+          const t = renderMs, grab = () => ctx.getImageData(0, 0, canvas.width, canvas.height).data, shake = fxState.shake; fxState.shake = 0;
+          RL.off = check === 2; renderMs = t; render(); const a = grab(); out.balls = RL.map.size;
+          RL.off = true; renderMs = t; render(); const b = grab(); RL.off = false; renderMs = t; fxState.shake = shake;
+          let d = 0, d8 = 0; for (let i = 0; i < a.length; i += 4) { const m = Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])); if (m) d++; if (m > 8) d8++; } out.diff = d; out.diff8 = d8;
+        }
+        return out;
+      },
       /** perf QA (playtest r3 note 9): time n render() calls and n fixed sim steps on this page right now (ms each, median of 5 batches) */
-      benchFrame(n) {
-        n = Math.max(1, n | 0 || 30); const med = (a) => a.sort((x, y) => x - y)[a.length >> 1], R1 = [], S1 = [];
-        for (let k = 0; k < 5; k++) { let t = performance.now(); for (let i = 0; i < n; i++) { renderMs += 1000 / 60; render(); } R1.push((performance.now() - t) / n);
+      // o.flush: read one pixel after each render, so the canvas rasterises inside the timing (software canvas: the draw calls'
+      // pixel work, not just recording them); o.batches (default 5). *Min = the fastest batch (robust on a busy machine).
+      benchFrame(n, o) {
+        n = Math.max(1, n | 0 || 30); o = o || {}; const nb = Math.max(1, o.batches | 0 || 5), med = (a) => a.slice().sort((x, y) => x - y)[a.length >> 1], R1 = [], S1 = [];
+        for (let k = 0; k < nb; k++) { let t = performance.now(); for (let i = 0; i < n; i++) { renderMs += 1000 / 60; render(); if (o.flush) ctx.getImageData(0, 0, 1, 1); } R1.push((performance.now() - t) / n);
           t = performance.now(); for (let i = 0; i < n; i++) step(DT); S1.push((performance.now() - t) / n); }
-        return { render: med(R1), step: med(S1), balls: world.balls.length, golfers: world.golfers.length };
+        return { render: med(R1), step: med(S1), renderMin: Math.min(...R1), stepMin: Math.min(...S1), balls: world.balls.length, golfers: world.golfers.length };
       },
       step(sec) { const n = Math.min(7200, Math.max(1, Math.round((+sec || DT) / DT))); for (let i = 0; i < n; i++) step(DT); return n * DT; },
       /** f in [0,1): fraction of the whole day+night cycle (day first). setNight(true) jumps to the start of night. */
@@ -30137,7 +30292,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     get renderScale() { return renderScale; }, // canvas backing px per logical px (hi-fi art: res-2 sprites need >= 2)
     setRenderScale(n) { n = Math.max(1, Math.min(8, n | 0)); GFX.baseRS = n; if (n !== renderScale) { renderScale = n; if (canvas) setupCanvas(); } return renderScale; },
     /** graphics quality (perf pass): { pref: 'auto'|'high'|'low', level: 0-3 }. Assign 'auto'|'high'|'low' (a setting) or a level 0-3 (debug/QA: pins it until the setting changes) */
-    get gfx() { return { pref: gfxPref(), level: GFX.level, renderScale, particles: GFX.part, liteNight: GFX.lite, lastP95: GFX.lastP95 == null ? null : +GFX.lastP95.toFixed(2), lastLate: GFX.lastLate, upNeed: GFX.upNeed }; },
+    get gfx() { return { pref: gfxPref(), level: GFX.level, renderScale, particles: GFX.part, liteNight: GFX.lite, lastP95: GFX.lastP95 == null ? null : +GFX.lastP95.toFixed(2), lastLate: GFX.lastLate, upNeed: GFX.upNeed, displayMs: +HZ.ema.toFixed(2), skipped: HZ.skipped }; }, // displayMs: the rAF interval; skipped: frames dropped on a >105 Hz display (perf, note 9)
     set gfx(v) { if (typeof v === 'number') { GFX.pinned = true; gfxSetLevel(v, 'api'); return; } if (state && ['auto', 'high', 'low'].includes(v)) { state.settings.gfx = v; applyGfx(); saveDeviceSettings(); } },
     resize() { layout.apply(); },
     trialFreePlay() { return trialFreePlay(); },
@@ -30344,7 +30499,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const eqs = root.querySelectorAll('[data-rl=eq]');
     if (eqs.length) {
       const lv = eqLevels(t, playing, rm), k = lv.join('');
-      eqs.forEach((e) => { if (e.__k === k || !e.getClientRects().length) return; e.__k = k; for (let i = 0; i < e.children.length; i++) e.children[i].style.height = (lv[i] || 1) * 12.5 + '%'; });
+      // perf (note 9): no getClientRects() visibility read here (it forced a style + layout pass 16x a second, right after the
+      // portrait redraws); a hidden meter just takes the new heights (no layout while it's display:none)
+      eqs.forEach((e) => { if (e.__k === k) return; e.__k = k; for (let i = 0; i < e.children.length; i++) e.children[i].style.height = (lv[i] || 1) * 12.5 + '%'; });
     }
     if (animate.mood !== mood) { animate.mood = mood; const mt = dget('rat.moods.' + mood, mood); root.querySelectorAll('[data-rl=mood]').forEach((e) => { e.textContent = mt; }); }
   }
@@ -31295,10 +31452,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       const kk = Math.min(kmax, Math.floor((H - rest) / 48));
       if (kk >= 3) { drop = d; k = kk; break; }
     }
-    const write = () => { cards.forEach((e, i) => { if (e) e.style.display = i < drop ? 'none' : ''; }); root.style.setProperty('--rl-pw', 48 * k + 'px'); if (fr) fr.style.width = 48 * k + 'px'; };
+    const write = () => { // perf: write only what changed (--rl-pw sits on the root: setting it restyles every element)
+      cards.forEach((e, i) => { const d = i < drop ? 'none' : ''; if (e && e.style.display !== d) e.style.display = d; });
+      const pw = 48 * k + 'px'; if (root.style.getPropertyValue('--rl-pw') !== pw) root.style.setProperty('--rl-pw', pw); if (fr && fr.style.width !== pw) fr.style.width = pw; };
     write();                                                                          // ---- write ----
     // one verification read: text that rewraps at the new width can still overflow; step down (bounded, rarely > 1 step)
-    for (let guard = 0; guard < 4 && c.scrollHeight > c.clientHeight + 1; guard++) { if (k > 3) k--; else if (drop < order.length) drop++; else break; write(); }
+    let over = false;
+    for (let guard = 0; guard < 4 && (over = c.scrollHeight > c.clientHeight + 1); guard++) { if (k > 3) k--; else if (drop < order.length) drop++; else break; write(); }
+    c._fitStuck = over && k <= 3 && drop >= order.length; // nothing left to drop: updateJournal stops retrying (perf)
     const pf = PERF.fit || (PERF.fit = { ms: 0, n: 0 }); pf.ms += performance.now() - t0; pf.n++;
   }
   function knownRanges(here, extra) {
@@ -31456,8 +31617,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
     updatePlayer(c, s);
     if (c === els.corner && performance.now() - lastResizeT > 600) {
-      // refit on key changes, or when content grew (goal text rewrap, reroll) and now overflows: one cheap read at 4 Hz, never during a drag
-      if (c.dataset.fitk !== fitKey(s) || c.scrollHeight > c.clientHeight + 1) { c.dataset.fitk = fitKey(s); fitCorner(); }
+      // refit on key changes, or when content grew (goal text rewrap, reroll) and now overflows: one cheap read at 4 Hz, never during a drag.
+      // perf (playtest r3 note 9): a corner that still overflows with every card already dropped can't be fixed by a refit, and each
+      // refit re-shows the dropped cards to measure them (a ~430-element style + layout pass, 1 Hz, 15+ ms at 4x CPU): wait for a key change
+      const k = fitKey(s);
+      if (c.dataset.fitk !== k || (!c._fitStuck && c.scrollHeight > c.clientHeight + 1)) { c.dataset.fitk = k; fitCorner(); }
     }
   }
 

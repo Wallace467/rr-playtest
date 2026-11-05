@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Range Rat 隐私政策</title>
+<link rel="alternate" hreflang="en" href="privacy.html">
+<link rel="alternate" hreflang="de" href="privacy.de.html">
+<link rel="alternate" hreflang="es" href="privacy.es.html">
+<link rel="alternate" hreflang="pt-BR" href="privacy.pt-BR.html">
+<link rel="alternate" hreflang="zh-CN" href="privacy.zh-CN.html">
+<style>
+:root { --bg: #f6efe0; --card: #fffaf0; --fg: #2b2118; --mute: #6d5d4b; --line: #e2d5bd; --acc: #8a5a0c; --btn: #4d6a24; --btnfg: #fffaf0; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1d1712; --card: #29211a; --fg: #f3e8d4; --mute: #bba98f; --line: #3f3428; --acc: #f2c641; --btn: #4d6a24; --btnfg: #f6ecd6; color-scheme: dark; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.6 "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 42rem; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(48px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 4px; color: var(--acc); }
+h2 { font-size: 1.15rem; margin: 2rem 0 .4rem; }
+p, li { max-width: 65ch; } ul { padding-left: 1.2em; }
+.date { color: var(--mute); margin: 0 0 1.5rem; }
+.short { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 20px; }
+a { color: var(--acc); }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 20px; }
+.bar.end { margin: 40px 0 0; }
+.back { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 16px; border-radius: 10px; background: var(--btn); color: var(--btnfg); font-weight: 700; text-decoration: none; }
+.back:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+.langs { margin: 0; color: var(--mute); font-size: .95rem; }
+.langs a { display: inline-block; padding: 8px 2px; }
+.langs a[aria-current] { color: var(--fg); font-weight: 700; text-decoration: none; }
+.note { margin: 0 0 12px; color: var(--mute); font-size: .9rem; }
+.addr { -webkit-user-select: all; user-select: all; font-weight: 700; overflow-wrap: anywhere; }
+/* inside the game's policy sheet the game has its own Close button: the game opens this page as #in-game and also
+   marks it (html.in-game) after the language switcher loads another version */
+body:target .back, html.in-game .back { display: none; }
+body:target .bar.end, html.in-game .bar.end { display: none; }
+</style>
+</head>
+<body id="in-game">
+<main>
+<nav class="bar" aria-label="Range Rat">
+<a class="back" href="./" target="_top" data-back>← 返回游戏</a>
+<p class="langs" aria-label="语言"><a href="privacy.html" hreflang="en" lang="en">EN</a> · <a href="privacy.de.html" hreflang="de" lang="de">DE</a> · <a href="privacy.es.html" hreflang="es" lang="es">ES</a> · <a href="privacy.pt-BR.html" hreflang="pt-BR" lang="pt-BR">PT</a> · <a href="privacy.zh-CN.html" hreflang="zh-CN" lang="zh-CN" aria-current="page">中文</a></p>
+</nav>
+<p class="note">本文为译文。如与英文版本不一致，以英文版本为准。</p>
+
+<h1>Range Rat 隐私政策</h1>
+<p class="date">最后更新：2026 年 11 月 5 日</p>
+
+<h2>我们是谁</h2>
+<p>Range Rat 由 Wallace Labs Kft. 制作，这是一家在匈牙利布达佩斯注册的公司。我们是本政策所述个人数据的负责方（即“控制者”）。有关你的数据，请联系：<span class="addr">privacy@wallacelabs.dev</span> (<a href="mailto:privacy@wallacelabs.dev">发邮件</a>)。其他事宜：<span class="addr">hello@wallacelabs.dev</span> (<a href="mailto:hello@wallacelabs.dev">发邮件</a>)。</p>
+
+<div class="short">
+<h2>简要说明</h2>
+<ul>
+<li>游戏不会收集关于你的个人数据，也不会把它发给我们。没有账号，没有统计分析，没有广告，也没有追踪。</li>
+<li>你的存档保存在你的设备上；如果你在 Steam 上玩，还会保存在 Steam 云中。</li>
+<li>只有在测试版中，你才可以选择给我们发送反馈。你点“发送”之前，什么都不会发出去，而且表单会准确地告诉你将发送哪些内容。</li>
+</ul>
+</div>
+
+<h2>1. 游戏在你的设备上保存什么</h2>
+<p>游戏会保存你的进度、设置以及你输入的档案名（最多 16 个字符）。在浏览器或手机应用中，它使用浏览器的存储空间；在电脑上，它使用你用户文件夹中的文件。这些只是为了让游戏正常运行，绝不会发送给我们。要删除这些数据，可以在游戏里删除存档、在浏览器中清除该网站的数据、删除应用，或者删除游戏的文件夹。</p>
+<p>电脑版还会写入一个日志文件（range-rat.log），用于排查问题。其中包含技术信息和你的 Steam 显示名称，它会一直留在你的电脑上，除非你自己选择发给我们。</p>
+
+<h2>2. Steam</h2>
+<p>如果你在 Steam 上玩，你的购买、Steam 账号、成就、Steam 云（它把你的存档文件复制到 Valve 的服务器上，让存档在不同电脑之间跟着你走）以及“丰富状态”（Steam 好友可以看到你正在哪个练习场玩）都由 Valve 负责。Valve 依照 Steam 自己的隐私政策处理这些信息。我们不会从 Valve 那里收到关于你的个人数据，只会收到销售总数。</p>
+
+<h2>3. 测试反馈（仅限测试版）</h2>
+<p>如果你在反馈表单中点了“发送”，我们会收到：</p>
+<ul>
+<li>你写的内容、你选的标签，以及你填写的名字（如果填了）；</li>
+<li>一张游戏画面的截图；</li>
+<li>技术信息：游戏版本、你的浏览器或设备类型（User-Agent）、屏幕尺寸、语言设置、游戏设置、进度和性能数据，以及最近的错误信息；</li>
+<li>你的存档码，仅当你勾选“附上我的存档”时才会发送（其中包含你的档案名）。</li>
+</ul>
+<p>这些内容会发到 Discord 上一个只有我们能看到的私人频道。Discord（Discord Inc.，美国）依照它自己的隐私政策处理这些内容。和你向任何网站发送内容时一样，Discord 也会看到你的 IP 地址。</p>
+<p><strong>目的：</strong>查找并修复 Bug，改进游戏。我们的法律依据是你的同意（欧盟《通用数据保护条例》（GDPR）第 6 条第 1 款第 (a) 项），你点“发送”即表示同意。你可以随时撤回同意，只需请我们删除你的反馈。</p>
+<p><strong>保存期限：</strong>反馈在我们不再需要时就会删除，最迟在游戏发布后 12 个月删除。存档码在我们复现 Bug 后立即删除。</p>
+<p>测试反馈仅适用于 16 岁及以上的玩家，或已获得家长许可的玩家。不想发送任何内容？可以改用“复制报告”，然后用你喜欢的方式分享。</p>
+
+<h2>4. 托管测试版的网站</h2>
+<p>测试版托管在 itch.io 和 GitHub Pages 上。和大多数网站一样，它们会依照各自的隐私政策记录访问者的 IP 地址。我们不会收到这些记录。</p>
+
+<h2>5. 如果你给我们发邮件</h2>
+<p>我们会用你的邮箱地址和邮件内容来回复你，并最多保存 2 年，除非你要求我们提前删除。法律依据：我们回复你的正当利益（GDPR 第 6 条第 1 款第 (f) 项）。</p>
+
+<h2>6. 你的权利</h2>
+<p>你可以要求我们提供你的数据副本，或者要求我们更正、删除你的数据，限制或反对我们使用这些数据，或者把数据转移到别处。请写信至 <span class="addr">privacy@wallacelabs.dev</span> (<a href="mailto:privacy@wallacelabs.dev">发邮件</a>)。由于我们几乎不保存任何数据，如果你能告诉我们大概在什么时候发送了反馈、用的是什么名字，会很有帮助。你也可以向匈牙利数据保护机构 Nemzeti Adatvédelmi és Információszabadság Hatóság（NAIH，<a href="https://www.naih.hu" target="_blank" rel="noopener">www.naih.hu</a>）投诉，或向你所在地的数据保护机构投诉。</p>
+
+<h2>7. 儿童</h2>
+<p>Range Rat 适合所有年龄段。正式发布的游戏不会收集任何人的个人数据，包括儿童。</p>
+
+<h2>8. 变更</h2>
+<p>如果情况有变（例如推出手机应用），我们会更新本页面和顶部的日期。</p>
+
+<nav class="bar end" aria-label="Range Rat">
+<a class="back" href="./" target="_top" data-back>← 返回游戏</a>
+</nav>
+</main>
+<script src="privacy.js"></script>
+</body>
+</html>

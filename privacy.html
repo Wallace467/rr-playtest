@@ -2,28 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Range Rat Privacy Policy</title>
+<link rel="alternate" hreflang="en" href="privacy.html">
+<link rel="alternate" hreflang="de" href="privacy.de.html">
+<link rel="alternate" hreflang="es" href="privacy.es.html">
+<link rel="alternate" hreflang="pt-BR" href="privacy.pt-BR.html">
+<link rel="alternate" hreflang="zh-CN" href="privacy.zh-CN.html">
 <style>
-:root { --bg: #f6efe0; --card: #fffaf0; --fg: #2b2118; --mute: #6d5d4b; --line: #e2d5bd; --acc: #8a5a0c; }
-@media (prefers-color-scheme: dark) { :root { --bg: #1d1712; --card: #29211a; --fg: #f3e8d4; --mute: #bba98f; --line: #3f3428; --acc: #f2c641; color-scheme: dark; } }
+:root { --bg: #f6efe0; --card: #fffaf0; --fg: #2b2118; --mute: #6d5d4b; --line: #e2d5bd; --acc: #8a5a0c; --btn: #4d6a24; --btnfg: #fffaf0; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1d1712; --card: #29211a; --fg: #f3e8d4; --mute: #bba98f; --line: #3f3428; --acc: #f2c641; --btn: #4d6a24; --btnfg: #f6ecd6; color-scheme: dark; } }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.6 "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif; }
-main { max-width: 42rem; margin: 0 auto; padding: 32px max(18px, env(safe-area-inset-left)) 64px max(18px, env(safe-area-inset-right)); }
+main { max-width: 42rem; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(48px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
 h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 4px; color: var(--acc); }
 h2 { font-size: 1.15rem; margin: 2rem 0 .4rem; }
 p, li { max-width: 65ch; } ul { padding-left: 1.2em; }
 .date { color: var(--mute); margin: 0 0 1.5rem; }
 .short { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 20px; }
 a { color: var(--acc); }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 20px; }
+.bar.end { margin: 40px 0 0; }
+.back { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 16px; border-radius: 10px; background: var(--btn); color: var(--btnfg); font-weight: 700; text-decoration: none; }
+.back:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+.langs { margin: 0; color: var(--mute); font-size: .95rem; }
+.langs a { display: inline-block; padding: 8px 2px; }
+.langs a[aria-current] { color: var(--fg); font-weight: 700; text-decoration: none; }
+.note { margin: 0 0 12px; color: var(--mute); font-size: .9rem; }
+.addr { -webkit-user-select: all; user-select: all; font-weight: 700; overflow-wrap: anywhere; }
+/* inside the game's policy sheet the game has its own Close button: the game opens this page as #in-game and also
+   marks it (html.in-game) after the language switcher loads another version */
+body:target .back, html.in-game .back { display: none; }
+body:target .bar.end, html.in-game .bar.end { display: none; }
 </style>
 </head>
-<body>
+<body id="in-game">
 <main>
+<nav class="bar" aria-label="Range Rat">
+<a class="back" href="./" target="_top" data-back>← Back to the game</a>
+<p class="langs" aria-label="Language"><a href="privacy.html" hreflang="en" lang="en" aria-current="page">EN</a> · <a href="privacy.de.html" hreflang="de" lang="de">DE</a> · <a href="privacy.es.html" hreflang="es" lang="es">ES</a> · <a href="privacy.pt-BR.html" hreflang="pt-BR" lang="pt-BR">PT</a> · <a href="privacy.zh-CN.html" hreflang="zh-CN" lang="zh-CN">中文</a></p>
+</nav>
+
 <h1>Range Rat privacy policy</h1>
 <p class="date">Last updated: 5 November 2026</p>
 
 <h2>Who we are</h2>
-<p>Range Rat is made by Wallace Labs Kft., a company registered in Budapest, Hungary. We are responsible for the personal data described here (the "controller"). Contact: [email coming soon].</p>
+<p>Range Rat is made by Wallace Labs Kft., a company registered in Budapest, Hungary. We are responsible for the personal data described here (the "controller"). Contact about your data: <span class="addr">privacy@wallacelabs.dev</span> (<a href="mailto:privacy@wallacelabs.dev">email</a>). Anything else: <span class="addr">hello@wallacelabs.dev</span> (<a href="mailto:hello@wallacelabs.dev">email</a>).</p>
 
 <div class="short">
 <h2>The short version</h2>
@@ -61,13 +84,18 @@ a { color: var(--acc); }
 <p>We use your email address and message to reply, and keep them for up to 2 years unless you ask us to delete them sooner. Legal basis: our legitimate interest in answering you (GDPR Article 6(1)(f)).</p>
 
 <h2>6. Your rights</h2>
-<p>You can ask us for a copy of your data, or ask us to correct or delete it, restrict or object to how we use it, or move it elsewhere. Write to [email coming soon]. Since we hold almost nothing, it helps if you tell us roughly when you sent feedback and the name you used. You can also complain to the Hungarian data protection authority, the Nemzeti Adatvédelmi és Információszabadság Hatóság (NAIH), <a href="https://www.naih.hu">www.naih.hu</a>, or to the authority where you live.</p>
+<p>You can ask us for a copy of your data, or ask us to correct or delete it, restrict or object to how we use it, or move it elsewhere. Write to <span class="addr">privacy@wallacelabs.dev</span> (<a href="mailto:privacy@wallacelabs.dev">email</a>). Since we hold almost nothing, it helps if you tell us roughly when you sent feedback and the name you used. You can also complain to the Hungarian data protection authority, the Nemzeti Adatvédelmi és Információszabadság Hatóság (NAIH), <a href="https://www.naih.hu" target="_blank" rel="noopener">www.naih.hu</a>, or to the authority where you live.</p>
 
 <h2>7. Children</h2>
 <p>Range Rat is suitable for all ages. The released game collects no personal data from anyone, children included.</p>
 
 <h2>8. Changes</h2>
 <p>If this changes, for example for a phone app, we'll update this page and the date at the top.</p>
+
+<nav class="bar end" aria-label="Range Rat">
+<a class="back" href="./" target="_top" data-back>← Back to the game</a>
+</nav>
 </main>
+<script src="privacy.js"></script>
 </body>
 </html>

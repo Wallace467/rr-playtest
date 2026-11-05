@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Range Rat Política de privacidade</title>
+<link rel="alternate" hreflang="en" href="privacy.html">
+<link rel="alternate" hreflang="de" href="privacy.de.html">
+<link rel="alternate" hreflang="es" href="privacy.es.html">
+<link rel="alternate" hreflang="pt-BR" href="privacy.pt-BR.html">
+<link rel="alternate" hreflang="zh-CN" href="privacy.zh-CN.html">
+<style>
+:root { --bg: #f6efe0; --card: #fffaf0; --fg: #2b2118; --mute: #6d5d4b; --line: #e2d5bd; --acc: #8a5a0c; --btn: #4d6a24; --btnfg: #fffaf0; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1d1712; --card: #29211a; --fg: #f3e8d4; --mute: #bba98f; --line: #3f3428; --acc: #f2c641; --btn: #4d6a24; --btnfg: #f6ecd6; color-scheme: dark; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.6 "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 42rem; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(48px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 4px; color: var(--acc); }
+h2 { font-size: 1.15rem; margin: 2rem 0 .4rem; }
+p, li { max-width: 65ch; } ul { padding-left: 1.2em; }
+.date { color: var(--mute); margin: 0 0 1.5rem; }
+.short { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 20px; }
+a { color: var(--acc); }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 20px; }
+.bar.end { margin: 40px 0 0; }
+.back { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 16px; border-radius: 10px; background: var(--btn); color: var(--btnfg); font-weight: 700; text-decoration: none; }
+.back:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+.langs { margin: 0; color: var(--mute); font-size: .95rem; }
+.langs a { display: inline-block; padding: 8px 2px; }
+.langs a[aria-current] { color: var(--fg); font-weight: 700; text-decoration: none; }
+.note { margin: 0 0 12px; color: var(--mute); font-size: .9rem; }
+.addr { -webkit-user-select: all; user-select: all; font-weight: 700; overflow-wrap: anywhere; }
+/* inside the game's policy sheet the game has its own Close button: the game opens this page as #in-game and also
+   marks it (html.in-game) after the language switcher loads another version */
+body:target .back, html.in-game .back { display: none; }
+body:target .bar.end, html.in-game .bar.end { display: none; }
+</style>
+</head>
+<body id="in-game">
+<main>
+<nav class="bar" aria-label="Range Rat">
+<a class="back" href="./" target="_top" data-back>← Voltar para o jogo</a>
+<p class="langs" aria-label="Idioma"><a href="privacy.html" hreflang="en" lang="en">EN</a> · <a href="privacy.de.html" hreflang="de" lang="de">DE</a> · <a href="privacy.es.html" hreflang="es" lang="es">ES</a> · <a href="privacy.pt-BR.html" hreflang="pt-BR" lang="pt-BR" aria-current="page">PT</a> · <a href="privacy.zh-CN.html" hreflang="zh-CN" lang="zh-CN">中文</a></p>
+</nav>
+<p class="note">Tradução. Se houver diferença em relação à versão em inglês, vale a versão em inglês.</p>
+
+<h1>Política de privacidade do Range Rat</h1>
+<p class="date">Última atualização: 5 de novembro de 2026</p>
+
+<h2>Quem somos</h2>
+<p>O Range Rat é feito pela Wallace Labs Kft., uma empresa registrada em Budapeste, na Hungria. Somos responsáveis pelos dados pessoais descritos aqui (o "controlador"). Contato sobre os seus dados: <span class="addr">privacy@wallacelabs.dev</span> (<a href="mailto:privacy@wallacelabs.dev">e-mail</a>). Qualquer outro assunto: <span class="addr">hello@wallacelabs.dev</span> (<a href="mailto:hello@wallacelabs.dev">e-mail</a>).</p>
+
+<div class="short">
+<h2>Resumindo</h2>
+<ul>
+<li>O jogo não coleta dados pessoais sobre você nem os envia para nós. Não há contas, nem análises, nem anúncios, nem rastreamento.</li>
+<li>Os seus saves ficam no seu dispositivo, e na Steam Cloud se você joga na Steam.</li>
+<li>Só nas versões de teste você pode escolher nos mandar feedback. Nada é enviado até você tocar em Enviar, e o formulário mostra exatamente o que vai ser enviado.</li>
+</ul>
+</div>
+
+<h2>1. O que o jogo guarda no seu dispositivo</h2>
+<p>O jogo salva o seu progresso, as suas configurações e o nome de perfil que você digitar (até 16 caracteres). No navegador ou no app do celular, ele usa o armazenamento do navegador; no computador, arquivos na sua pasta de usuário. Isso serve só para o jogo funcionar e nunca é enviado para nós. Para apagar, exclua o save no jogo, limpe os dados do site no navegador, remova o app ou apague a pasta do jogo.</p>
+<p>A versão para computador também grava um arquivo de log (range-rat.log) para ajudar a resolver problemas. Ele inclui detalhes técnicos e o seu nome de exibição na Steam, e fica no seu computador, a não ser que você decida enviá-lo para nós.</p>
+
+<h2>2. Steam</h2>
+<p>Se você joga na Steam, a Valve cuida da sua compra, da sua conta Steam, das conquistas, da Steam Cloud (que copia o seu arquivo de save para os servidores da Valve, para ele te acompanhar de um computador para outro) e da "presença detalhada" (os seus amigos na Steam veem em qual range você está jogando). A Valve trata isso de acordo com a política de privacidade da própria Steam. Não recebemos da Valve dados pessoais sobre você, só os totais de vendas.</p>
+
+<h2>3. Feedback das versões de teste (só nas versões de teste)</h2>
+<p>Se você tocar em Enviar no formulário de feedback, recebemos:</p>
+<ul>
+<li>o que você escrever, as etiquetas que escolher e o seu nome, se você informar;</li>
+<li>uma captura da tela do jogo;</li>
+<li>detalhes técnicos: a versão do jogo, o tipo do seu navegador ou dispositivo (user agent), o tamanho da tela, as configurações de idioma, as configurações do jogo, números de progresso e desempenho e as mensagens de erro recentes;</li>
+<li>o código do seu save, só se você marcar "Anexar meu save" (ele inclui o seu nome de perfil).</li>
+</ul>
+<p>Isso vai para um canal privado no Discord que só nós vemos. O Discord (Discord Inc., EUA) trata isso de acordo com a própria política de privacidade. Como qualquer site para o qual você envia algo, o Discord também vê o seu endereço IP.</p>
+<p><strong>Para quê:</strong> para encontrar e corrigir bugs e melhorar o jogo. A base legal é o seu consentimento (artigo 6(1)(a) do RGPD, o Regulamento Geral de Proteção de Dados da União Europeia), que você dá ao tocar em Enviar. Você pode retirá-lo a qualquer momento pedindo que a gente apague o seu feedback.</p>
+<p><strong>Por quanto tempo:</strong> apagamos o feedback quando não precisamos mais dele e, no máximo, 12 meses depois do lançamento do jogo. Os códigos de save são apagados assim que conseguimos reproduzir o bug.</p>
+<p>O feedback das versões de teste é para pessoas a partir de 16 anos, ou com a permissão dos pais. Prefere não enviar nada? Use "Copiar relatório" e compartilhe do jeito que quiser.</p>
+
+<h2>4. Sites que hospedam as versões de teste</h2>
+<p>As versões de teste ficam hospedadas no itch.io e no GitHub Pages. Como a maioria dos sites, eles registram os endereços IP dos visitantes de acordo com as próprias políticas de privacidade. Nós não recebemos esses registros.</p>
+
+<h2>5. Se você mandar um e-mail para nós</h2>
+<p>Usamos o seu endereço de e-mail e a sua mensagem para responder, e guardamos tudo por até 2 anos, a não ser que você peça para apagarmos antes. Base legal: o nosso interesse legítimo em responder você (artigo 6(1)(f) do RGPD).</p>
+
+<h2>6. Os seus direitos</h2>
+<p>Você pode nos pedir uma cópia dos seus dados, ou pedir que a gente os corrija ou apague, restrinja o uso deles ou os transfira para outro lugar, e pode se opor à forma como os usamos. Escreva para <span class="addr">privacy@wallacelabs.dev</span> (<a href="mailto:privacy@wallacelabs.dev">e-mail</a>). Como guardamos quase nada, ajuda se você disser mais ou menos quando enviou o feedback e o nome que usou. Você também pode reclamar na autoridade húngara de proteção de dados, a Nemzeti Adatvédelmi és Információszabadság Hatóság (NAIH), <a href="https://www.naih.hu" target="_blank" rel="noopener">www.naih.hu</a>, ou na autoridade de onde você mora.</p>
+
+<h2>7. Crianças</h2>
+<p>O Range Rat é adequado para todas as idades. O jogo lançado não coleta dados pessoais de ninguém, nem de crianças.</p>
+
+<h2>8. Mudanças</h2>
+<p>Se isso mudar, por exemplo para um app de celular, vamos atualizar esta página e a data lá em cima.</p>
+
+<nav class="bar end" aria-label="Range Rat">
+<a class="back" href="./" target="_top" data-back>← Voltar para o jogo</a>
+</nav>
+</main>
+<script src="privacy.js"></script>
+</body>
+</html>

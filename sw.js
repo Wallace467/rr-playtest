@@ -1,5 +1,5 @@
-/* Range Rat playtest service worker, build 2026-11-05-8440e86-e77d918a */
-const CACHE = 'range-rat-2026-11-05-8440e86-e77d918a';
+/* Range Rat playtest service worker, build 2026-11-05-7425888-48406ed6 */
+const CACHE = 'range-rat-2026-11-05-7425888-48406ed6';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });

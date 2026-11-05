@@ -14,12 +14,12 @@
   body.rr-body{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
   #rr-root{height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important}
 }</style>
-<meta name="range-rat-unlock" content="full">
-<meta name="rr-pwa" content="2026-11-05-8440e86-e77d918a">
+<meta name="rr-pwa" content="2026-11-05-7425888-48406ed6">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-05-8440e86">
+<meta name="range-rat-build" content="2026-11-05-7425888">
+<meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
  * Pixelify Sans 600 = big headings and banners only (>= 18 CSS px). Both SIL OFL 1.1, licences in ui/fonts/. */
@@ -39,6 +39,517 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 </head>
 <body>
 <div id="game"></div>
+<script>/* ---- feedback config (build/build.py) ---- */
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-05-7425888", "builtAt": "2026-11-05T17:55:11Z"};
+</script>
+<script>/* ---- ui/feedback.js ---- */
+/* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
+ *
+ * Bundled only by `python3 build/build.py --with feedback` (or --playtest); the default/Steam build never contains
+ * it. build.py loads this file FIRST (before balance.js) so the error ring buffer sees every later script, and puts
+ * window.RR_FEEDBACK_CONFIG = { endpoint, build, builtAt } in front of it. The endpoint comes from
+ * --feedback-webhook <file> and is never committed.
+ *
+ * Player-first (BRIEF pillar 0): nothing is sent until the player presses Send, the form shows exactly what will be
+ * sent, the save is opt-in, and there is no background sending, ever. Personal data: only the optional name.
+ *
+ * Read-only use of the engine (window.RANGE_RAT): pause(on), exportCode() (RR1- save code), getStats(), perf(),
+ * gfx, state.settings, mode, version, layout.root, fmt, on(). No engine code is changed.
+ *
+ * Plain ES2020, no dependencies. The screenshot is composited natively: clone the UI DOM, swap each <canvas> for an
+ * <img> of its pixels, serialise into an SVG <foreignObject>, draw that to a canvas, export JPEG under 1.5 MB.
+ * If that throws or taints (Safari can), it falls back to the field canvas alone and says so in the report.
+ */
+(function (W) {
+  'use strict';
+  if (W.RR_FEEDBACK) return;
+  const CFG = W.RR_FEEDBACK_CONFIG || {};
+
+  // ---- relay swap: to send through a relay instead of the Discord webhook, either put the relay URL in the
+  // ---- --feedback-webhook file, or set it here (one line). A relay receives the identical multipart request.
+  const ENDPOINT_OVERRIDE = null;
+
+  const ENDPOINT = ENDPOINT_OVERRIDE || (typeof CFG.endpoint === 'string' && /^https:\/\//.test(CFG.endpoint) ? CFG.endpoint : null);
+  const SHOT_MAX = 1.5 * 1024 * 1024;   // screenshot cap (owner spec)
+  const TOTAL_MAX = 8 * 1024 * 1024;     // Discord's default upload limit is 10 MB per message; stay well under
+  const MSG_MAX = 3500;                  // embed description is 4096; leave room for the rest of the 6000-char embed budget
+  const NAME_MAX = 40;
+  const ERR_MAX = 20;
+  const GAP_MS = 30 * 1000, DAY_MS = 24 * 3600 * 1000, DAY_MAX = 20, RETRY_GAP_MS = 3000;
+  const STORE_KEY = 'rrfb_sends';
+  const TAGS = ['bug', 'confusing', 'idea', 'loved'];
+  const TAG_EN = { bug: 'Bug', confusing: 'Confusing', idea: 'Idea', loved: 'Loved it' };
+
+  // ===================================================================== error ring buffer (installed at load)
+  const errors = [];
+  /** strip URLs down to the file name: no local paths (file:///Users/...) or hosting URLs in reports */
+  const scrub = (s) => String(s == null ? '' : s).replace(/\b(?:file|https?|blob):\/\/[^\s)'"]*\/([^\s/)'"?#]*)/g, '$1').slice(0, 600);
+  function pushErr(o) { errors.push(o); if (errors.length > ERR_MAX) errors.splice(0, errors.length - ERR_MAX); }
+  W.addEventListener('error', (e) => {
+    if (!e) return;
+    const t = e.target;
+    if (t && t !== W && t.tagName) { pushErr({ at: new Date().toISOString(), type: 'resource', message: 'failed to load <' + String(t.tagName).toLowerCase() + '>', source: scrub(t.src || t.href || '') }); return; }
+    pushErr({ at: new Date().toISOString(), type: 'error', message: scrub(e.message), source: scrub(e.filename), line: e.lineno | 0, col: e.colno | 0, stack: scrub(e.error && e.error.stack).slice(0, 600) });
+  }, true);
+  W.addEventListener('unhandledrejection', (e) => {
+    const r = e && e.reason;
+    pushErr({ at: new Date().toISOString(), type: 'unhandledrejection', message: scrub(r && r.message ? r.message : r), stack: scrub(r && r.stack).slice(0, 600) });
+  });
+
+  // ===================================================================== small helpers
+  const R = () => W.RANGE_RAT || null;
+  const root = () => { const r = R(); return (r && r.layout && r.layout.root) || document.getElementById('rr-root'); };
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  /** DIALOG.text.feedback.<key> in the live locale (English fallback inline), {placeholders} filled */
+  function t(key, fb, vars) {
+    let v; try { v = W.DIALOG && W.DIALOG.text && W.DIALOG.text.feedback && W.DIALOG.text.feedback[key]; } catch (e) { v = null; }
+    let s = typeof v === 'string' && v.length ? v : fb;
+    if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+    return s;
+  }
+  const store = {
+    get(k) { try { return W.localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { W.localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  };
+  const fmtN = (n) => { try { const r = R(); return r && r.fmt ? r.fmt(n) : String(Math.round(n)); } catch (e) { return String(n); } };
+  const fmtTime = (sec) => { sec = Math.max(0, Math.round(+sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}h ${m}m` : m ? `${m}m ${s}s` : `${s}s`; };
+  const kb = (n) => (n >= 1024 * 1024 ? (n / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
+  const layoutClass = () => { const r = root(); const m = r && /\brl-(narrow|duo|wide)\b/.exec(r.className); return m ? m[1] : 'unknown'; };
+  const inIframe = () => { try { return W.top !== W.self; } catch (e) { return true; } };
+  const plainCopy = (o) => { try { return JSON.parse(JSON.stringify(o)); } catch (e) { return null; } };
+
+  // ===================================================================== throttle (per device, localStorage)
+  let memSends = []; // used when storage is blocked (private mode / iframe settings)
+  function sends() {
+    const raw = store.get(STORE_KEY); let a = null;
+    if (raw != null) { try { a = JSON.parse(raw); } catch (e) { a = null; } }
+    if (!Array.isArray(a)) a = memSends;
+    const now = Date.now(); return a.filter((x) => typeof x === 'number' && x <= now + 60000 && now - x < DAY_MS);
+  }
+  function recordSend() { const a = sends(); a.push(Date.now()); memSends = a; store.set(STORE_KEY, JSON.stringify(a)); }
+  /** null when a send is allowed, else { reason: 'gap'|'day', waitSec } */
+  function throttled() {
+    const a = sends(), now = Date.now();
+    if (a.length >= DAY_MAX) return { reason: 'day', waitSec: Math.ceil((Math.min(...a) + DAY_MS - now) / 1000) };
+    const last = a.length ? Math.max(...a) : 0;
+    if (now - last < GAP_MS) return { reason: 'gap', waitSec: Math.ceil((last + GAP_MS - now) / 1000) };
+    return null;
+  }
+
+  // ===================================================================== screenshot
+  const loadImg = (src, ms) => new Promise((res, rej) => {
+    const im = new Image(); let done = false;
+    const to = setTimeout(() => { if (!done) { done = true; rej(new Error('image load timeout')); } }, ms || 5000);
+    im.onload = () => { if (!done) { done = true; clearTimeout(to); res(im); } };
+    im.onerror = () => { if (!done) { done = true; clearTimeout(to); rej(new Error('image load failed')); } };
+    im.src = src;
+  });
+  const toBlob = (cv, type, q) => new Promise((res, rej) => { try { cv.toBlob((b) => (b ? res(b) : rej(new Error('toBlob returned null'))), type, q); } catch (e) { rej(e); } });
+  /** JPEG under SHOT_MAX: step quality down, then scale down. Throws on a tainted canvas (SecurityError). */
+  async function encode(cv) {
+    let src = cv;
+    for (let pass = 0; pass < 4; pass++) {
+      for (const q of [0.86, 0.74, 0.62, 0.5]) { const b = await toBlob(src, 'image/jpeg', q); if (b.size <= SHOT_MAX) return { blob: b, w: src.width, h: src.height, q }; }
+      const s = document.createElement('canvas'); s.width = Math.max(1, Math.round(src.width * 0.7)); s.height = Math.max(1, Math.round(src.height * 0.7));
+      const g = s.getContext('2d'); g.drawImage(src, 0, 0, s.width, s.height); src = s;
+    }
+    throw new Error('screenshot stays over the size cap');
+  }
+  /** synchronous part: snapshot the UI DOM and every canvas's pixels right now (before the form or pause card appear) */
+  function snapshot() {
+    const r = root(); if (!r) return null;
+    const rect = r.getBoundingClientRect();
+    const clone = r.cloneNode(true);
+    const oc = [...r.querySelectorAll('canvas')], cc = [...clone.querySelectorAll('canvas')];
+    oc.forEach((c, i) => {
+      const k = cc[i]; if (!k) return;
+      const img = document.createElement('img');
+      for (const a of ['class', 'style', 'data-el', 'aria-hidden']) { const v = c.getAttribute(a); if (v != null) img.setAttribute(a, v); }
+      const cs = getComputedStyle(c); img.style.width = cs.width; img.style.height = cs.height; img.style.display = cs.display === 'inline' ? 'inline-block' : cs.display;
+      try { img.setAttribute('src', c.width && c.height ? c.toDataURL('image/png') : ''); } catch (e) { img.setAttribute('src', ''); }
+      k.replaceWith(img);
+    });
+    // form values live in properties, not attributes
+    const oi = [...r.querySelectorAll('input,textarea,select')], ci = [...clone.querySelectorAll('input,textarea,select')];
+    oi.forEach((x, i) => { const y = ci[i]; if (!y) return; if (x.type === 'checkbox' || x.type === 'radio') { if (x.checked) y.setAttribute('checked', ''); else y.removeAttribute('checked'); } else if (x.tagName === 'TEXTAREA') y.textContent = x.value; else y.setAttribute('value', x.value); });
+    clone.querySelectorAll('[data-rrfb]').forEach((e) => e.remove()); // our own button / form never appear in the shot
+    clone.querySelectorAll('script').forEach((e) => e.remove());
+    let field = null; const fc = r.querySelector('[data-el=canvas]');
+    if (fc) { try { field = fc.width && fc.height ? fc.toDataURL('image/png') : null; } catch (e) { field = null; } }
+    return { clone, w: Math.max(1, Math.round(rect.width)), h: Math.max(1, Math.round(rect.height)), field };
+  }
+  /** async part: rasterise the snapshot via SVG <foreignObject>; fall back to the field canvas */
+  async function rasterise(snap) {
+    if (!snap) return { mode: 'none', note: 'no game root' };
+    const dpr = Math.min(2, W.devicePixelRatio || 1);
+    try {
+      const css = [...document.querySelectorAll('style')].map((s) => s.textContent).join('\n').replace(/:root\s*\{/g, ':root,.rrfb-shot{');
+      const host = document.createElement('div');
+      host.className = 'rrfb-shot'; // XMLSerializer adds the XHTML namespace itself
+      host.setAttribute('style', `width:${snap.w}px;height:${snap.h}px;position:relative;overflow:hidden;background:#1c1410;margin:0`);
+      const st = document.createElement('style'); st.textContent = css; host.appendChild(st); host.appendChild(snap.clone);
+      const xhtml = new XMLSerializer().serializeToString(host);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${snap.w}" height="${snap.h}"><foreignObject x="0" y="0" width="100%" height="100%">${xhtml}</foreignObject></svg>`;
+      const img = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), 6000);
+      const cv = document.createElement('canvas'); cv.width = Math.round(snap.w * dpr); cv.height = Math.round(snap.h * dpr);
+      const g = cv.getContext('2d'); g.fillStyle = '#1c1410'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(img, 0, 0, cv.width, cv.height);
+      const out = await encode(cv); // throws SecurityError if the SVG tainted the canvas
+      return Object.assign({ mode: 'full' }, out);
+    } catch (e) {
+      const why = String((e && (e.name + ': ' + e.message)) || e).slice(0, 160);
+      try {
+        if (!snap.field) throw new Error('field canvas unreadable');
+        const im = await loadImg(snap.field, 4000);
+        const cv = document.createElement('canvas'); cv.width = im.naturalWidth; cv.height = im.naturalHeight; cv.getContext('2d').drawImage(im, 0, 0);
+        return Object.assign({ mode: 'field-only', note: 'screenshot: field only (' + why + ')' }, await encode(cv));
+      } catch (e2) { return { mode: 'none', note: 'screenshot: none (' + why + '; ' + String(e2 && e2.message || e2).slice(0, 120) + ')' }; }
+    }
+  }
+
+  // ===================================================================== report data
+  function collect(perfAtOpen) {
+    const r = R(); let st = null, stats = null;
+    try { st = r && r.state; } catch (e) { st = null; }
+    try { stats = r && r.getStats ? r.getStats() : null; } catch (e) { stats = null; }
+    const settings = {}; // primitives only
+    if (st && st.settings) for (const k of Object.keys(st.settings)) { const v = st.settings[k]; if (v == null || ['string', 'number', 'boolean'].includes(typeof v)) settings[k] = v; }
+    let gfx = null; try { gfx = r && plainCopy(r.gfx); } catch (e) { gfx = null; }
+    const g = stats ? {
+      mode: stats.mode, range: stats.range, rangeIdx: stats.rangeIdx, stars: stats.stars, unlocked: stats.unlocked, playSeconds: Math.round(stats.playSeconds || 0),
+      cash: stats.cash, cashPerSec: stats.cashPerSec, cashPerSecRaw: stats.cashPerSecRaw, runCash: stats.runCash, prestigeAt: stats.prestigeAt,
+      stock: stats.stock, hopper: stats.hopper, capacity: stats.capacity, gear: stats.gear, robots: stats.robots, bays: stats.bays,
+      night: stats.night, achievements: stats.achievements, timeToCredits: stats.timeToCredits, upgradeLevels: plainCopy(stats.upgradeLevels)
+    } : { mode: r ? r.mode : 'no-engine' };
+    let locale = null; try { locale = (W.DIALOG && W.DIALOG.locale) || null; } catch (e) { locale = null; }
+    let inputMode = null; try { inputMode = r ? r.inputMode || null : null; } catch (e) { inputMode = null; }
+    return {
+      build: { id: CFG.build || metaBuild(), builtAt: CFG.builtAt || null, engine: r ? r.version || null : null },
+      device: {
+        userAgent: navigator.userAgent, screen: { w: screen.width, h: screen.height }, viewport: { w: W.innerWidth, h: W.innerHeight },
+        dpr: W.devicePixelRatio || 1, layout: layoutClass(), gameLocale: locale, browserLocale: navigator.language || null,
+        inputMode, touchPoints: navigator.maxTouchPoints | 0, inIframe: inIframe(), reducedMotionPref: !!(W.matchMedia && W.matchMedia('(prefers-reduced-motion: reduce)').matches)
+      },
+      settings, game: g, perf: perfAtOpen, gfx, errors: errors.slice()
+    };
+  }
+  function metaBuild() { const m = document.querySelector('meta[name="range-rat-build"]'); return m ? m.getAttribute('content') : null; }
+
+  // ===================================================================== Discord request
+  const clip = (s, n) => { s = String(s == null ? '' : s); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+  function buildReport(F) {
+    return Object.assign({ schema: 1, kind: 'range-rat-playtest-feedback', sentAt: new Date().toISOString(), tags: F.tags.slice(), message: F.message, name: F.name || null,
+      saveAttached: !!(F.attachSave && F.saveCode), screenshot: { mode: F.shot.mode, note: F.shot.note || null, bytes: F.shot.blob ? F.shot.blob.size : 0, w: F.shot.w || 0, h: F.shot.h || 0 } }, F.data);
+  }
+  function buildPayload(F, report) {
+    const g = report.game || {}, d = report.device;
+    const title = clip((F.tags.length ? F.tags.map((x) => '[' + TAG_EN[x] + ']').join(' ') + ' ' : '') + 'Playtest feedback' + (F.name ? ' from ' + F.name : ''), 256);
+    const fields = [
+      ['Range', g.range ? `${g.range} (#${(g.rangeIdx | 0) + 1}), ${g.stars | 0} stars` : String(g.mode || '?')],
+      ['Playtime', fmtTime(g.playSeconds)],
+      ['Acorns', g.cash != null ? `${fmtN(g.cash)} (${fmtN(g.cashPerSec || 0)}/s)` : '?'],
+      ['Layout', `${d.layout}, ${d.viewport.w}x${d.viewport.h} @${d.dpr}x`],
+      ['Build', String(report.build.id || '?')],
+      ['Screenshot', report.screenshot.mode === 'full' ? 'full UI' : report.screenshot.mode === 'field-only' ? 'field only' : 'none'],
+      ['Errors', String(report.errors.length)],
+      ['Save', report.saveAttached ? 'attached (save.txt)' : 'not attached'],
+      ['Locale', `${d.gameLocale || '?'} / ${d.browserLocale || '?'}`]
+    ].map(([name, value]) => ({ name, value: clip(value, 1024), inline: true }));
+    const footer = clip(d.userAgent, 300);
+    let desc = F.message.trim() || '(no message)';
+    // the whole embed must stay within 6000 characters
+    const fixed = title.length + footer.length + fields.reduce((n, f) => n + f.name.length + f.value.length, 0);
+    desc = clip(desc, Math.min(4096, 5900 - fixed));
+    const files = [{ id: 0, filename: 'report.json', description: 'Range Rat playtest report' }];
+    const embed = { title, description: desc, color: 0xf2c641, fields, footer: { text: footer }, timestamp: report.sentAt };
+    if (F.shot.blob) { files.unshift({ id: 0, filename: 'screenshot.jpg', description: 'Screenshot' }); embed.image = { url: 'attachment://screenshot.jpg' }; }
+    if (report.saveAttached) files.push({ id: 0, filename: 'save.txt', description: 'RR1- save code' });
+    files.forEach((f, i) => { f.id = i; });
+    return { username: 'Range Rat playtest', allowed_mentions: { parse: [] }, embeds: [embed], attachments: files };
+  }
+  function buildForm(F) {
+    const report = buildReport(F), payload = buildPayload(F, report);
+    const fd = new FormData();
+    fd.append('payload_json', JSON.stringify(payload));
+    const blobs = { 'report.json': new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }) };
+    if (F.shot.blob) blobs['screenshot.jpg'] = F.shot.blob;
+    if (report.saveAttached) blobs['save.txt'] = new Blob([F.saveCode], { type: 'text/plain' });
+    let total = 0;
+    payload.attachments.forEach((a) => { const b = blobs[a.filename]; total += b.size; fd.append('files[' + a.id + ']', b, a.filename); });
+    return { fd, report, payload, total };
+  }
+  function postUrl() { try { const u = new URL(ENDPOINT); if (/(^|\.)discord(app)?\.com$/.test(u.hostname)) u.searchParams.set('wait', 'true'); return u.toString(); } catch (e) { return ENDPOINT; } }
+  /** resolves 'ok' | 'http' (definitely not delivered) | 'unknown' (network/CORS: it may have arrived) */
+  async function send(F) {
+    const { fd, total } = buildForm(F);
+    if (total > TOTAL_MAX) return { result: 'http', status: 413 };
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const to = setTimeout(() => { if (ctl) ctl.abort(); }, 30000);
+    try {
+      const res = await fetch(postUrl(), { method: 'POST', body: fd, mode: 'cors', credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined });
+      return res.ok ? { result: 'ok', status: res.status } : { result: 'http', status: res.status };
+    } catch (e) {
+      return { result: 'unknown', error: String(e && e.message || e).slice(0, 120) };
+    } finally { clearTimeout(to); }
+  }
+  function reportText(F) {
+    const rep = buildReport(F);
+    let s = `Range Rat playtest feedback\nTags: ${F.tags.map((x) => TAG_EN[x]).join(', ') || '-'}\nName: ${F.name || '-'}\n\n${F.message || '(no message)'}\n\n--- report.json ---\n${JSON.stringify(rep, null, 2)}\n`;
+    if (rep.saveAttached) s += `\n--- save.txt ---\n${F.saveCode}\n`;
+    return s;
+  }
+  async function copyText(s) {
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(s); return true; } } catch (e) { /* iframe without clipboard-write: try the old way */ }
+    try {
+      const ta = document.createElement('textarea'); ta.value = s; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+      document.body.appendChild(ta); ta.select(); const ok = document.execCommand && document.execCommand('copy'); ta.remove(); return !!ok;
+    } catch (e) { return false; }
+  }
+
+  // ===================================================================== styles
+  const CSS = `
+.rrfb-btn{position:absolute;z-index:7;display:none;align-items:center;gap:4px;min-height:30px;padding:2px 10px;border-radius:999px;border:2px solid var(--rr-line,#5a4232);background:rgba(26,17,12,.82);color:var(--rr-text,#f6ecd6);font-family:var(--rr-font-label,system-ui,sans-serif);font-weight:700;font-size:calc(13px*var(--rr-fs,1));line-height:1.1;white-space:nowrap;cursor:pointer;opacity:.8;touch-action:manipulation}
+.rrfb-btn.on{display:inline-flex}.rrfb-btn:hover,.rrfb-btn:focus-visible{opacity:1;border-color:var(--rr-gold,#f2c641)}
+.rrfb-ov{position:absolute;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;background:rgba(12,8,6,.72);touch-action:pan-y;user-select:text;-webkit-user-select:text}
+.rrfb-card{width:min(100%,520px);max-height:100%;overflow:auto;box-sizing:border-box;background:var(--rr-panel,#2a1d16);border:3px solid var(--rr-line,#5a4232);border-radius:14px;padding:14px 16px;color:var(--rr-text,#f6ecd6);font-family:var(--rr-font-body,system-ui,sans-serif);font-size:calc(15px*var(--rr-fs,1));line-height:1.35;text-align:left;overscroll-behavior:contain}
+.rrfb-card h2{font-family:var(--rr-font-head,system-ui,sans-serif);font-weight:600;font-size:calc(24px*var(--rr-fs,1));color:var(--rr-gold,#f2c641);margin:0 0 4px}
+.rrfb-card h3{font-family:var(--rr-font-label,system-ui,sans-serif);font-size:calc(15px*var(--rr-fs,1));margin:12px 0 6px;color:var(--rr-gold,#f2c641)}
+.rrfb-card p{margin:4px 0}.rrfb-card .sub{color:var(--rr-text2,#dccaa8)}
+.rrfb-tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.rrfb-tag{min-height:40px;padding:4px 12px;border-radius:999px;border:2px solid var(--rr-line,#5a4232);background:var(--rr-panel2,#3a2a20);color:var(--rr-text,#f6ecd6);font-family:var(--rr-font-label,system-ui,sans-serif);font-weight:700;font-size:calc(14px*var(--rr-fs,1));cursor:pointer}
+.rrfb-tag[aria-pressed=true]{background:#4d6a24;border-color:var(--rr-green,#a9bd5a)}
+.rrfb-card label{display:block;margin:8px 0 2px;font-family:var(--rr-font-label,system-ui,sans-serif);font-weight:700}
+.rrfb-card textarea,.rrfb-card input[type=text]{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border-radius:8px;border:2px solid var(--rr-line,#5a4232);background:#1a110c;color:var(--rr-text,#f6ecd6);font-family:var(--rr-font-body,system-ui,sans-serif);font-size:calc(15px*var(--rr-fs,1));font-weight:400;user-select:text;-webkit-user-select:text}
+.rrfb-card textarea{min-height:96px;resize:vertical}
+.rrfb-card .chk{display:flex;gap:8px;align-items:flex-start;font-weight:700}.rrfb-card .chk input{width:22px;height:22px;margin:0;flex:0 0 auto}
+.rrfb-card .chk small{display:block;font-weight:400;color:var(--rr-text2,#dccaa8)}
+.rrfb-prev{margin-top:10px;padding:10px;border-radius:10px;background:#1f150f;border:1px solid var(--rr-line,#5a4232)}
+.rrfb-prev .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.rrfb-thumb{flex:0 0 auto;width:132px;max-height:180px;object-fit:contain;border-radius:6px;border:1px solid var(--rr-line,#5a4232);background:#000}
+.rrfb-sum{flex:1 1 180px;margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:calc(14px*var(--rr-fs,1))}
+.rrfb-sum dt{color:var(--rr-text2,#dccaa8)}.rrfb-sum dd{margin:0}
+.rrfb-prev details{margin-top:8px}.rrfb-prev summary{cursor:pointer;font-weight:700;min-height:32px}
+.rrfb-pre{max-height:220px;overflow:auto;margin:6px 0 0;padding:8px;border-radius:6px;background:#120c08;font:calc(12.5px*var(--rr-fs,1))/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre}
+.rrfb-status{min-height:1.4em;margin:10px 0 0;font-weight:700}.rrfb-status.ok{color:var(--rr-green,#a9bd5a)}.rrfb-status.bad{color:var(--rr-red,#ef7a64)}
+.rrfb-card textarea.rrfb-manual{display:none;min-height:120px;margin-top:6px;font:12px/1.3 ui-monospace,Menlo,Consolas,monospace;background:#120c08;border-width:1px}
+.rrfb-card textarea.rrfb-manual.on{display:block}
+.rrfb-acts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-top:10px}
+.rrfb-acts button{min-height:44px;padding:4px 14px;border-radius:10px;border:2px solid var(--rr-line,#5a4232);background:var(--rr-panel2,#3a2a20);color:var(--rr-text,#f6ecd6);font-family:var(--rr-font-label,system-ui,sans-serif);font-weight:700;font-size:calc(14px*var(--rr-fs,1));cursor:pointer}
+.rrfb-acts button.pri{background:#4d6a24;border-color:var(--rr-green,#a9bd5a)}.rrfb-acts button[disabled]{opacity:.55;cursor:default}
+.rrfb-acts [hidden]{display:none}`;
+
+  // ===================================================================== entry point: the button
+  let btn = null, form = null, busy = false;
+  function ensureButton() {
+    const r = root(); if (!r) return;
+    const fw = r.querySelector('[data-el=fieldwrap]'); if (!fw) return;
+    if (!document.getElementById('rrfb-style')) { const s = document.createElement('style'); s.id = 'rrfb-style'; s.textContent = CSS; document.head.appendChild(s); }
+    if (!btn || !btn.isConnected) {
+      btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rrfb-btn'; btn.setAttribute('data-rrfb', 'btn');
+      btn.addEventListener('pointerdown', (e) => e.stopPropagation()); // never steer the rat
+      btn.addEventListener('click', (e) => { e.stopPropagation(); open(); });
+      fw.appendChild(btn);
+    }
+    const lab = t('button', 'Feedback'), aria = t('buttonAria', 'Send feedback to Ben (F8)');
+    if (btn.textContent !== '✎ ' + lab) btn.textContent = '✎ ' + lab;
+    btn.setAttribute('aria-label', aria); btn.title = aria;
+    place();
+  }
+  const hit = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  /** the part of the field canvas actually on screen (wide/duo crop the canvas top under a clipping box) */
+  function visibleField(cv, r) {
+    const C = cv.getBoundingClientRect(); const v = { left: C.left, right: C.right, top: C.top, bottom: C.bottom };
+    for (let e = cv.parentElement; e && e !== r.parentElement; e = e.parentElement) {
+      const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue;
+      const b = e.getBoundingClientRect(); v.left = Math.max(v.left, b.left); v.right = Math.min(v.right, b.right); v.top = Math.max(v.top, b.top); v.bottom = Math.min(v.bottom, b.bottom);
+    }
+    return v;
+  }
+  /** a field corner, never over the HUD, the bottom bar or any control. Top-left first (sky above the ball house). */
+  function place() {
+    const r = root(); if (!btn || !r) return;
+    const r2 = R(), mode = r2 ? r2.mode : null;
+    const on = mode === 'game' && !form;
+    btn.classList.toggle('on', on); if (!on) return;
+    const fw = btn.parentElement, cv = r.querySelector('[data-el=canvas]'); if (!fw || !cv) return;
+    const F = fw.getBoundingClientRect(), vis = visibleField(cv, r), bw = btn.offsetWidth, bh = btn.offsetHeight;
+    // persistent things only: avoiding transient pop-ups (banners, toasts) would make the button jump about
+    const avoid = [...r.querySelectorAll('.rr-hud, .rr-bottom, button, [role=button]')].filter((e) => e !== btn && !e.closest('[data-rrfb], .rr-banner, .rr-toasts, .rr-toast, .rr-bubble') && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden').map((e) => e.getBoundingClientRect()).filter((b) => b.width && b.height);
+    const m = 6, TL = [vis.left + m, vis.top + m], TR = [vis.right - bw - m, vis.top + m], BL = [vis.left + m, vis.bottom - bh - m], BR = [vis.right - bw - m, vis.bottom - bh - m];
+    const cands = [TL, TR, BL, BR];
+    let pick = cands[0];
+    for (const [x, y] of cands) { const b = { left: x, top: y, right: x + bw, bottom: y + bh }; if (!avoid.some((a) => hit(a, b))) { pick = [x, y]; break; } }
+    const L = Math.round(pick[0] - F.left) + 'px', T = Math.round(pick[1] - F.top) + 'px';
+    if (btn.style.left !== L) btn.style.left = L; if (btn.style.top !== T) btn.style.top = T;
+  }
+
+  // ===================================================================== the form
+  let F = null; // current draft
+  async function open() {
+    if (form || busy) return;
+    const r = R(), rt = root(); if (!rt) return;
+    busy = true;
+    // 1. screenshot first: the DOM + canvas snapshot is taken synchronously, before anything else changes
+    let snap = null; try { snap = snapshot(); } catch (e) { snap = null; }
+    // perf() drains the engine's timing ring buffers, so it is read once, here
+    let perf = null; try { perf = r && typeof r.perf === 'function' ? plainCopy(r.perf()) : null; } catch (e) { perf = null; }
+    // 2. pause, if the game is running and not already paused by the player
+    let pausedByUs = false;
+    try { if (r && r.mode === 'game' && typeof r.pause === 'function' && !rt.querySelector('.rr-pausecard')) { r.pause(true); pausedByUs = true; } } catch (e) { /* ignore */ }
+    const shot = await rasterise(snap);
+    F = { tags: [], message: '', name: '', attachSave: false, saveCode: null, shot, data: collect(perf), pausedByUs, lastAttempt: 0, state: 'edit', shotURL: shot.blob ? URL.createObjectURL(shot.blob) : null, opener: document.activeElement };
+    busy = false;
+    render();
+  }
+  function close() {
+    if (!form) return;
+    form.remove(); form = null;
+    if (F && F.shotURL) try { URL.revokeObjectURL(F.shotURL); } catch (e) { /* ignore */ }
+    const r = R(), wasUs = F && F.pausedByUs, op = F && F.opener; F = null;
+    try { if (wasUs && r && typeof r.pause === 'function') r.pause(false); } catch (e) { /* ignore */ }
+    place();
+    try { if (op && op.isConnected && op.focus) op.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+  }
+  function summaryHTML() {
+    const d = F.data, g = d.game || {}, rep = buildReport(F);
+    const shotLine = F.shot.mode === 'full' ? `${t('shotFull', 'Full screen')} · ${kb(F.shot.blob.size)}` : F.shot.mode === 'field-only' ? `${t('shotField', 'Field only')} · ${kb(F.shot.blob.size)}` : t('shotNone', 'None (this browser blocked it)');
+    const rows = [
+      [t('sumShot', 'Screenshot'), shotLine],
+      [t('sumGame', 'Game'), g.range ? `${g.range} · ${fmtTime(g.playSeconds)} · ${fmtN(g.cash || 0)} ${t('acorns', 'acorns')}` : String(g.mode || '-')],
+      [t('sumDevice', 'Device'), `${d.device.layout} · ${d.device.viewport.w}×${d.device.viewport.h} @${d.device.dpr}x · ${d.device.gameLocale || '-'}`],
+      [t('sumErrors', 'Errors logged'), String(d.errors.length)],
+      [t('sumSave', 'Save attached'), rep.saveAttached ? `${t('yes', 'Yes')} · ${kb(F.saveCode.length)}` : t('no', 'No')],
+      [t('sumBuild', 'Build'), String(d.build.id || '-')]
+    ];
+    return `<dl class="rrfb-sum">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`;
+  }
+  function render() {
+    const rt = root(); if (!rt || !F) return;
+    if (!form) {
+      form = document.createElement('div'); form.className = 'rrfb-ov'; form.setAttribute('data-rrfb', 'form');
+      form.setAttribute('role', 'dialog'); form.setAttribute('aria-modal', 'true'); form.setAttribute('aria-labelledby', 'rrfb-h');
+      for (const ev of ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'wheel', 'contextmenu']) form.addEventListener(ev, (e) => e.stopPropagation());
+      form.innerHTML = `<div class="rrfb-card">
+        <h2 id="rrfb-h">${esc(t('title', 'Send feedback'))}</h2>
+        <p class="sub">${esc(t('intro', 'Goes straight to Ben. Nothing is sent until you press Send.'))}</p>
+        <div class="rrfb-tags" role="group" aria-label="${esc(t('tagsLabel', 'What kind of note is it?'))}">${TAGS.map((k) => `<button type="button" class="rrfb-tag" data-tag="${k}" aria-pressed="false">${esc(t('tag_' + k, TAG_EN[k]))}</button>`).join('')}</div>
+        <label for="rrfb-msg">${esc(t('message', 'What happened? What did you expect?'))}</label>
+        <textarea id="rrfb-msg" maxlength="${MSG_MAX}" data-f="msg"></textarea>
+        <label for="rrfb-name">${esc(t('name', 'Your name (optional)'))}</label>
+        <input id="rrfb-name" type="text" maxlength="${NAME_MAX}" autocomplete="off" data-f="name">
+        <label class="chk"><input type="checkbox" data-f="save"><span>${esc(t('attachSave', 'Attach my save so Ben can reproduce it'))}<small>${esc(t('attachSaveHint', "Your progress and your rat's name."))}</small></span></label>
+        <section class="rrfb-prev" aria-labelledby="rrfb-ph"><h3 id="rrfb-ph">${esc(t('previewTitle', 'What will be sent'))}</h3>
+          <div class="row">${F.shotURL ? `<img class="rrfb-thumb" data-f="thumb" alt="${esc(t('shotAlt', 'Screenshot that will be sent'))}" src="${F.shotURL}">` : ''}<div data-f="sum"></div></div>
+          <details><summary>${esc(t('showAll', 'Show everything that will be sent'))}</summary><pre class="rrfb-pre" data-f="json"></pre></details>
+        </section>
+        <p class="rrfb-status" role="status" aria-live="polite" data-f="status"></p>
+        <textarea class="rrfb-manual" readonly data-f="manual" aria-label="${esc(t('reportText', 'Report text'))}"></textarea>
+        <div class="rrfb-acts">
+          <button type="button" data-a="cancel">${esc(t('cancel', 'Cancel'))}</button>
+          <button type="button" data-a="copy">${esc(t('copy', 'Copy report'))}</button>
+          <button type="button" class="pri" data-a="send">${esc(t('send', 'Send'))}</button>
+          <button type="button" class="pri" data-a="done" hidden>${esc(t('close', 'Close'))}</button>
+        </div></div>`;
+      rt.appendChild(form);
+      const q = (s) => form.querySelector(s);
+      form.querySelectorAll('[data-tag]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.tag, i = F.tags.indexOf(k); if (i >= 0) F.tags.splice(i, 1); else F.tags.push(k); F.tags.sort((a, c) => TAGS.indexOf(a) - TAGS.indexOf(c)); b.setAttribute('aria-pressed', String(i < 0)); refresh(); }));
+      q('[data-f=msg]').addEventListener('input', (e) => { F.message = e.target.value.slice(0, MSG_MAX); refresh(); });
+      q('[data-f=name]').addEventListener('input', (e) => { F.name = e.target.value.replace(/\s+/g, ' ').trim().slice(0, NAME_MAX); refresh(); });
+      q('[data-f=save]').addEventListener('change', async (e) => {
+        F.attachSave = !!e.target.checked;
+        if (F.attachSave && !F.saveCode) {
+          const r = R(); status(t('making', 'Making your save code...'), '');
+          try { F.saveCode = r && typeof r.exportCode === 'function' ? String(await r.exportCode()) : null; } catch (er) { F.saveCode = null; }
+          if (!F.saveCode || !/^RR\d+-/.test(F.saveCode)) { F.saveCode = null; F.attachSave = false; e.target.checked = false; status(t('saveFailed', "Couldn't make a save code here."), 'bad'); refresh(); return; }
+          status('', '');
+        }
+        refresh();
+      });
+      q('[data-a=cancel]').addEventListener('click', close);
+      q('[data-a=done]').addEventListener('click', close);
+      q('[data-a=copy]').addEventListener('click', doCopy);
+      q('[data-a=send]').addEventListener('click', doSend);
+      if (!ENDPOINT) { const s = q('[data-a=send]'); s.hidden = true; q('[data-a=copy]').classList.add('pri'); status(t('noEndpoint', 'Sending is off in this build. Copy the report instead.'), ''); }
+      setTimeout(() => { try { q('[data-f=msg]').focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 20);
+    }
+    refresh(); place();
+  }
+  function refresh() {
+    if (!form || !F) return;
+    form.querySelector('[data-f=sum]').innerHTML = summaryHTML();
+    const rep = buildReport(F), pl = buildPayload(F, rep);
+    form.querySelector('[data-f=json]').textContent = 'payload_json:\n' + JSON.stringify(pl, null, 2) + '\n\nreport.json:\n' + JSON.stringify(rep, null, 2) + (rep.saveAttached ? '\n\nsave.txt:\n' + F.saveCode : '');
+  }
+  function status(msg, cls) { if (!form) return; const s = form.querySelector('[data-f=status]'); s.textContent = msg; s.className = 'rrfb-status' + (cls ? ' ' + cls : ''); }
+  async function doCopy() {
+    const txt = reportText(F), ok = await copyText(txt);
+    const man = form && form.querySelector('[data-f=manual]');
+    if (ok) { if (man) man.classList.remove('on'); status(t('copied', 'Report copied. Paste it to Ben however suits you.'), 'ok'); return; }
+    if (man) { man.value = txt; man.classList.add('on'); try { man.focus(); man.select(); } catch (e) { /* ignore */ } }
+    status(t('copyManual', "Copy didn't work here. Select the text below and copy it."), 'bad');
+  }
+  async function doSend() {
+    if (!F || F.state === 'sending' || !ENDPOINT) return;
+    if (!F.message.trim() && !F.tags.length) { status(t('empty', 'Add a few words or pick a tag first.'), 'bad'); return; }
+    const th = throttled();
+    if (th) { status(th.reason === 'day' ? t('dayLimit', "That's today's limit of 20. Copy the report instead.") : t('wait', 'One moment: you can send again in {n}s.', { n: th.waitSec }), 'bad'); return; }
+    if (Date.now() - F.lastAttempt < RETRY_GAP_MS) return;
+    F.lastAttempt = Date.now(); F.state = 'sending';
+    const sb = form.querySelector('[data-a=send]'); sb.disabled = true; sb.textContent = t('sending', 'Sending...');
+    form.querySelectorAll('[data-a=cancel],[data-a=copy]').forEach((b) => { b.disabled = true; });
+    status(t('sending', 'Sending...'), '');
+    const res = await send(F);
+    if (!form) return;
+    form.querySelectorAll('[data-a=cancel],[data-a=copy]').forEach((b) => { b.disabled = false; });
+    if (res.result === 'ok') {
+      recordSend(); F.state = 'sent';
+      sb.hidden = true; form.querySelector('[data-a=cancel]').hidden = true; const d = form.querySelector('[data-a=done]'); d.hidden = false;
+      status(t('sent', 'Sent! Thanks, that really helps.'), 'ok'); try { d.focus(); } catch (e) { /* ignore */ }
+      return;
+    }
+    F.state = 'edit'; sb.disabled = false; sb.textContent = t('retry', 'Try again');
+    // 'unknown' = the request may well have arrived (network drop, or a browser that hides the reply): say so honestly
+    status(res.result === 'unknown' ? t('unsure', "Couldn't confirm it arrived. Copy the report to be safe.") : t('failed', "Couldn't send it. Copy the report and pass it to Ben."), 'bad');
+    try { form.querySelector('[data-a=copy]').focus(); } catch (e) { /* ignore */ }
+  }
+
+  // ===================================================================== keys: F8 opens; while open, the form owns the keyboard
+  const FOCUSABLE = 'button:not([disabled]):not([hidden]), input:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+  W.addEventListener('keydown', (e) => {
+    if (!form) {
+      if (e.key === 'F8' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); e.stopPropagation(); open(); }
+      return;
+    }
+    // the game never sees keys while the form is open; native typing / button activation still happen
+    e.stopPropagation();
+    if (e.key === 'Escape' || e.key === 'F8') { e.preventDefault(); close(); return; }
+    if (e.key === 'Tab') {
+      const list = [...form.querySelectorAll(FOCUSABLE)].filter((x) => x.getClientRects().length && !(x.classList.contains('rrfb-manual') && !x.classList.contains('on')));
+      if (!list.length) return;
+      const i = list.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); list[list.length - 1].focus(); }
+      else if (!e.shiftKey && (i < 0 || i === list.length - 1)) { e.preventDefault(); list[0].focus(); }
+    }
+  }, true);
+  W.addEventListener('keyup', (e) => { if (form) e.stopPropagation(); }, true);
+
+  // ===================================================================== boot: wait for the engine's root (game.js boots after us)
+  let tries = 0;
+  function boot() {
+    const r = R();
+    if (!r || !root() || !root().querySelector('[data-el=fieldwrap]')) { if (++tries < 600) setTimeout(boot, 50); return; }
+    ensureButton();
+    try { for (const ev of ['screen', 'locale', 'pause']) r.on(ev, () => setTimeout(ensureButton, 0)); } catch (e) { /* ignore */ }
+    try { const ro = new ResizeObserver(() => place()); ro.observe(root()); const fw = root().querySelector('[data-el=fieldwrap]'); if (fw) ro.observe(fw); } catch (e) { /* ignore */ }
+    W.addEventListener('resize', () => place());
+    setInterval(ensureButton, 1000); // layout switches can move the canvas without resizing anything we observe; cheap
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
+
+  // a small read-only handle for tests and for Ben's console
+  W.RR_FEEDBACK = { open, close, get isOpen() { return !!form; }, get endpointSet() { return !!ENDPOINT; }, errors: () => errors.slice(), throttled };
+})(window);
+
+</script>
 <script>/* ---- design/balance.js ---- */
 /* Range Rat: design/balance.js
  * Sets window.BALANCE per BRIEF.md §3, plus the v2 additions: §2 robot idle track, §6 cosmetics and
@@ -6525,6 +7036,10 @@ window.DIALOG = {
 
     { speaker: 'gus', trigger: 'shopIntroLate', text: "That's the shop. Spend your acorns in there." },
 
+    // the first open of a big panel holds the range (round 4 tester T4): said once, inside that panel
+    { speaker: 'gus', trigger: 'menuPause', text: "Take your time. I've stopped the clock, just this once." },
+    { speaker: 'gus', trigger: 'menuPause', text: "Usually it runs on. Nothing's lost: balls wait on the grass." },
+
     { speaker: 'gus', trigger: 'firstHitByBall', text: "Ooh, they got you. Some of 'em aim for you on purpose." },
     { speaker: 'gus', trigger: 'firstHitByBall', text: "A cage stops the next one. Worth every acorn, trust me." },
 
@@ -9117,6 +9632,8 @@ window.DIALOG = {
       { speaker: 'gus', trigger: 'canAffordUpgrade', text: "Ein paar Eicheln hast du. Ab in den Laden, gönn dir was." },
       { speaker: 'gus', trigger: 'shopIntro', text: "Reicht für einen größeren Korb. Schau mal in den Laden.", textPad: "Reicht für einen größeren Korb. Y: Laden." }, // the shop introduction (playtest round 3 notes 16 + 17)
       { speaker: 'gus', trigger: 'shopIntroLate', text: "Das ist der Laden. Da gibst du deine Eicheln aus." },
+      { speaker: 'gus', trigger: 'menuPause', text: "Lass dir Zeit. Ich halt die Uhr an, nur dieses eine Mal." }, // the first open of a big panel (round 4 tester T4)
+      { speaker: 'gus', trigger: 'menuPause', text: "Sonst läuft's weiter. Nichts geht verloren: Bälle warten." },
       { speaker: 'gus', trigger: 'firstHitByBall', text: "Autsch, erwischt. Manche zielen absichtlich auf dich." },
       { speaker: 'gus', trigger: 'firstHitByBall', text: "Ein Käfig fängt den nächsten ab. Jede Eichel wert." },
       { speaker: 'gus', trigger: 'firstNight', text: "Jetzt ist's dunkel. Nachts ist zu, außer mit Laternen." },
@@ -11489,6 +12006,8 @@ window.DIALOG = {
       { speaker: 'gus', trigger: 'canAffordUpgrade', text: "Ya tienes unas bellotas. Abre la tienda y date un gusto." },
       { speaker: 'gus', trigger: 'shopIntro', text: "Te llega para un saco más grande. Echa un ojo a la tienda.", textPad: "Te llega para un saco más grande. Y abre la tienda." }, // the shop introduction (playtest round 3 notes 16 + 17)
       { speaker: 'gus', trigger: 'shopIntroLate', text: "Esa es la tienda. Ahí gastas tus bellotas." },
+      { speaker: 'gus', trigger: 'menuPause', text: "Tómate tu tiempo. Paro el reloj, solo esta vez." }, // the first open of a big panel (round 4 tester T4)
+      { speaker: 'gus', trigger: 'menuPause', text: "Normalmente sigue. No se pierde nada: las bolas esperan." },
       { speaker: 'gus', trigger: 'firstHitByBall', text: "Uy, te dieron. Algunos te apuntan a propósito." },
       { speaker: 'gus', trigger: 'firstHitByBall', text: "Una jaula para la próxima. Vale cada bellota, hazme caso." },
       { speaker: 'gus', trigger: 'firstNight', text: "Ya es de noche. Cerramos, a menos que colguemos faroles." },
@@ -13813,6 +14332,8 @@ window.DIALOG = {
       { speaker: 'gus', trigger: 'canAffordUpgrade', text: "Juntou umas bolotas. Abre a loja e se dá um agrado." },
       { speaker: 'gus', trigger: 'shopIntro', text: "Já dá pra um cesto maior. Dá uma olhada na loja.", textPad: "Já dá pra um cesto maior. Y: loja." }, // the shop introduction (playtest round 3 notes 16 + 17)
       { speaker: 'gus', trigger: 'shopIntroLate', text: "Essa é a loja. É lá que você gasta as bolotas." },
+      { speaker: 'gus', trigger: 'menuPause', text: "Com calma. Parei o relógio, só desta vez." }, // the first open of a big panel (round 4 tester T4)
+      { speaker: 'gus', trigger: 'menuPause', text: "Em geral segue. Nada se perde: as bolas esperam na grama." },
       { speaker: 'gus', trigger: 'firstHitByBall', text: "Ui, te pegaram. Tem uns que miram em você de propósito." },
       { speaker: 'gus', trigger: 'firstHitByBall', text: "Uma gaiola segura a próxima. Vale cada bolota, confia." },
       { speaker: 'gus', trigger: 'firstNight', text: "Escureceu. De noite a gente fecha, a não ser com lanterna." },
@@ -16165,6 +16686,10 @@ window.DIALOG = {
       { speaker: 'gus', trigger: 'shopIntro', text: "够买个大号球篓了。去商店看看吧。", textPad: "够买个大号球篓了。Y 键开商店。" }, // the shop introduction (playtest round 3 notes 16 + 17)
 
       { speaker: 'gus', trigger: 'shopIntroLate', text: "那就是商店。橡果就在那儿花。" },
+
+      { speaker: 'gus', trigger: 'menuPause', text: "慢慢来。这次我先把时间停一下。" }, // the first open of a big panel (round 4 tester T4)
+
+      { speaker: 'gus', trigger: 'menuPause', text: "平时它会照常运转。不会有损失：球就在草地上等着。" },
 
       { speaker: 'gus', trigger: 'firstHitByBall', text: "哎哟，挨了一下吧。有些家伙是故意瞄你的。" },
       { speaker: 'gus', trigger: 'firstHitByBall', text: "装个防护笼能挡下一球。每颗橡果都花得值，信我。" },
@@ -19372,7 +19897,7 @@ window.DIALOG = {
       if (d.tier === 0 && d.ticks !== false && !st.hapticTicks && !force) { res.why = 'ticks off'; return res; }
       if (d.rmSkip && reducedMotion() && !force) { res.why = 'reduced'; return res; }
       if (W.document && document.hidden) { res.why = 'hidden'; return res; }
-      if (!force && (paused.user || paused.away)) { res.why = 'paused'; return res; }
+      if (!force && (paused.user || paused.menu || paused.away)) { res.why = 'paused'; return res; }
       const now = nowMs();
       if (!force && now - (HS.last[name] || -1e9) < d.gap) { res.why = 'gap'; return res; }
       if (!force && now < HS.busyUntil && d.tier < HS.busyTier) { res.why = 'busy'; return res; }
@@ -19928,6 +20453,9 @@ window.DIALOG = {
       // the shop introduction (playtest round 3 notes 16 + 17; BALANCE.retention.shopIntro): a fresh game opens the Shop after
       // the first deposit and its rows a few at a time. Older saves have none (sanitize keeps it null): they show everything
       shopIntro: B.retention && B.retention.shopIntro ? B.retention.shopIntro.fresh() : null,
+      // first opens and Gus's "new in the shop" lines (round 4 tester notes T2-T4): panels opened once (each held the range
+      // the first time), lines said, shop kinds already met (null = not looked yet). See menuFirstOpen / guideTick
+      guide: { open: {}, said: {}, seen: null },
       player: null
     };
     if (st.shopIntro) st.tutorialFired.canAffordUpgrade = true; // Gus's shop line (shopIntro) replaces "You've a few acorns"
@@ -20261,6 +20789,13 @@ window.DIALOG = {
     if (isObj(o.ledger)) { o.ledger = Object.assign({}, o.ledger); if (!Array.isArray(o.ledger.log)) o.ledger.log = []; o.ledger.log = o.ledger.log.filter((x) => isObj(x) && typeof x.id === 'string').slice(-20); }
     o.goals = Array.isArray(s.goals) ? s.goals.map((g) => (g && g.stat === 'maxComboThisGoal' ? null : g)) : []; // combo goals are gone: the slot refills
     // the shop introduction: only a save that started with one has it (an older save shows everything, as before)
+    // first opens (round 4 tester T4): a save from before them that has used its shop never holds the range (or hears Gus's line)
+    if (isObj(s.guide)) { const G = s.guide; o.guide = { open: isObj(G.open) ? Object.assign({}, G.open) : {}, said: isObj(G.said) ? Object.assign({}, G.said) : {}, seen: isObj(G.seen) ? Object.assign({}, G.seen) : null }; if (G.off) o.guide.off = 1; }
+    else {
+      const lv = isObj(s.levels) ? s.levels : {}, si = isObj(s.shopIntro) ? s.shopIntro : null;
+      const used = (s.gear | 0) > 0 || Object.keys(lv).some((k) => (lv[k] | 0) > 0) || (s.rangeIdx | 0) > 0 || (s.frontier | 0) > 0 || (s.stars | 0) > 0 || (s.tour | 0) > 0 || (si && (si.n | 0) > 0 && !si.cta) || (isObj(s.stats) && (+s.stats.playSeconds || 0) > 900);
+      o.guide = { open: used ? { all: 1 } : {}, said: used ? { menu: 1 } : {}, seen: null };
+    }
     if (isObj(s.shopIntro) && SI_()) { const S = Object.assign(SI_().fresh(), s.shopIntro); S.n = clamp(S.n | 0, 0, SI_().stages.length); S.k = Math.max(0, S.k | 0); if (!isObj(S.x)) S.x = {}; if (!Array.isArray(S.fresh)) S.fresh = []; o.shopIntro = S; } else o.shopIntro = null;
     for (const k of ['cash', 'runCash', 'allTimeCash', 'stock', 'stars', 'dayT', 'tour', 'goalsDone', 'cage', 'cageT', 'paid', 'paidTotal']) if (!isNum(o[k])) o[k] = d[k];
     // stats/hopper from a hand-edited or damaged save: "10" would string-concatenate on the next `+=`
@@ -23258,7 +23793,7 @@ window.DIALOG = {
       if (rq.got && d2(p.x, p.y, g.x, g.y + 8) < 16 * 16) requestDone(rq, g);
       return;
     }
-    if (!reqHosts().length || paused.user || focusQuiet()) return;
+    if (!reqHosts().length || paused.user || paused.menu || focusQuiet()) return;
     const p = world.player; if (!p || p.lastMoveT == null || gameT - p.lastMoveT > 30) return; // only while someone's playing
     const nb = eff('noticeboard');
     world.reqT = (world.reqT == null ? (Q.firstAfterSec || 20) : world.reqT) - dt * (1 + nb);
@@ -23656,7 +24191,7 @@ window.DIALOG = {
     return c;
   }
   function ledgerTick(dt) {
-    if (!ledgerOn() || paused.user || trialLocked()) return;
+    if (!ledgerOn() || paused.user || paused.menu || trialLocked()) return;
     if ((world.ledgerT = (world.ledgerT == null ? 2 : world.ledgerT) - dt) > 0) return;
     world.ledgerT = (LEDGER_() || {}).everySec || 3;
     ledgerBuyOne(false);
@@ -23740,7 +24275,7 @@ window.DIALOG = {
   /** updatePlayer, when nothing steers the rat: {dx, dy} while the auto rat drives (null: he doesn't) */
   function autoSteer(p, dt) {
     const A = AUTORAT_();
-    const can = autoRatOn() && mode === 'game' && !paused.user && !p.trapWork && !(W.document && W.document.hidden) && (p.idleT || 0) >= ((A && A.resumeSec) || 4);
+    const can = autoRatOn() && mode === 'game' && !paused.user && !paused.menu && !p.trapWork && !(W.document && W.document.hidden) && (p.idleT || 0) >= ((A && A.resumeSec) || 4);
     if (!can) { if (p.auto) autoRelease(p); return null; }
     if (!p.auto) { p.auto = true; p.target = null; p.autoGoal = null; p.autoRe = 0; emit('autoRat', { driving: true }); }
     const cap = playerCap(), n = hopperN(); p.autoRe = (p.autoRe || 0) - dt;
@@ -27122,6 +27657,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-tab{min-height:44px;padding:0 10px;font-weight:700;border:2px solid transparent;border-radius:8px;background:none;font-family:var(--rr-font-label)!important;font-size:calc(15px*var(--rr-fs))!important;color:var(--rr-text2)!important}
 .rr-tab[aria-selected=true]{background:var(--rr-panel2);border-color:var(--rr-line);color:var(--rr-text)!important}
 .rr-sheetbody{overflow:auto;padding:8px;flex:1;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+/* the first open of a big panel (round 4 tester T4): Gus's one line, between the sheet's head and its list */
+.rr-sheetgus{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:2px solid var(--rr-line);background:rgba(0,0,0,.2);flex:0 0 auto}
+.rr-sheetgus canvas{width:40px;height:40px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto;background:#3a2a20;border-radius:8px}
+.rr-sheetgus p{margin:0;min-width:0;font-size:calc(14px*var(--rr-fs));line-height:1.3;color:var(--rr-text)}
+.rr-sheetgus .rr-who{display:inline;margin-right:4px;font-family:var(--rr-font-label);color:var(--rr-gold)}
 /* scrollbars (owner: "don't look great" + the shop shifted when one appeared): slim and rounded, a warm gold thumb on a
    dark track. Every vertical panel scroller reserves its gutter, so rows never move when a list grows long enough to
    scroll. Chromium / Electron / Safari draw the ::-webkit-scrollbar parts (rounded, hover); Firefox gets the standard
@@ -28515,6 +29055,51 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (peekT <= 0) { const p = peek; peek = null; peekOut = p; p.classList.remove('on'); setTimeout(() => { peekDrop(p); if (peekOut === p) peekOut = null; }, 330); }
   }
 
+  // ---- the first open of a big panel (playtest round 4, tester notes T2 + T4: he "felt rushed because the game kept going
+  // while he was clicking through the menus"). The first time each of Shop, Style, Trophies, Journal and Settings opens over
+  // the field (a phone sheet; Settings on every layout), the range holds still until it closes: paused.menu stops what the
+  // Pause button stops (sim, golfers, balls, timers, day / night, goals, chests, the auto rat, the Ledger, requests), without
+  // the pause card, and the music plays on. On the first of those, and only then, Gus says inside the sheet that the range
+  // normally runs on and nothing's lost. After that panels behave as before (the game keeps running). Wide / duo side-column
+  // tabs sit beside the field and never close, so they don't hold it. Not away time: no offline pay or away card comes of it.
+  // state.guide = { open: { <panel>: 1 } or { all: 1 }, said: { menu: 1 }, seen: { <shop kind>: 1 } or null } (sanitize:
+  // an older save that has used its shop gets { all: 1 }, so it never pauses).
+  const MENU_KEY = { shop: 'shop', wardrobe: 'style', achievements: 'trophies', stats: 'trophies', settings: 'settings', goals: 'journal', journal: 'journal' };
+  function guideState() {
+    if (!state) return null;
+    if (!isObj(state.guide)) state.guide = { open: { all: 1 }, said: { menu: 1 }, seen: null };
+    const G = state.guide; if (!isObj(G.open)) G.open = {}; if (!isObj(G.said)) G.said = {};
+    return G;
+  }
+  let menuNote = null;
+  /** a big panel is opening (name: a sheet tab or 'journal'; host: its sheet element, where Gus's note goes). True = held */
+  function menuFirstOpen(name, host) {
+    const G = guideState(), k = MENU_KEY[name];
+    if (!G || !k || mode !== 'game' || G.open.all || G.open[k]) return false;
+    G.open[k] = 1;
+    if (paused.user || sideMode) return false; // the Pause button already holds it (Settings from the pause card): nothing to explain
+    if (!paused.menu) { paused.menu = true; clearMoveKeys(); emit('pause', { paused: true, by: 'menu', panel: k }); }
+    if (!G.said.menu && host) { G.said.menu = 1; showMenuNote(host); }
+    return true;
+  }
+  function menuClosed() {
+    if (menuNote) { menuNote.remove(); menuNote = null; }
+    if (!paused.menu) return;
+    paused.menu = false; emit('pause', { paused: false, by: 'menu' }); kick();
+  }
+  /** Gus's one line about it, at the top of the sheet (the field and his peek are under the sheet on a phone) */
+  function showMenuNote(sh) {
+    const lines = (dget('tutorial') || []).filter((t) => t && t.trigger === 'menuPause').map((t) => t.text), text = lines.join(' ');
+    if (!text) return;
+    if (menuNote) menuNote.remove();
+    const n = el('div', 'rr-sheetgus'); n.setAttribute('role', 'status');
+    n.innerHTML = `<canvas width="28" height="26" aria-hidden="true"></canvas><p><b class="rr-who">${esc(tx('dialog.gus', 'Gus'))}</b> ${esc(text)}</p>`;
+    sh.insertBefore(n, sh.querySelector('.rr-sheetbody'));
+    try { drawGus(n.querySelector('canvas').getContext('2d'), false, 0, 'pleased'); } catch (e) { /* ignore */ }
+    menuNote = n;
+    emit('dialog', { trigger: 'menuPause', kind: 'tutorial', speaker: 'gus', text, lines, blocking: false });
+  }
+
   // ---- sheets (phone layout) ----
   const SHEET_TABS = { shop: ['shop', 'wardrobe'], wardrobe: ['shop', 'wardrobe'], achievements: ['achievements', 'stats'], stats: ['achievements', 'stats'], settings: ['settings'], goals: ['goals'] };
   function openSheet(name) {
@@ -28556,6 +29141,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function switchTab(name) {
     if (!sheet) return;
     sheetTab = name;
+    menuFirstOpen(name, sheet.sh); // a tab seen for the first time (Style in the Shop sheet) holds the range too
     sheet.sh.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
     if (sheetInst) sheetInst.destroy();
     const body = sheet.sh.querySelector('.rr-sheetbody'); body.innerHTML = ''; body.scrollTop = 0;
@@ -28564,6 +29150,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   }
   function closeSheet(immediate) {
     if (!sheet) return;
+    menuClosed(); // the first open's hold ends with the sheet (menuFirstOpen)
     const s = sheet; sheet = null; clearTimeout(s.walletT); if (sheetInst) { sheetInst.destroy(); sheetInst = null; }
     if (immediate) { s.sh.remove(); s.scrim.remove(); return; }
     s.sh.classList.remove('on'); s.scrim.classList.remove('on');
@@ -29341,7 +29928,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   }
 
   // ===================================================================== §M INPUT / LOOP
-  const paused = { dialog: false, modal: false };
+  const paused = { dialog: false, modal: false, menu: false }; // menu: held while a big panel is open for the first time (menuFirstOpen)
   let timeScale = 1;
   let pointerId = null;
   function toLogical(cx, cy) {
@@ -29483,7 +30070,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function gfxP(a, n, q) { const s = gfxS.subarray(0, n); s.set(a.subarray(0, n)); s.sort(); return s[Math.min(n - 1, Math.floor(n * q))]; }
   function gfxMonitor(w, t0) {
     const iv = GFX.lastT ? t0 - GFX.lastT : 0; GFX.lastT = t0;
-    if (gfxPref() !== 'auto' || GFX.pinned || timeScale !== 1 || (mode !== 'game' && mode !== 'credits') || lowPower() || document.hidden || sideMode || paused.user || paused.modal || paused.dialog || paused.away || sheet) { GFX.n = 0; GFX.frames = 0; return; }
+    if (gfxPref() !== 'auto' || GFX.pinned || timeScale !== 1 || (mode !== 'game' && mode !== 'credits') || lowPower() || document.hidden || sideMode || paused.user || paused.menu || paused.modal || paused.dialog || paused.away || sheet) { GFX.n = 0; GFX.frames = 0; return; }
     if (++GFX.frames < 180 || !iv || iv > 250) return; // warm-up, or the first frame after a stall / tab switch
     if (!GFX.n) GFX.w0 = t0;
     gfxW[GFX.n] = w; gfxI[GFX.n] = iv; if (++GFX.n < GFX_WIN && !(GFX.n >= 20 && t0 - GFX.w0 >= 1000)) return; // a window: 64 frames or 1 s
@@ -29523,7 +30110,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     renderMs += dtReal * 1000;
     // fixed timestep sim
     if (fxState.hitStop > 0) { fxState.hitStop -= dtReal; }
-    else if (!(mode === 'game' && (paused.dialog || paused.modal || paused.user || paused.away || trialLocked())) && !(sideMode && sideMode.paused)) {
+    else if (!(mode === 'game' && (paused.dialog || paused.modal || paused.user || paused.menu || paused.away || trialLocked())) && !(sideMode && sideMode.paused)) { // paused.menu: the first open of a big panel (round 4 tester T4)
       acc += dtReal * timeScale * slowScale(); // fx.slowmo (Perfect Dodge): the sim crawls for a beat
       let n = 0; const maxSteps = Math.max(150, Math.ceil(timeScale * 20));
       while (acc >= DT && n < maxSteps) { try { step(DT); } catch (e) { frameError('step', e); } acc -= DT; n++; }
@@ -29533,7 +30120,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (mode !== 'game') for (const s of [world.player, world.house].concat(world.golfers, world.robots)) if (s && s.sq) updateSpring(s.sq, dtReal); // perf: no array per game frame
     updateDialog(); updatePeek(dtReal * 1000); updatePin(dtReal); updateDodgeBtn(); updateAutoBtn(); updateChestBtn();
     if (mode === 'game' && !(paused.modal || paused.dialog)) updateCritters(dtReal);
-    if (mode === 'game' && !(paused.modal || paused.dialog || paused.user)) try { livingTick(dtReal); } catch (e) { frameError('living', e); } // §I3 living range
+    if (mode === 'game' && !(paused.modal || paused.dialog || paused.user || paused.menu)) try { livingTick(dtReal); } catch (e) { frameError('living', e); } // §I3 living range
     a11yFrame(dtReal); // gamepad polling + screen-reader announcer (a11y pass)
     if (creditsAnim) creditsAnim(dtReal * 1000);
     // chest scene open: the sim is paused (modal) and its 92-97% opaque backdrop covers the field, so the field redraws
@@ -30014,7 +30601,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     on('focus', onFocusChange);
     W.addEventListener('pointerdown', (e) => setInputMode(e.pointerType === 'touch' ? 'touch' : 'pointer', true), { capture: true });
     try { Object.defineProperty(api, 'inputMode', { get: () => inputMode, enumerable: true }); api.announce = announce; api.setLanguage = setLanguage; api.pause = setUserPause; } catch (e) { /* ignore */ }
-    on('screen', () => { if (mode !== 'game' && paused.user) { paused.user = false; renderPause(); } syncPauseAudio(); });
+    on('screen', () => { if (mode !== 'game' && paused.user) { paused.user = false; renderPause(); } if (mode !== 'game') menuClosed(); syncPauseAudio(); });
   }
 
   // ===================================================================== §N API / BOOT
@@ -30123,6 +30710,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       drawRatAt(g, x, y, o) { return state ? !!drawRat(g, x, y, Object.assign({ sprite: 'player_hands', frame: 0 }, o || {})) : false; },
       /** note 12: the pins in play, every green's spot, the share of shots pulled to a pin, the collection model's density */
       pins() { const P = PINS_() || {}, n = (world.greens || []).length; return { n, max: (world.allGreens || []).length, all: (world.allGreens || []).map((q) => ({ x: q.x, y: q.y })), pull: Math.min(0.9, (P.pullPerPin || 0) * n), spread: P.spreadPx || 0, density: pinDensity() }; },
+      /** round 4 tester T4: what sanitize makes of a save's first-open record (an older save has none) */
+      sanitizeGuide(s) { return sanitize(JSON.parse(JSON.stringify(s))).guide; },
       sanitizeLook() { const s = sanitize(JSON.parse(JSON.stringify(state))); return ratLookOf(s.profile && s.profile.look); },
       hedges() { return traps.zones.filter((z) => z.kind === 'hedge').map((z) => ({ side: z.side, x0: z.x0, x1: z.x1, y0: z.y0, y1: z.y1, held: z.hN | 0, cached: !!z.hedgeCv, edge: EDGE, hogs: (world.hogs || []).filter((o) => traps.zones[o.zi] === z).map((o) => ({ y: Math.round(o.y), t: Math.round(o.t * 100) / 100, ball: o.ball || null })) })); },
       /** the live inputs to BALANCE.rateModel.steady (o: { idle, active }) and Firefly Bays' lantern numbers */
@@ -30200,6 +30789,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** popup tests (tests/e2e/test_phone_popups.py): a toast / a Gus peek line, through the real paths */
       toast(text) { toast(String(text), { now: true }); return true; },
       gus(line, mood) { ui_.gusBubble && ui_.gusBubble(String(line), mood || 'neutral'); return true; },
+      /** round 4 tester T4: the first-open hold. { held, user, open: {panel: 1}, said: {menu: 1}, note: Gus's line on show } */
+      menu() { const G = guideState(); return { held: !!paused.menu, user: !!paused.user, open: G ? Object.assign({}, G.open) : null, said: G ? Object.assign({}, G.said) : null, note: menuNote && menuNote.isConnected ? menuNote.textContent : null }; },
       quietUI(on) { const q = on !== false; layout.root && layout.root.classList.toggle('rr-quietui', q); return q; },
       /** ?debug=1 only: a chest in the tray, optionally with a staged outcome: force = [{kind:'acorns'} | {kind:'cos', r?, slot?}] */
       grantChest(tier, ach, force) { if (!DEBUG) return false; const cs = chestState(); cs.seq = (cs.seq | 0) + 1; cs.inv.push({ id: cs.seq, tier: tier || 'wood', ach: ach || 'first_pickup', at: Date.now(), force: Array.isArray(force) ? force : undefined }); emit('chest', { tier: tier || 'wood', ach: ach || 'debug', count: cs.inv.length }); return cs.seq; },
@@ -30286,6 +30877,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     /** the shop introduction (playtest round 3 notes 16 + 17): { n, stages, cta, hl, fresh: [row help keys] } or null when off */
     shopIntro() { return state ? shopIntroInfo() : null; },
     shopIntroFinish() { return shopIntroFinish(); },
+    /** ui/layout.js: its own big panel (the phone Journal sheet) opened / closed. The first open holds the range (round 4 tester T4) */
+    menuOpened(name, sheetEl) { return menuFirstOpen(String(name || ''), sheetEl || null); },
+    menuClosed() { menuClosed(); return true; },
     haptics: HAPTICS,
     /** chest FX store: live particles now, the peak since the scene opened, and this quality level's cap */
     chestFx() { const m = Array.from(CP.ms).sort((a, b) => a - b), kinds = {}; for (let i = 0; i < CP.n; i++) { const k = CP.k[CP.live[i]]; kinds[k] = (kinds[k] | 0) + 1; } return { live: CP.n, peak: CP.peak, cap: CP.cap, max: CHP_MAX, colours: CH_PAL.length, msP50: +m[32].toFixed(2), msMax: +m[63].toFixed(2), frames: CP.frames, gov: CP.gov, q: +chQ.toFixed(3), kinds }; },
@@ -31774,11 +32368,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     sh.querySelector('[data-close]').addEventListener('click', () => { tap(); close(); });
     const jb = sh.querySelector('[data-rl=journal]'); buildJournal(jb, {});
     gsheet = { sh, scrim, host: null, prev: document.activeElement };
+    try { R.menuOpened && R.menuOpened('journal', sh); } catch (e) { /* ignore */ } // the first open holds the range (round 4 tester T4)
     requestAnimationFrame(() => { scrim.classList.add('on'); sh.classList.add('on'); });
     setTimeout(() => { try { sh.querySelector('[data-close]').focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 60);
   }
   function closeGoalsSheet(now) {
     if (!gsheet) return; const g = gsheet; gsheet = null;
+    try { R.menuClosed && R.menuClosed(); } catch (e) { /* ignore */ }
     if (now) { g.sh.remove(); g.scrim.remove(); return; }
     g.sh.classList.remove('on'); g.scrim.classList.remove('on'); setTimeout(() => { g.sh.remove(); g.scrim.remove(); }, 300);
     try { g.prev && g.prev.focus && g.prev.focus({ preventScroll: true }); } catch (e) { /* ignore */ }

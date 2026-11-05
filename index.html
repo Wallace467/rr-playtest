@@ -15,6 +15,7 @@
   #rr-root{height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important}
 }</style>
 <meta name="range-rat-unlock" content="full">
+<meta name="rr-pwa" content="2026-11-05-8440e86-e77d918a">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
@@ -33330,6 +33331,29 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
 if ('serviceWorker' in navigator && self.isSecureContext) {
   addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
 }
+/* An iPhone keeps a home-screen app suspended for days, so it may never relaunch: check for a newer build when the app comes
+   back to the front (and every 10 min), and offer a one-tap update. The game saves on pagehide, so reloading loses nothing. */
+(function () {
+  var meta = document.querySelector('meta[name="rr-pwa"]'), cur = meta && meta.content, busy = false;
+  if (!cur || !self.fetch) return;
+  function show() {
+    if (document.getElementById('rr-upd')) return;
+    var b = document.createElement('button'); b.id = 'rr-upd'; b.type = 'button';
+    b.textContent = 'New version ready – tap to update';
+    b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483000;' +
+      'padding:10px 16px;border-radius:10px;border:2px solid #f2c641;background:#2a1c16;color:#efdfb6;font:700 15px "Atkinson Hyperlegible",system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.55)';
+    b.addEventListener('click', function (e) { e.stopPropagation(); location.reload(); });
+    document.body.appendChild(b);
+  }
+  function check() {
+    if (busy || document.hidden || navigator.onLine === false) return; busy = true;
+    fetch('index.html?check=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+      var m = /<meta name="rr-pwa" content="([^"]+)">/.exec(t); if (m && m[1] !== cur) show();
+    }).catch(function () {}).then(function () { busy = false; });
+  }
+  document.addEventListener('visibilitychange', check);
+  setInterval(check, 10 * 60 * 1000); setTimeout(check, 20000);
+})();
 </script>
 </body>
 </html>

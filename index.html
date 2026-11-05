@@ -14,11 +14,11 @@
   body.rr-body{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
   #rr-root{height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-05-b8540ee-d6430e76">
+<meta name="rr-pwa" content="2026-11-05-c9381d8-deb11845">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-05-b8540ee">
+<meta name="range-rat-build" content="2026-11-05-c9381d8">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,7 +40,7 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-05-b8540ee", "builtAt": "2026-11-05T19:26:12Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-05-c9381d8", "builtAt": "2026-11-05T19:29:41Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -352,7 +352,7 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
       btn.addEventListener('click', (e) => { e.stopPropagation(); open(); });
       fw.appendChild(btn);
     }
-    const lab = t('button', 'Feedback'), aria = t('buttonAria', 'Send feedback to Ben (F8)');
+    const lab = t('button', 'Feedback'), aria = t('buttonAria', 'Send feedback to Wallace Labs (F8)');
     if (btn.textContent !== '✎ ' + lab) btn.textContent = '✎ ' + lab;
     btn.setAttribute('aria-label', aria); btn.title = aria;
     place();
@@ -434,14 +434,14 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
       for (const ev of ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'wheel', 'contextmenu']) form.addEventListener(ev, (e) => e.stopPropagation());
       form.innerHTML = `<div class="rrfb-card">
         <h2 id="rrfb-h">${esc(t('title', 'Send feedback'))}</h2>
-        <p class="sub">${esc(t('intro', 'Goes straight to Ben. Nothing is sent until you press Send.'))}</p>
+        <p class="sub">${esc(t('intro', 'Goes to the Wallace Labs Discord, only when you press Send.'))}</p>
         <p class="sub" data-f="legal">${esc(t('age', "For players 16+ (or with a parent's OK)."))} <a href="${PRIVACY_URL}" target="_blank" rel="noopener" data-f="privacy">${esc(t('privacy', 'Privacy policy'))}</a></p>
         <div class="rrfb-tags" role="group" aria-label="${esc(t('tagsLabel', 'What kind of note is it?'))}">${TAGS.map((k) => `<button type="button" class="rrfb-tag" data-tag="${k}" aria-pressed="false">${esc(t('tag_' + k, TAG_EN[k]))}</button>`).join('')}</div>
         <label for="rrfb-msg">${esc(t('message', 'What happened? What did you expect?'))}</label>
         <textarea id="rrfb-msg" maxlength="${MSG_MAX}" data-f="msg"></textarea>
         <label for="rrfb-name">${esc(t('name', 'Your name (optional)'))}</label>
         <input id="rrfb-name" type="text" maxlength="${NAME_MAX}" autocomplete="off" data-f="name">
-        <label class="chk"><input type="checkbox" data-f="save"><span>${esc(t('attachSave', 'Attach my save so Ben can reproduce it'))}<small>${esc(t('attachSaveHint', "Your progress and your rat's name."))}</small></span></label>
+        <label class="chk"><input type="checkbox" data-f="save"><span>${esc(t('attachSave', 'Attach my save so we can reproduce it'))}<small>${esc(t('attachSaveHint', "Your progress and your rat's name."))}</small></span></label>
         <section class="rrfb-prev" aria-labelledby="rrfb-ph"><h3 id="rrfb-ph">${esc(t('previewTitle', 'What will be sent'))}</h3>
           <div class="row">${F.shotURL ? `<img class="rrfb-thumb" data-f="thumb" alt="${esc(t('shotAlt', 'Screenshot that will be sent'))}" src="${F.shotURL}">` : ''}<div data-f="sum"></div></div>
           <details><summary>${esc(t('showAll', 'Show everything that will be sent'))}</summary><pre class="rrfb-pre" data-f="json"></pre></details>
@@ -488,7 +488,7 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
   async function doCopy() {
     const txt = reportText(F), ok = await copyText(txt);
     const man = form && form.querySelector('[data-f=manual]');
-    if (ok) { if (man) man.classList.remove('on'); status(t('copied', 'Report copied. Paste it to Ben however suits you.'), 'ok'); return; }
+    if (ok) { if (man) man.classList.remove('on'); status(t('copied', 'Report copied. Send it to Wallace Labs however suits you.'), 'ok'); return; }
     if (man) { man.value = txt; man.classList.add('on'); try { man.focus(); man.select(); } catch (e) { /* ignore */ } }
     status(t('copyManual', "Copy didn't work here. Select the text below and copy it."), 'bad');
   }
@@ -513,7 +513,7 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     }
     F.state = 'edit'; sb.disabled = false; sb.textContent = t('retry', 'Try again');
     // 'unknown' = the request may well have arrived (network drop, or a browser that hides the reply): say so honestly
-    status(res.result === 'unknown' ? t('unsure', "Couldn't confirm it arrived. Copy the report to be safe.") : t('failed', "Couldn't send it. Copy the report and pass it to Ben."), 'bad');
+    status(res.result === 'unknown' ? t('unsure', "Couldn't confirm it arrived. Copy the report to be safe.") : t('failed', "Couldn't send. Copy the report and pass it to Wallace Labs."), 'bad');
     try { form.querySelector('[data-a=copy]').focus(); } catch (e) { /* ignore */ }
   }
 
@@ -8452,9 +8452,9 @@ window.DIALOG = {
     // PLAYTEST ONLY: the "Send feedback" form of the playtest build (PLAYTEST.md). Unused strings in the default build.
     feedback: {
       button: "Feedback",
-      buttonAria: "Send feedback to Ben (F8)",
+      buttonAria: "Send feedback to Wallace Labs (F8)",
       title: "Send feedback",
-      intro: "Goes straight to Ben. Nothing is sent until you press Send.",
+      intro: "Goes to the Wallace Labs Discord, only when you press Send.",
       age: "For players 16+ (or with a parent's OK).",
       privacy: "Privacy policy",
       promiseNote: "(Playtest versions have a Send feedback button; nothing goes until you press it.)",
@@ -8465,7 +8465,7 @@ window.DIALOG = {
       tag_loved: "Loved it",
       message: "What happened? What did you expect?",
       name: "Your name (optional)",
-      attachSave: "Attach my save so Ben can reproduce it",
+      attachSave: "Attach my save so we can reproduce it",
       attachSaveHint: "Your progress and your rat's name.",
       making: "Making your save code...",
       saveFailed: "Couldn't make a save code here.",
@@ -8492,9 +8492,9 @@ window.DIALOG = {
       retry: "Try again",
       close: "Close",
       sent: "Sent! Thanks, that really helps.",
-      failed: "Couldn't send it. Copy the report and pass it to Ben.",
+      failed: "Couldn't send. Copy the report and pass it to Wallace Labs.",
       unsure: "Couldn't confirm it arrived. Copy the report to be safe.",
-      copied: "Report copied. Paste it to Ben however suits you.",
+      copied: "Report copied. Send it to Wallace Labs however suits you.",
       copyManual: "Copy didn't work here. Select the text below and copy it.",
       noEndpoint: "Sending is off in this build. Copy the report instead.",
       empty: "Add a few words or pick a tag first.",
@@ -10929,9 +10929,9 @@ window.DIALOG = {
       pause: { title: "Pause", resume: "Weiter", hint: "P oder Esc drücken, um weiterzuspielen.", hintPad: "Start oder B drücken, um weiterzuspielen.", hintTap: "Tipp auf Weiter, um weiterzuspielen." },
       feedback: {
         button: "Feedback",
-        buttonAria: "Feedback an Ben senden (F8)",
+        buttonAria: "Feedback an Wallace Labs senden (F8)",
         title: "Feedback senden",
-        intro: "Geht direkt an Ben. Erst mit Senden wird etwas verschickt.",
+        intro: "Geht in den Discord von Wallace Labs, erst wenn du sendest.",
         age: "Für Spieler ab 16 (oder mit dem OK der Eltern).",
         privacy: "Datenschutzerklärung",
         promiseNote: "(Testversionen haben einen „Feedback senden“-Knopf; erst wenn du ihn drückst, geht etwas raus.)",
@@ -10942,7 +10942,7 @@ window.DIALOG = {
         tag_loved: "Super",
         message: "Was ist passiert? Was hast du erwartet?",
         name: "Dein Name (freiwillig)",
-        attachSave: "Spielstand anhängen, damit Ben es nachstellen kann",
+        attachSave: "Spielstand anhängen, damit wir es nachstellen können",
         attachSaveHint: "Dein Fortschritt und der Name deiner Ratte.",
         making: "Spielstand-Code wird erstellt...",
         saveFailed: "Hier ließ sich kein Spielstand-Code erstellen.",
@@ -10969,9 +10969,9 @@ window.DIALOG = {
         retry: "Nochmal",
         close: "Schließen",
         sent: "Gesendet! Danke, das hilft wirklich.",
-        failed: "Senden ging nicht. Kopier den Bericht und gib ihn Ben.",
+        failed: "Senden ging nicht. Kopier den Bericht für Wallace Labs.",
         unsure: "Unklar, ob es ankam. Kopier sicherheitshalber den Bericht.",
-        copied: "Bericht kopiert. Schick ihn Ben, wie es dir passt.",
+        copied: "Bericht kopiert. Schick ihn an Wallace Labs, wie du magst.",
         copyManual: "Kopieren geht hier nicht. Text unten markieren und kopieren.",
         noEndpoint: "Senden ist hier aus. Kopier stattdessen den Bericht.",
         empty: "Schreib ein paar Worte oder wähl ein Thema.",
@@ -13343,9 +13343,9 @@ window.DIALOG = {
       pause: { title: "En pausa", resume: "Seguir", hint: "Presiona P o Esc para seguir.", hintPad: "Presiona Start o B para seguir.", hintTap: "Toca Seguir para continuar." },
       feedback: {
         button: "Comentarios",
-        buttonAria: "Enviar comentarios a Ben (F8)",
+        buttonAria: "Enviar comentarios a Wallace Labs (F8)",
         title: "Enviar comentarios",
-        intro: "Va directo a Ben. Nada se envía hasta que le des a Enviar.",
+        intro: "Va al Discord de Wallace Labs, solo cuando le des a Enviar.",
         age: "Para mayores de 16 (o con permiso de sus padres).",
         privacy: "Política de privacidad",
         promiseNote: "(Las versiones de prueba tienen un botón Enviar comentarios; nada se envía hasta que lo pulses).",
@@ -13356,7 +13356,7 @@ window.DIALOG = {
         tag_loved: "Me encantó",
         message: "¿Qué pasó? ¿Qué esperabas?",
         name: "Tu nombre (opcional)",
-        attachSave: "Adjuntar mi partida para que Ben pueda reproducirlo",
+        attachSave: "Adjuntar mi partida para que podamos reproducirlo",
         attachSaveHint: "Tu progreso y el nombre de tu rata.",
         making: "Generando tu código de partida...",
         saveFailed: "Aquí no se pudo generar un código de partida.",
@@ -13383,9 +13383,9 @@ window.DIALOG = {
         retry: "Reintentar",
         close: "Cerrar",
         sent: "¡Enviado! Gracias, ayuda muchísimo.",
-        failed: "No se pudo enviar. Copia el informe y pásaselo a Ben.",
+        failed: "No se pudo enviar. Copia el informe para Wallace Labs.",
         unsure: "No se confirmó la llegada. Copia el informe por si acaso.",
-        copied: "Informe copiado. Pásaselo a Ben como prefieras.",
+        copied: "Informe copiado. Pásaselo a Wallace Labs como prefieras.",
         copyManual: "No se pudo copiar. Selecciona el texto de abajo y cópialo.",
         noEndpoint: "El envío está desactivado en esta versión. Copia el informe.",
         empty: "Escribe algo o elige una etiqueta primero.",
@@ -15658,9 +15658,9 @@ window.DIALOG = {
       pause: { title: "Pausado", resume: "Continuar", hint: "Aperte P ou Esc para continuar.", hintPad: "Aperte Start ou B para continuar.", hintTap: "Toque em Continuar para seguir." },
       feedback: {
         button: "Feedback",
-        buttonAria: "Enviar feedback para o Ben (F8)",
+        buttonAria: "Enviar feedback para a Wallace Labs (F8)",
         title: "Enviar feedback",
-        intro: "Vai direto para o Ben. Nada sai até você tocar em Enviar.",
+        intro: "Vai para o Discord da Wallace Labs só quando você enviar.",
         age: "Para jogadores a partir de 16 anos (ou com o OK dos pais).",
         privacy: "Política de privacidade",
         promiseNote: "(As versões de teste têm um botão Enviar feedback; nada sai até você tocar nele.)",
@@ -15671,7 +15671,7 @@ window.DIALOG = {
         tag_loved: "Adorei",
         message: "O que aconteceu? O que você esperava?",
         name: "Seu nome (opcional)",
-        attachSave: "Anexar meu save para o Ben reproduzir",
+        attachSave: "Anexar meu save para a gente reproduzir",
         attachSaveHint: "Seu progresso e o nome do seu rato.",
         making: "Gerando o código do save...",
         saveFailed: "Não deu para gerar um código de save aqui.",
@@ -15698,9 +15698,9 @@ window.DIALOG = {
         retry: "Tentar de novo",
         close: "Fechar",
         sent: "Enviado! Valeu, isso ajuda muito.",
-        failed: "Não deu para enviar. Copie o relatório e mande para o Ben.",
+        failed: "Não deu para enviar. Copie o relatório para a Wallace Labs.",
         unsure: "Envio não confirmado. Copie o relatório, por garantia.",
-        copied: "Relatório copiado. Mande para o Ben do jeito que preferir.",
+        copied: "Relatório copiado. Mande para a Wallace Labs como preferir.",
         copyManual: "Copiar não funcionou aqui. Selecione o texto abaixo e copie.",
         noEndpoint: "O envio está desligado nesta versão. Copie o relatório.",
         empty: "Escreva umas palavras ou escolha um tipo antes.",
@@ -18077,9 +18077,9 @@ window.DIALOG = {
       pause: { title: "已暂停", resume: "继续", hint: "按 P 或 Esc 继续。", hintPad: "按 Start 或 B 继续。", hintTap: "点“继续”接着玩。" },
       feedback: {
         button: "反馈",
-        buttonAria: "给 Ben 发送反馈（F8）",
+        buttonAria: "给 Wallace Labs 发送反馈（F8）",
         title: "发送反馈",
-        intro: "直接发给 Ben。你点“发送”之前什么都不会发出去。",
+        intro: "发到 Wallace Labs 的 Discord，点“发送”才会发出。",
         age: "适合 16 岁及以上的玩家（或已获家长同意）。",
         privacy: "隐私政策",
         promiseNote: "（测试版有“发送反馈”按钮；你点下它之前，什么都不会发出去。）",
@@ -18090,7 +18090,7 @@ window.DIALOG = {
         tag_loved: "很喜欢",
         message: "发生了什么？你原本期待什么？",
         name: "你的名字（可选）",
-        attachSave: "附上我的存档，方便 Ben 复现问题",
+        attachSave: "附上我的存档，方便我们复现问题",
         attachSaveHint: "你的进度和老鼠的名字。",
         making: "正在生成存档码……",
         saveFailed: "这里无法生成存档码。",
@@ -18117,9 +18117,9 @@ window.DIALOG = {
         retry: "重试",
         close: "关闭",
         sent: "已发送！谢谢，这真的很有帮助。",
-        failed: "发送失败。请复制报告转交给 Ben。",
+        failed: "发送失败。请复制报告转交给 Wallace Labs。",
         unsure: "无法确认是否送达。保险起见，复制一份报告。",
-        copied: "报告已复制。用你方便的方式发给 Ben 吧。",
+        copied: "报告已复制。用你方便的方式发给 Wallace Labs 吧。",
         copyManual: "这里复制不了。请选中下面的文字手动复制。",
         noEndpoint: "此版本已关闭发送功能。请改为复制报告。",
         empty: "先写几个字，或选一个标签。",

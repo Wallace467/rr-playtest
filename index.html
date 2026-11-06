@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-400d5db-a59c7c9e">
+<meta name="rr-pwa" content="2026-11-06-cb48e30-9353f49b">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-400d5db">
+<meta name="range-rat-build" content="2026-11-06-cb48e30">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,7 +40,7 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-400d5db", "builtAt": "2026-11-06T12:16:05Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-cb48e30", "builtAt": "2026-11-06T12:33:22Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -30960,6 +30960,38 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   const ACH_HINTS = { timesStunned: 'Some lessons are learned the hard way.', cosmeticsOwned: 'A rat of many looks...', goldBalls: 'All that glitters...', nightShifts: 'Some work best after dark.' };
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const mounted = [];
+  /** the scroll anchor of a panel rebuild: an element's key ([data-k], else [data-buy], else a row's [data-help]) */
+  function anchorKey(e) {
+    if (!e || !e.getAttribute) return null;
+    for (const a of ['data-k', 'data-buy', 'data-help']) { const v = e.getAttribute(a); if (v) return [a, v]; }
+    return null;
+  }
+  const anchorFind = (root, k) => { try { const all = root.querySelectorAll(`[${k[0]}="${String(k[1]).replace(/["\\]/g, '')}"]`); for (const x of all) if (x.getClientRects().length) return x; } catch (e) { /* ignore */ } return null; };
+  /** the nearest scrolling box around a panel (the sheet body, the wide side column) */
+  function scrollerOf(el) {
+    for (let e = el; e && e !== document.body; e = e.parentElement) { if (e.scrollHeight > e.clientHeight + 1) { const o = getComputedStyle(e).overflowY; if (o === 'auto' || o === 'scroll') return e; } }
+    return null;
+  }
+  /** an element's top inside a scroller's view, from the layout (offsets): a buy button's bounce (a transform) doesn't count */
+  const offY = (e) => { let y = 0; for (let x = e; x; x = x.offsetParent) y += x.offsetTop; return y; };
+  const viewY = (e, scr) => offY(e) - offY(scr) - scr.scrollTop;
+  function scrollAnchor(el, scr, tapK) {
+    if (!scr.scrollTop) return null; // at the top: nothing to keep (and a list that grows stays at its top)
+    const H = scr.clientHeight, inView = (x) => { const y = viewY(x, scr); return y + x.offsetHeight > 0 && y < H; };
+    let a = tapK && anchorFind(el, tapK), k = a ? tapK : null;
+    if (a && !inView(a)) { a = null; k = null; }
+    if (!a) for (const x of el.querySelectorAll('[data-k],[data-buy],[data-help]')) { if (!x.offsetHeight) continue; const y = viewY(x, scr); if (y >= -1 && y < H) { const kk = anchorKey(x); if (kk && anchorFind(el, kk) === x) { a = x; k = kk; break; } } }
+    return a ? { k, y: viewY(a, scr) } : null;
+  }
+  function scrollRestore(el, scr, anc) {
+    const put = () => { const a = anchorFind(el, anc.k); if (!a) return; const d = viewY(a, scr) - anc.y; if (Math.abs(d) >= 0.5) scr.scrollTop += d; return scr.scrollTop; };
+    let at = put();
+    // again once ui/help.js has decorated the new rows (its ⓘ and "New" tags come in a mutation observer, after this)
+    // and before the frame paints; not if the player has scrolled meanwhile
+    const again = () => { if (at != null && Math.abs(scr.scrollTop - at) < 1) at = put(); };
+    Promise.resolve().then(again);
+    requestAnimationFrame(again);
+  }
   /** Generic component: render(el) builds HTML when sig() changes; bind(el) wires events once per render. */
   function component(name, def) {
     return {
@@ -30968,9 +31000,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         const inst = { name, el, sig: null, state: {}, destroyed: false };
         // never rebuild the panel under a pressed finger/mouse: a re-render between pointerdown and
         // pointerup swaps the button out and the click is lost (owner: "clicks don't always register")
-        let held = false, pending = false;
+        let held = false, pending = false, tapK = null;
         const release = () => { if (!held) return; held = false; if (pending) { pending = false; setTimeout(() => inst.update(true), 0); } };
-        el.addEventListener('pointerdown', () => { held = true; }, true);
+        el.addEventListener('pointerdown', (e) => { held = true; tapK = anchorKey(e.target && e.target.closest ? e.target.closest('[data-k],[data-help],[data-buy]') : null); }, true);
         W.addEventListener('pointerup', release, true); W.addEventListener('pointercancel', release, true);
         inst.update = (force) => {
           if (inst.destroyed) return;
@@ -30979,13 +31011,19 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           if (held) { pending = true; if (def.tick) def.tick(inst); return; }
           inst.sig = s;
           const focused = document.activeElement && el.contains(document.activeElement) ? document.activeElement.getAttribute('data-k') : null;
-          const sc = el.scrollTop;
+          // Ben (phone, 2026-11-06): a buy must not move the list. The rebuild keeps the row you tapped (else the first row
+          // in view) exactly where it was on screen, whatever changed above it (Gus's card, a row added or maxed away).
+          const scr = scrollerOf(el), anc = scr ? scrollAnchor(el, scr, tapK) : null;
+          const sc = el.scrollTop, hl0 = inst.state.hlShown;
           el.innerHTML = def.html(inst);
           el.scrollTop = sc;
           if (def.resig) inst.sig = def.sig(inst); // sig depends on what html() just recorded (shop: the costs on screen)
           if (def.bind) def.bind(inst);
           if (def.tick) def.tick(inst);
-          if (focused) { const f = el.querySelector(`[data-k="${focused.replace(/"/g, '')}"]`); if (f) f.focus(); }
+          // preventScroll: a plain focus() scrolled the focused button into view; on iOS a tap doesn't focus, so the focus stayed
+          // on the sheet's first button and every rebuild after a buy jumped the Shop back to the top
+          if (focused) { const f = el.querySelector(`[data-k="${focused.replace(/"/g, '')}"]`); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+          if (anc && inst.state.hlShown === hl0) { if (W.RANGE_RAT_HELP && W.RANGE_RAT_HELP.decorate) W.RANGE_RAT_HELP.decorate(el); scrollRestore(el, scr, anc); } // (the shop introduction's first highlight scrolls itself into view once)
         };
         inst.destroy = () => { inst.destroyed = true; W.removeEventListener('pointerup', release, true); W.removeEventListener('pointercancel', release, true); const i = mounted.indexOf(inst); if (i >= 0) mounted.splice(i, 1); el.innerHTML = ''; };
         el.classList.add('rr-p-host');
@@ -37309,7 +37347,9 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     open: (el, key) => openPop(el, key || (el && el.dataset && el.dataset.rh), 'tap'), close: () => closePop(),
     get isOpen() { return !!pop; }, get popover() { return pop && pop.el; },
     text: (key) => ({ name: nameOf(key), help: helpOf(key), here: hereOf(key) }), objective: () => objective(),
-    get layers() { return layers.length; }
+    get layers() { return layers.length; },
+    /** decorate a just-rebuilt panel now (its ⓘ and New tags), so the engine can keep the scroll place on the finished rows */
+    decorate: (host) => { if (!R || !host || !host.querySelectorAll) return; try { host.querySelectorAll('.rr-p').forEach(decoratePanel); } catch (e) { /* ignore */ } }
   };
   if (typeof document !== 'undefined' && document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(init, 0));
   else setTimeout(init, 0);

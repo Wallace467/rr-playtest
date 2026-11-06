@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-4122a235-234e30c6">
+<meta name="rr-pwa" content="2026-11-06-4999b036-5543db3d">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-4122a235">
+<meta name="range-rat-build" content="2026-11-06-4999b036">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-06-4122a235", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-06-4999b036", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-4122a235", "builtAt": "2026-11-06T18:40:47Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-4999b036", "builtAt": "2026-11-06T20:42:50Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -24345,6 +24345,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   function pickupBy(robot, b) {
     const special = SPECIAL_IDS.includes(b.type);
+    b.by = robot || world.player; // who has it now: a first-time line about this ball keeps pointing at it (frWorldXY 'ball')
     lastPickT = gameT; // someone is collecting (Gus doesn't nag "stock empty" over it)
     state.stats.ballsCollected++;
     if (b.lit) litPickup(robot, b); // Firefly Bays: a ball in the lantern light pays a bonus (GDD "Firefly Bays")
@@ -25484,7 +25485,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       case 'house': return v(world.house);
       case 'robot0': return v(world.robots[0]);
       case 'rat': return v(world.player);
-      case 'ball': { const b = x && x.ball; return b && world.balls.indexOf(b) >= 0 ? { x: b.x, y: b.y - (b.z || 0) } : null; }
+      case 'ball': {
+        const b = x && x.ball; if (!b) return null;
+        if (world.balls.indexOf(b) >= 0) return { x: b.x, y: b.y - (b.z || 0) };
+        // scooped while Gus is still talking about it (the rat walked to it, a beetle took it): the pointer follows it to
+        // whoever carries it, rather than going out after a moment (reg_phone: the first special ball's pointer showed for
+        // 0.7 s of its 8.4 s line, the first glow ball's for 1.4 of 8)
+        const c = b.by; return c && (c === world.player || world.robots.indexOf(c) >= 0) && isNum(c.x) && isNum(c.y) ? { x: c.x, y: c.y, k: c === world.player ? 'rat' : 'robot0' } : null;
+      }
       case 'golfer': return v(x && x.golfer);
       case 'crate': { try { return v(crewPosts()[0]); } catch (er) { return null; } }
       case 'desk': return v(ledgerDeskXY());
@@ -25501,7 +25509,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (e.point && e.point.world) {
       const at = frWorldXY(e, x);
       if (x && x.ball && x.ball.tipFirst && firstTipB === x.ball) { cur.ptr = 'world:tip'; fieldMark('first', 'first', null); frRing(null); return; } // the first tip ball has its own "Tip!" marker + ring
-      if (at) { cur.ptr = 'world:' + e.point.world; cur.ptrSeen = true; const bx = FR_BOX[e.point.world] || [6, 8, 3]; fieldMark('first', 'first', e.point.mark ? tx(e.point.mark.replace(/^fx\./, 'fx.'), '') || null : null, at.x, at.y - bx[1] - 12); frRing(at, e.point.world); } // a label only when the entry has one ("A beetle!"): the canvas arrow points
+      if (at) { cur.ptr = 'world:' + e.point.world; cur.ptrSeen = true; const wk = at.k || e.point.world, bx = FR_BOX[wk] || [6, 8, 3]; fieldMark('first', 'first', e.point.mark ? tx(e.point.mark.replace(/^fx\./, 'fx.'), '') || null : null, at.x, at.y - bx[1] - 12); frRing(at, wk); } // a label only when the entry has one ("A beetle!"): the canvas arrow points; at.k: a scooped ball's carrier
       else { if (!cur.ptrSeen) cur.ptr = 'missing'; fieldMark('first', 'first', null); frRing(null); }
     }
     if ((e.point && e.point.dom) || e.shop) {
@@ -26750,7 +26758,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     g.fillStyle = '#7d5636'; for (let k = yb - 7; k < yb + 3; k += 2) g.fillRect(x - 3, k, 7, 1);
     g.fillStyle = '#b8864f'; g.fillRect(x - 3, yb - 8, 7, 1);
     const w = world.player, fishing = w && w.trapWork && w.trapWork.fish;
-    if (!fishing) drawLandingNet(g, x + 5, yb + 2, x + 9, yb - 5, 3, null, false); // the landing net leaning on the jetty
+    if (!fishing) drawRestingNet(g, x + 5, yb + 2); // the landing net leaning on the jetty (a cached stamp: one call a frame)
     // "fish here": a soft pulse at the jetty while balls are waiting and the rat is elsewhere
     const n = trapCount();
     if (!drained && n >= 3 && w && !fishing && d2(w.x, w.y, x, yb) > 30 * 30 && !RM_()) { const k = (renderMs % 1400) / 1400; drawPixRing(g, x, yb - 2, 4 + k * 6, 0.7 * (1 - k), '#fffaee'); }
@@ -26797,6 +26805,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     for (let a = 0; a < 28; a++) { const t = a / 28 * Math.PI * 2; g.fillRect(Math.round(cx + Math.cos(t) * r), Math.round(cy + Math.sin(t) * ry), 1, 1); }
     g.fillStyle = '#b8864f'; for (let x = -r + 2; x <= r - 2; x++) g.fillRect(cx + x, cy - ry, 1, 1);
     if (wet) { g.globalAlpha = 0.7; g.fillStyle = '#e8f6f8'; g.fillRect(cx - r, cy + 1, 1, 1); g.fillRect(cx + r, cy + 1, 1, 1); g.globalAlpha = 1; } // ripples where the hoop cuts the water
+  }
+  // the jetty's resting net never changes: drawn once into a small canvas (perf budget: lagoon_full night was +~45 calls a frame)
+  let restNet = null;
+  function drawRestingNet(g, x, y) {
+    if (!restNet) {
+      try { const c = document.createElement('canvas'); c.width = 12; c.height = 14; drawLandingNet(c.getContext('2d'), 1, 12, 5, 5, 3, null, false); restNet = c; } catch (e) { restNet = false; }
+    }
+    if (restNet) g.drawImage(restNet, Math.round(x) - 1, Math.round(y) - 12); else drawLandingNet(g, x, y, x + 4, y - 7, 3, null, false);
   }
   function pondModule() {
     return { name: 'pond', update(dt) { pondTick(dt); }, render(g, layer) { if (layer === 'top') drawPondTop(g); } };
@@ -38718,7 +38734,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     return n;
   }
   W.RANGE_RAT_REVEAL = {
-    table: REVEAL.map((e) => ({ key: e.key, hide: (e.hide || []).slice(), gone: (e.gone || []).slice(), optional: !!e.optional })),
+    table: REVEAL.map((e) => ({ key: e.key, hide: (e.hide || []).slice(), gone: (e.gone || []).slice(), optional: !!e.optional, news: !!e.news })), // news: a "New" tag only, nothing hidden (revealAll skips it)
     shown, revealAll,
     refresh: () => { lastState = null; lastSig = ''; check(true); },
     /** ui/help.js: an ⓘ was opened; it goes once its popover is closed */
@@ -40731,11 +40747,22 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     while (left > 0) { const s = Math.min(120, left); t.step(s); left -= s; await later(0); } // step() caps at 120 s per call
     return null;
   }
+  /** the mid-range kit is ~20 minutes into the visit: the story beats its pace has passed happened before the jump (their
+   *  timed effects over, a rest-of-visit one still on), so arriving doesn't replay the range's opening beat with its toast
+   *  and gold shower (Gullhaven's gullhavenOpen dropped 5 gold balls on a "clean" arrival once the pace knots were refit).
+   *  Runs straight after setRange, before the next frame's checkBeats; beats still ahead come at their pace as usual. */
+  function pastBeats() {
+    const g = R(), st = g && g.state, s = stats(); if (!st || !s || !isFinite(s.pace)) return;
+    const rm = (g.B.rangeMechanics || {})[s.range] || {}, AGO = 600; // "long ago": no catch-up gap (BALANCE.pace.beatGapSec) before the next beat
+    if (!st.beats || typeof st.beats !== 'object') st.beats = {};
+    for (const bt of rm.beats || []) if (!st.beats[bt.id] && (bt.atProgress || 0) <= s.pace) st.beats[bt.id] = { at: -AGO, until: bt.durationSec ? -AGO + bt.durationSec : null };
+  }
   function jump(i, flavour) {
     const t = T(); if (!t.setRange) return 'This build has no _test.setRange';
     const k = KIT[i] || KIT[0];
     const kit = flavour === 'kit' ? Object.assign({}, k.arrive, k.mid, { intro: false }) : Object.assign({}, k.arrive);
     const r = t.setRange(i, kit);
+    if (flavour === 'kit') pastBeats();
     try { R().dismissDialogs && flavour === 'kit' && R().dismissDialogs(); } catch (e) { /* ignore */ }
     return { msg: `Jumped to ${rangeName(i)} (${flavour === 'kit' ? 'mid-range kit' : 'fresh arrival'}): ${fmt(r.cash)} acorns, ${fmt(r.stars)} ★` };
   }
@@ -40760,6 +40787,10 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     if (!st.prestigeReady) r.giveCash(Math.max(0, st.partCost - st.cash) + 1);
     await later(150);
     (gameRoot() || document).querySelectorAll('.rh-scrim [data-ok], .rh-scrim [data-x]').forEach((b) => b.click()); // a queued "New here" card would sit over the dialog
+    // Town V1 (ui/town.js): the last part is signed at the estate agent, so open Ferris's sheet at "Sign the deeds" (the
+    // HUD's [data-sell] button only walks you to the street). No town (desk mode, an older build): the Buy button as before
+    const TW = W.RANGE_RAT_TOWN;
+    if (TW && TW.openAgent && TW.openAgent() !== false) return 'Last part ready: the estate agent is open (Sign the deeds)';
     const btn = (gameRoot() || document).querySelector('[data-sell]');
     if (btn) { btn.click(); return 'Last part ready: the Buy dialog is open'; }
     return r.sellRange() ? 'Bought the range (no Buy button on screen, bought directly)' : 'Buy failed';

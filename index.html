@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-6af1fc4d-c4b7b972">
+<meta name="rr-pwa" content="2026-11-06-bff542a7-5a914d47">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-6af1fc4d">
+<meta name="range-rat-build" content="2026-11-06-bff542a7">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-06-6af1fc4d", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-06-bff542a7", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-6af1fc4d", "builtAt": "2026-11-06T21:26:44Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-bff542a7", "builtAt": "2026-11-06T22:53:28Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -25620,7 +25620,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     frCalmMs = 0; frStart(nx.q, nx.e);
   }
   function frTrack(dtMs) {
-    const cur = frCur, onPeek = !!peek && peek._first === cur, onDock = !!dockLine && dockLine.first === cur;
+    // a dock line counts only while its slot is on screen: the town's slot stays in the page, hidden, after you leave town (QA
+    // 2026-11-06 night: a line started there stayed "current" for good and no first-time line played again)
+    const cur = frCur, onPeek = !!peek && peek._first === cur, onDock = !!dockLine && dockLine.first === cur && dockLine.el.getClientRects().length > 0;
     if (cur.e.done && !cur.acked && (cur.doneT = (cur.doneT || 0) - dtMs) <= 0) { // the entry is done while its line waits or shows (fresh-eyes QA N2): said, and it goes
       cur.doneT = 250;
       if (frTry(cur.e.done, frC(), cur.q.v || {})) { cur.acked = true; frLogPush({ id: cur.e.id, ev: 'done', b: cur.b }); frFinish(cur.q, cur.e, 'done'); if (onPeek) peekT = Math.min(peekT, 0); frEnd('done'); return; }
@@ -32861,7 +32863,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     dialog: { name: 'dialog', mount(el) { const host = layout.els.dialoghost; const home = host.parentNode; if (host && home !== el) { el.appendChild(host); host.classList.add('rr-dialoghost-mounted'); } const inst = { name: 'dialog', el, update() { }, destroy() { host.classList.remove('rr-dialoghost-mounted'); home.appendChild(host); const i = mounted.indexOf(inst); if (i >= 0) mounted.splice(i, 1); } }; mounted.push(inst); return inst; } },
     sell: component('sell', {
       sig: () => prestigeAvailable() + '|' + state.rangeIdx + '|' + starsForSale() + '|' + (state.paid | 0) + '|' + (W.DIALOG && W.DIALOG.locale) + '|' + carryOverNow(),
-      html() { if (!prestigeAvailable()) return ''; const last = (state.paid | 0) >= parts() - 1; return `<button class="rr-sellbtn" data-k="sell" data-sell="1">${esc(buyBtnLabel())}${last ? ' +' + starsForSale() + '★' : ' · ' + esc(fmt(nextPartCost()))}</button>${last && carryOverNow() ? `<div class="rr-carrynote" data-carrynote>${esc(dstr('help.carry.note', "Saving more won't come with you. Spend it on upgrades here, or sign and move on."))}</div>` : ''}`; },
+      html() { if (!prestigeAvailable()) return ''; const last = (state.paid | 0) >= parts() - 1; return `<button class="rr-sellbtn" data-k="sell" data-sell="1">${esc(buyBtnLabel())}${last ? ' +' + esc(fmt(starsForSale())) + '★' : ' · ' + esc(fmt(nextPartCost()))}</button>${last && carryOverNow() ? `<div class="rr-carrynote" data-carrynote>${esc(dstr('help.carry.note', "Saving more won't come with you. Spend it on upgrades here, or sign and move on."))}</div>` : ''}`; },
       bind(inst) { const b = inst.el.querySelector('[data-sell]'); if (b) b.addEventListener('click', () => { sfx('ui_tap'); unlockAudio(); confirmSell(); }); }
     })
   };
@@ -39997,7 +39999,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
 @keyframes rt-in{from{opacity:0}to{opacity:1}}
 .rr-reduced #rr-town.rt-in{animation:none}
 #rr-town .rt-top{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--rr-panel);border-bottom:2px solid var(--rr-line);min-height:54px}
-#rr-town .rt-cash{display:flex;align-items:center;gap:6px;min-width:0}
+#rr-town .rt-cash{display:flex;align-items:center;gap:6px;flex:0 0 auto} /* never shrinks under its number: at 360 px "23.7K" ran into TOWN (QA 2026-11-06 night) */
 #rr-town .rt-cash img{width:20px;height:20px;image-rendering:pixelated}
 #rr-town .rt-cash b{font-weight:700;font-size:calc(22px*var(--rr-fs));line-height:1;color:var(--rr-gold);font-variant-numeric:tabular-nums}
 #rr-town .rt-cash small{display:block;font-weight:700;font-size:calc(13px*var(--rr-fs));color:var(--rr-green)}
@@ -40731,7 +40733,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
           if (last) h += `<div class="rt-fine rt-carry" data-rt="carry" aria-live="polite">${esc(carryText())}</div>`; // the carry-over cap (DECISIONS 47), live below
         }
         if (last && (s.starsForSale | 0) > 0) h += `<div class="rt-d rt-starswhy" data-starswhy>★ ${esc(fill(dget('text.buy.starsWhy', '{n} stars: +{p}% income on every range, for good.'), { n: fmt(s.starsForSale), p: Math.round(s.starsForSale * (s.perStarPct || 0) * 10) / 10 }))}</div>`; // Ben, 2026-11-06: say what the stars are
-        h += `<div class="rt-fine">${esc(T('agent.fine', 'The last part signs the deeds: it\'s yours for good.'))} ${esc(T('agent.fine2', 'You earn stars, and the next range goes on the market.'))}</div>`;
+        h += `<div class="rt-fine">${esc(T('agent.fine', 'The last part signs the deeds: it\'s yours for good.'))}${front < rs.length - 1 ? ' ' + esc(T('agent.fine2', 'You earn stars, and the next range goes on the market.')) : ''}</div>`; // the finale has no next range (QA 2026-11-06 night)
       }
       h += '</div>';
     } else say(T('agent.say.roam', 'Nothing on the market. Visit any range you like.'));

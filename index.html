@@ -11,14 +11,14 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>@media (display-mode: standalone){
-  body.rr-body{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-  #rr-root{height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important}
+  #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
+  #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-cb4e146-f93a4401">
+<meta name="rr-pwa" content="2026-11-06-9a36b7d-0859d74d">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-cb4e146">
+<meta name="range-rat-build" content="2026-11-06-9a36b7d">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,7 +40,7 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-cb4e146", "builtAt": "2026-11-05T23:26:08Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-9a36b7d", "builtAt": "2026-11-06T01:53:48Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -352,7 +352,7 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
 .rrpv-x:focus-visible{outline:3px solid var(--rr-gold,#f2c641);outline-offset:2px}
 .rrpv-body{position:relative;flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;background:#f6efe0}
 .rrpv-body iframe{display:block;width:100%;height:100%;border:0;background:#f6efe0}
-.rrpv-fail{position:absolute;left:12px;right:12px;bottom:12px;margin:0;padding:10px 14px;border-radius:10px;background:var(--rr-panel,#2a1d16);border:2px solid var(--rr-line,#5a4232);font-family:var(--rr-font-body,system-ui,sans-serif);font-size:calc(15px*var(--rr-fs,1))}
+.rrpv-fail{position:absolute;left:12px;right:12px;top:12px;margin:0;padding:10px 14px;border-radius:10px;background:var(--rr-panel,#2a1d16);border:2px solid var(--rr-line,#5a4232);font-family:var(--rr-font-body,system-ui,sans-serif);font-size:calc(15px*var(--rr-fs,1))}
 .rrpv-fail a{color:var(--rr-gold,#f2c641);font-weight:700}.rrpv-fail .addr{-webkit-user-select:all;user-select:all;font-weight:700;overflow-wrap:anywhere}
 @media (prefers-color-scheme: dark){.rrpv-body,.rrpv-body iframe{background:#1d1712}}`;
 
@@ -392,12 +392,18 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     const fw = btn.parentElement, cv = r.querySelector('[data-el=canvas]'); if (!fw || !cv) return;
     const F = fw.getBoundingClientRect(), vis = visibleField(cv, r), bw = btn.offsetWidth, bh = btn.offsetHeight;
     // persistent things only: avoiding transient pop-ups (banners, toasts) would make the button jump about; .rr-fpsc is the
-    // Show FPS readout (top-left of the field: it and this button overlapped on Ben's iPhone, round 4)
-    const avoid = [...r.querySelectorAll('.rr-hud, .rr-bottom, .rr-fpsc, button, [role=button]')].filter((e) => e !== btn && !e.closest('[data-rrfb], .rr-banner, .rr-toasts, .rr-toast, .rr-bubble') && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden').map((e) => e.getBoundingClientRect()).filter((b) => b.width && b.height);
+    // Show FPS readout (top-left of the field: it and this button overlapped on Ben's iPhone, round 4); .rr-wind is the
+    // range counter in the same corner ("In pond: 12/30", "Firefly jar 3/8"): covered on Lily Lagoon / Firefly Bays (device QA S3)
+    const avoid = [...r.querySelectorAll('.rr-hud, .rr-bottom, .rr-fpsc, .rr-wind, button, [role=button]')].filter((e) => e !== btn && !e.closest('[data-rrfb], .rr-banner, .rr-toasts, .rr-toast, .rr-bubble') && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden').map((e) => e.getBoundingClientRect()).filter((b) => b.width && b.height);
     const m = 6, TL = [vis.left + m, vis.top + m], TR = [vis.right - bw - m, vis.top + m], BL = [vis.left + m, vis.bottom - bh - m], BR = [vis.right - bw - m, vis.bottom - bh - m];
-    const cands = [TL, TR, BL, BR];
-    let pick = cands[0];
-    for (const [x, y] of cands) { const b = { left: x, top: y, right: x + bw, bottom: y + bh }; if (!avoid.some((a) => hit(a, b))) { pick = [x, y]; break; } }
+    const box = (x, y) => ({ left: x, top: y, right: x + bw, bottom: y + bh });
+    // a top corner that is taken (a two-line range counter across a narrow landscape field): just under what's in the way
+    const under = ([x, y]) => { let yy = y; for (let k = 0; k < 4; k++) { const hs = avoid.filter((a) => hit(a, box(x, yy))); if (!hs.length) break; yy = Math.max(...hs.map((a) => a.bottom)) + 4; } return [x, yy]; };
+    const cands = [TL, TR, BL, BR, under(TL), under(TR)].filter(([x, y]) => y + bh <= vis.bottom - m + 0.5);
+    const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+    let pick = null, least = Infinity;
+    for (const [x, y] of cands) { const b = box(x, y), o = avoid.reduce((n, a) => n + area(a, b), 0); if (!o) { pick = [x, y]; break; } if (o < least) { least = o; pick = [x, y]; } } // nowhere clear: cover the least
+    if (!pick) pick = TL;
     const L = Math.round(pick[0] - F.left) + 'px', T = Math.round(pick[1] - F.top) + 'px';
     if (btn.style.left !== L) btn.style.left = L; if (btn.style.top !== T) btn.style.top = T;
   }
@@ -539,8 +545,8 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
   // with the policy page in the game's language in an <iframe>. Close / Esc / pad B (the engine sends pad B as Escape to
   // the top aria-modal layer) closes it and focus goes back to the link. The game stays paused while it's open.
   // No JS, or a page that can't be framed: the links stay plain target=_blank links to the same page.
-  const PV_TIMEOUT_MS = 12000;
-  let pv = null; // { el, frame, opener, pausedByUs, timer }
+  const PV_TIMEOUT_MS = 4000; // no page by then: the "Couldn't load" note (a later load still clears it)
+  let pv = null; // { el, frame, opener, opKey, pausedByUs, timer, loaded, failed, probe: 'skip' | 'pending' | 'ok' | 'fail' }
   function openPrivacy(opener, lang) {
     const rt = root(), url = privacyUrl(lang);
     if (!rt) { try { W.open(url, '_blank', 'noopener'); } catch (e) { /* ignore */ } return; }
@@ -563,25 +569,46 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     const op = opener || document.activeElement;
     // the pause re-renders Settings (its Pause toggle), replacing the link: remember how to find it again
     const opKey = op && op.getAttribute ? (op.getAttribute('data-k') ? `[data-k="${op.getAttribute('data-k')}"]` : op.getAttribute('data-f') ? `[data-f="${op.getAttribute('data-f')}"]` : null) : null;
-    pv = { el, frame, opener: op, opKey, pausedByUs, timer: 0, loaded: false };
+    pv = { el, frame, opener: op, opKey, pausedByUs, timer: 0, loaded: false, failed: false, probe: 'skip' };
+    // Can't show it (offline, blocked, the policy on another host such as itch.io): say so within PV_TIMEOUT_MS at the
+    // latest, with a new-tab link and the address as selectable text. UX audit 2026-11-06: a cross-origin frame fires
+    // `load` even for the browser's error page, and the game can't look inside it, so the sheet used to stay blank.
+    // Cross-origin, a no-cors fetch of the same URL is the probe: it rejects on a network failure (offline, DNS, blocked).
+    const same = (() => { try { return new URL(url, location.href).origin === location.origin; } catch (e) { return false; } })();
+    const live = () => !!pv && pv.el === el;
     const fail = () => {
-      if (!pv || pv.el !== el || el.querySelector('.rrpv-fail')) return;
+      if (!live() || pv.failed) return;
+      pv.failed = true;
       const p = document.createElement('p'); p.className = 'rrpv-fail'; p.setAttribute('role', 'status');
-      p.innerHTML = `${esc(t('privacyFail', "Couldn't show the privacy policy here."))} <a href="${esc(url)}" target="_blank" rel="noopener" data-f="pv-tab">${esc(t('privacyTab', 'Open it in a new tab'))}</a><br><span class="addr">${PRIVACY_MAIL}</span> (<a href="mailto:${PRIVACY_MAIL}">${esc(t('privacyMail', 'email'))}</a>)`;
-      el.querySelector('.rrpv-body').appendChild(p);
+      p.innerHTML = `<b>${esc(t('privacyFail', "Couldn't load the policy."))}</b> <a href="${esc(url)}" target="_blank" rel="noopener" data-f="pv-tab">${esc(t('privacyTab', 'Open it in a new tab'))}</a><br><span class="addr" data-f="pv-addr">${PRIVACY_MAIL}</span> (<a href="mailto:${PRIVACY_MAIL}" data-f="pv-mail">${esc(t('privacyMail', 'email'))}</a>)`;
+      el.querySelector('.rrpv-body').appendChild(p); el.classList.add('rrpv-failed');
     };
+    const unfail = () => { if (!live() || !pv.failed) return; pv.failed = false; const p = el.querySelector('.rrpv-fail'); if (p) p.remove(); el.classList.remove('rrpv-failed'); }; // it loaded after all (a slow network)
+    frame.addEventListener('error', () => fail());
     frame.addEventListener('load', () => {
-      if (!pv || pv.el !== el) return;
-      pv.loaded = true; clearTimeout(pv.timer);
-      let same = false; try { same = new URL(frame.src, location.href).origin === location.origin; } catch (e) { same = false; }
-      if (!same) return; // cross-origin (itch.io): can't look inside; the load event is all we get
+      if (!live()) return;
+      pv.loaded = true;
+      if (!same) { if (pv.probe === 'fail') fail(); else if (pv.probe === 'ok') unfail(); return; } // can't look inside: the probe decides
       let doc = null; try { doc = frame.contentDocument; } catch (e) { doc = null; }
       if (!doc || !doc.querySelector('main')) { fail(); return; } // an error page (offline, blocked)
+      unfail(); clearTimeout(pv.timer);
       try { doc.documentElement.classList.add('in-game'); } catch (e) { /* ignore */ } // hides the page's Back buttons (the sheet has Close)
       // Esc inside the policy page closes too (same origin only; the page itself runs no script)
       try { doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closePrivacy(); } }); } catch (e) { /* ignore */ }
     });
-    pv.timer = setTimeout(() => { if (pv && pv.el === el && !pv.loaded) fail(); }, PV_TIMEOUT_MS);
+    pv.probe = same ? 'skip' : 'pending';
+    if (!same) {
+      try {
+        // a host whose CSP forbids the fetch (not the frame) says nothing about the page: then only the timer decides
+        let csp = false; const onCsp = (e) => { if (e && String(e.blockedURI || '').indexOf(PRIVACY_BASE) === 0) csp = true; };
+        document.addEventListener('securitypolicyviolation', onCsp);
+        fetch(url, { mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer' })
+          .then(() => { document.removeEventListener('securitypolicyviolation', onCsp); if (!live()) return; pv.probe = 'ok'; if (pv.loaded) unfail(); },
+            () => setTimeout(() => { document.removeEventListener('securitypolicyviolation', onCsp); if (!live()) return; if (csp) { pv.probe = 'skip'; return; } pv.probe = 'fail'; fail(); }, 0));
+      } catch (e) { pv.probe = 'fail'; fail(); }
+    }
+    try { if (W.navigator && navigator.onLine === false) fail(); } catch (e) { /* ignore */ } // offline: no need to wait
+    pv.timer = setTimeout(() => { if (live() && (!pv.loaded || pv.probe === 'pending')) fail(); }, PV_TIMEOUT_MS);
     el.querySelector('[data-a=pv-close]').addEventListener('click', (e) => { e.stopPropagation(); closePrivacy(); });
     setTimeout(() => { try { el.querySelector('[data-a=pv-close]').focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 20);
     place();
@@ -621,9 +648,11 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     e.stopPropagation(); e.stopImmediatePropagation();
     if (e.key === 'Escape') { e.preventDefault(); closePrivacy(); return; }
     if (e.key === 'Tab') {
-      const x = pv.el.querySelector('[data-a=pv-close]'), f = pv.frame;
+      // Close -> (the "Couldn't load" note's links) -> the page -> Close; Shift+Tab the other way
+      const list = [pv.el.querySelector('[data-a=pv-close]'), ...pv.el.querySelectorAll('.rrpv-fail a'), pv.frame].filter(Boolean);
       e.preventDefault();
-      (document.activeElement === x ? f : x).focus();
+      const i = list.indexOf(document.activeElement), n = list.length;
+      list[((i < 0 ? 0 : i + (e.shiftKey ? -1 : 1)) % n + n) % n].focus();
     }
   }, true);
   W.addEventListener('keyup', (e) => { if (pv) { e.stopPropagation(); e.stopImmediatePropagation(); } }, true);
@@ -657,6 +686,8 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     try { for (const ev of ['screen', 'locale', 'pause']) r.on(ev, () => setTimeout(ensureButton, 0)); } catch (e) { /* ignore */ }
     try { const ro = new ResizeObserver(() => place()); ro.observe(root()); const fw = root().querySelector('[data-el=fieldwrap]'); if (fw) ro.observe(fw); } catch (e) { /* ignore */ }
     W.addEventListener('resize', () => place());
+    // the range counter (.rr-wind) shows / hides as a range loads or fills: move at once, not on the next 1 s tick
+    try { const wv = root().querySelector('[data-el=wind]'); if (wv) new MutationObserver(() => place()).observe(wv, { attributes: true, attributeFilter: ['style'] }); } catch (e) { /* ignore */ }
     setInterval(ensureButton, 1000); // layout switches can move the canvas without resizing anything we observe; cheap
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
@@ -877,7 +908,7 @@ window.BALANCE = {
   // retune, a big gift), they fire in order, at least this many seconds apart; beats with the same atProgress fire together.
   pace: {
     knots: {
-      muni:    [0, 0.0047, 0.013, 0.041, 0.11, 0.21, 0.38, 0.61, 0.99, 1.6, 2.1],
+      muni:    [0, 0.004, 0.014, 0.037, 0.091, 0.18, 0.35, 0.57, 0.92, 1.5, 2],   // refit 2026-11-06 (the opening's firsts + goal rewards fixed when dealt; the other rows are within noise)
       county:  [0, 0.0014, 0.0069, 0.021, 0.049, 0.089, 0.19, 0.45, 0.86, 1.5, 2],
       resort:  [0, 0.0046, 0.019, 0.044, 0.095, 0.19, 0.38, 0.68, 1.1, 1.5, 1.8],
       neon:    [0, 0.0066, 0.03, 0.087, 0.19, 0.33, 0.6, 0.89, 1.2, 1.5, 1.8],
@@ -1292,11 +1323,14 @@ window.BALANCE = {
         { ids: ['robotspeed', 'robotcap'], beetle: true, buys: 2, sec: 60 },
         { ids: ['robotmagnet', 'lights', 'pins', 'locked'], beetle: true, buys: 4, sec: 120 }
       ],
-      early: { cage: 'stunned', lights: 'dusk' },
+      // beetle (Ben's iPhone playtest 2026-11-05: Gus's gift beetle came unexplained): the beetle rows open the moment the
+      // gift beetle arrives, with "New" tags (the Beetle line, 'robots', too), so Gus's "more in the shop" is true
+      early: { cage: 'stunned', lights: 'dusk', robotspeed: 'beetle', robotcap: 'beetle' },
       /** a fresh intro state (state.shopIntro): n stages open (0 = no Shop yet), t / k = play second and buy count when the
        *  last stage opened (or its beetle arrived), x = ids opened early, fresh = the latest new ids (their "New" tags),
-       *  dep = play second of the first deposit, cta = the Shop button glows, hl = the focus row is highlighted */
-      fresh() { return { n: 0, t: 0, k: 0, x: {}, fresh: [], dep: -1, cta: 0, hl: 0, done: 0 }; },
+       *  dep = play second of the first deposit, cta = the Shop button glows, hl = the focus row is highlighted,
+       *  at = play second the Shop appeared (-1 not yet; retention.firsts counts from it) */
+      fresh() { return { n: 0, t: 0, k: 0, x: {}, fresh: [], dep: -1, cta: 0, hl: 0, done: 0, at: -1 }; },
       /** advance S with the facts f = { t (play s), deposited, afford (the focus item), beetle, stunned, night }; S.k counts
        *  buys (the caller bumps it). Returns the ids that just appeared ('shop' first when the Shop itself does), or null */
       step(S, f) {
@@ -1306,7 +1340,7 @@ window.BALANCE = {
         if (!S.n) {
           const dep = S.dep >= 0 && f.t - S.dep >= this.afterDepositSec;
           if (!(f.t >= this.maxSec || (f.t >= this.minSec && dep && f.afford))) return null;
-          S.n = 1; S.t = f.t; S.k0 = S.k; S.cta = 1; S.hl = 1; S.fresh = [];
+          S.n = 1; S.t = f.t; S.at = f.t; S.k0 = S.k; S.cta = 1; S.hl = 1; S.fresh = [];
           out.push('shop');
         } else if (S.n < st.length) {
           const s = st[S.n];
@@ -1318,7 +1352,10 @@ window.BALANCE = {
         for (const id in this.early) {
           if (S.x[id] || !S.n || this.stageOf(id) < S.n) continue;
           const w = this.early[id];
-          if ((w === 'stunned' && f.stunned) || (w === 'dusk' && (f.night || f.t >= this.duskSec))) { S.x[id] = 1; S.fresh = (S.fresh || []).concat(id); out.push(id); }
+          if ((w === 'stunned' && f.stunned) || (w === 'dusk' && (f.night || f.t >= this.duskSec)) || (w === 'beetle' && f.beetle)) {
+            S.x[id] = 1; S.fresh = (S.fresh || []).concat(id); out.push(id);
+            if (w === 'beetle' && !S.fresh.includes('robots')) S.fresh.push('robots'); // the Beetle line (in no stage) gets its tag too
+          }
         }
         if (S.n >= st.length) S.done = 1;
         return out.length ? out : null;
@@ -1341,6 +1378,27 @@ window.BALANCE = {
     // bucket (loop/game.js BUCKET_PAL), and a Gus line once per tier per save (state.bucketSeen). No economy change.
     // design/sim.js logs the first time each tier is reached as loose novelty (not counted for the 20-min rule).
     bucketTiers: { upgrade: 'price', every: 25, count: 9 },
+
+    // The first tip ball and the first trophy chests (Ben, playtest 2026-11-05 evening: the first tip "should come a little
+    // later so the user gets their bearings first" and be "better highlighted so it's clear what it is"; the first chest
+    // landed on top of the opening). A FRESH game only (newState() sets state.firsts; older saves have none and keep
+    // tipBall.firstAtSec and their chests as before), first Mudbank visit only.
+    // Tips: no tip ball at all (the scripted first one or an earned one) until tipReady(): tipMinSec of play, the first
+    // deposit made and the Shop out (shopIntro stage 1) with a first buy or tipAfterShopSec since it appeared. The first
+    // one then rides the next shot at a quiet moment, lives tipLifeSec (later ones tipBall.lifeSec), wears a pulsing ring
+    // and a "Tip!" marker, and Gus says so as it lands; it pays tipFirstMult tips (about the ones held back: without it
+    // the realistic sim's trial ran ~1.5 min longer). Earned tips wait until it is scooped or fades.
+    // Chests: a trophy won before chestReady() (chestMinSec of play, the Shop out) unlocks with a small toast and its
+    // chest is set aside (state.firsts.held); then, at a quiet moment, the waiting chests come out together: the Trophies
+    // badge and one Gus line. Shared by loop/game.js and design/sim.js: tipReady() and chestReady() are the one rule.
+    firsts: {
+      tipMinSec: 180, tipAfterShopSec: 60, tipLifeSec: 40, tipFirstMult: 5, chestMinSec: 300,
+      /** a fresh state.firsts: tip / chest = that hold is over; held = trophy chests set aside until chestReady() */
+      fresh() { return { tip: 0, chest: 0, held: [] }; },
+      /** f = { t (play s), deposited, shopAt (play s the Shop appeared, -1 = not yet), buys } */
+      tipReady(f) { return f.t >= this.tipMinSec && !!f.deposited && f.shopAt >= 0 && ((f.buys | 0) > 0 || f.t - f.shopAt >= this.tipAfterShopSec); },
+      chestReady(f) { return f.t >= this.chestMinSec && f.shopAt >= 0; }
+    },
 
     // 3 goal slots, always visible. Finishing one rerolls the slot. The reward is rewardSec seconds of
     // rolling income (min rewardMin x valueMult x prestigeMult), so goals feel the same all game.
@@ -7921,7 +7979,8 @@ window.DIALOG = {
     },
     offline: "Beetles kept picking while you were out. +{cash}",
     firstSpecialBall: "A lost member's ball! Worth a few extra acorns.",
-    firstTipBall: "A tip ball! Grab it before it fades: worth {n} balls.",
+    firstTipBall: "A golfer tipped you! Scoop the gold ball before it fades.",
+    chestWaiting: "You've a chest waiting from earlier. It's in Trophies.",
     firstRobot: "Clockwork beetle wound up! Tick tick, says Gus.",
     newRange: "New range! Fresh grass, new kettle.",
     milestone: [
@@ -8385,6 +8444,7 @@ window.DIALOG = {
       lanternPowered: "Lantern powered!",
       balls: "+{n} balls",
       tip: "Tip! +{n}",
+      tipMark: "Tip!",
       special: { premium: "Premium!", tour: "Tour ball!", gold: "Gold!", glow: "Glow ball!" }
     },
     toast: {
@@ -8637,7 +8697,7 @@ window.DIALOG = {
       }
     },
     dialog: {
-      giftBeetle: "Found a box of these in the shed. Clockwork beetles! They fetch balls on their own.", gus: "Gus", next: "tap ▸", nextKey: "Enter ▸" },
+      giftBeetle: "Found this clockwork beetle in the shed. It fetches balls.", giftBeetle2: "It works while you work. More of them in the shop.", gus: "Gus", next: "tap ▸", nextKey: "Enter ▸" },
     // launch intro (ui/intro.js): under the Wallace Labs logo. The studio name itself is never translated.
     intro: { presents: "presents" },
     title: {
@@ -8741,7 +8801,7 @@ window.DIALOG = {
       intro: "Goes to the Wallace Labs Discord, only when you press Send.",
       age: "For players 16+ (or with a parent's OK).",
       privacy: "Privacy policy",
-      privacyFail: "Couldn't show the privacy policy here.",
+      privacyFail: "Couldn't load the policy.",
       privacyTab: "Open it in a new tab",
       privacyMail: "email",
       promiseNote: "(Playtest versions have a Send feedback button; nothing goes until you press it.)",
@@ -10565,7 +10625,8 @@ window.DIALOG = {
       },
       offline: "Die Käfer haben weitergesammelt, als du weg warst. +{cash}",
       firstSpecialBall: "Ein verlorener Mitgliederball! Bringt Extra-Eicheln.",
-      firstTipBall: "Ein Trinkgeldball! Schnell, er ist {n} Bälle wert.",
+      firstTipBall: "Trinkgeld von einem Golfer! Schnapp den goldenen Ball.",
+      chestWaiting: "Von vorhin wartet noch eine Truhe. Schau bei den Pokalen.",
       firstRobot: "Aufziehkäfer aufgezogen! Tick tick, sagt Gus.",
       newRange: "Neue Range! Frisches Gras, neuer Kessel.",
       milestone: [
@@ -10997,6 +11058,7 @@ window.DIALOG = {
         lanternPowered: "Laterne aufgeladen!",
         balls: "+{n} Bälle",
         tip: "Trinkgeld! +{n}",
+        tipMark: "Trinkgeld!",
         special: { premium: "Premium!", tour: "Tourball!", gold: "Gold!", glow: "Leuchtball!" }
       },
       toast: {
@@ -11248,7 +11310,7 @@ window.DIALOG = {
         }
       },
       dialog: {
-        giftBeetle: "Hab im Schuppen eine Kiste gefunden. Aufziehkäfer! Die holen Bälle ganz von allein.", gus: "Gus", next: "weiter ▸", nextKey: "Enter ▸" },
+        giftBeetle: "Hab den Aufziehkäfer im Schuppen gefunden. Er holt Bälle.", giftBeetle2: "Er schuftet, während du schuftest. Mehr davon im Laden.", gus: "Gus", next: "weiter ▸", nextKey: "Enter ▸" },
       intro: { presents: "präsentiert" },
       title: {
         play: "Spielen",
@@ -11349,7 +11411,7 @@ window.DIALOG = {
         intro: "Geht in den Discord von Wallace Labs, erst wenn du sendest.",
         age: "Für Spieler ab 16 (oder mit dem OK der Eltern).",
         privacy: "Datenschutzerklärung",
-        privacyFail: "Die Datenschutzerklärung lässt sich hier nicht anzeigen.",
+        privacyFail: "Die Datenschutzerklärung ließ sich nicht laden.",
         privacyTab: "In neuem Tab öffnen",
         privacyMail: "E-Mail",
         promiseNote: "(Testversionen haben einen „Feedback senden“-Knopf; erst wenn du ihn drückst, geht etwas raus.)",
@@ -13090,7 +13152,8 @@ window.DIALOG = {
       },
       offline: "Los escarabajos recogieron mientras no estabas. +{cash}",
       firstSpecialBall: "¡La bola perdida de un socio! Vale unas bellotas extra.",
-      firstTipBall: "¡Una bola de propina! Recógela rápido: vale {n} bolas.",
+      firstTipBall: "¡Propina de un golfista! Recoge la bola dorada ya.",
+      chestWaiting: "Tienes un cofre esperando de antes. Está en Trofeos.",
       firstRobot: "¡Escarabajo con cuerda! «Tic, tic», dice Gus.",
       newRange: "¡Campo nuevo! Césped fresco, tetera nueva.",
       milestone: [
@@ -13535,6 +13598,7 @@ window.DIALOG = {
         lanternPowered: "¡Farol cargado!",
         balls: "+{n} bolas",
         tip: "¡Propina! +{n}",
+        tipMark: "¡Propina!",
         special: { premium: "¡Premium!", tour: "¡Bola de tour!", gold: "¡Oro!", glow: "¡Bola brillante!" }
       },
       toast: {
@@ -13786,7 +13850,7 @@ window.DIALOG = {
         }
       },
       dialog: {
-        giftBeetle: "Encontré una caja de estos en el cobertizo. ¡Escarabajos de cuerda! Recogen bolas por su cuenta.", gus: "Gus", next: "toca ▸", nextKey: "Enter ▸" },
+        giftBeetle: "Encontré este escarabajo de cuerda. ¡Te trae bolas!", giftBeetle2: "Trabaja mientras tú trabajas. Hay más en la tienda.", gus: "Gus", next: "toca ▸", nextKey: "Enter ▸" },
       intro: { presents: "presenta" },
       title: {
         play: "Jugar",
@@ -13887,7 +13951,7 @@ window.DIALOG = {
         intro: "Va al Discord de Wallace Labs, solo cuando le des a Enviar.",
         age: "Para mayores de 16 (o con permiso de sus padres).",
         privacy: "Política de privacidad",
-        privacyFail: "No se puede mostrar la política de privacidad aquí.",
+        privacyFail: "No se pudo cargar la política.",
         privacyTab: "Abrirla en una pestaña nueva",
         privacyMail: "correo",
         promiseNote: "(Las versiones de prueba tienen un botón Enviar comentarios; nada se envía hasta que lo pulses).",
@@ -15542,7 +15606,8 @@ window.DIALOG = {
       },
       offline: "Os besouros seguiram catando na sua ausência. +{cash}",
       firstSpecialBall: "Uma bola perdida de sócio! Vale umas bolotas a mais.",
-      firstTipBall: "Uma bola de gorjeta! Pegue rápido: vale {n} bolas.",
+      firstTipBall: "Gorjeta de um golfista! Pegue a bola dourada logo.",
+      chestWaiting: "Tem um baú esperando de antes. Está em Troféus.",
       firstRobot: "Besouro de corda pronto! Tique-taque, diz o Gus.",
       newRange: "Campo novo! Grama nova, chaleira nova.",
       milestone: [
@@ -15974,6 +16039,7 @@ window.DIALOG = {
         lanternPowered: "Lanterna carregada!",
         balls: "+{n} bolas",
         tip: "Gorjeta! +{n}",
+        tipMark: "Gorjeta!",
         special: { premium: "Premium!", tour: "Torneio!", gold: "Ouro!", glow: "Brilhante!" }
       },
       toast: {
@@ -16225,7 +16291,7 @@ window.DIALOG = {
         }
       },
       dialog: {
-        giftBeetle: "Achei uma caixa disso no galpão. Besouros de corda! Eles buscam bola sozinhos.", gus: "Gus", next: "toque ▸", nextKey: "Enter ▸" },
+        giftBeetle: "Achei este besouro de corda no galpão. Ele busca bolas.", giftBeetle2: "Trabalha enquanto você trabalha. Tem mais na loja.", gus: "Gus", next: "toque ▸", nextKey: "Enter ▸" },
       intro: { presents: "apresenta" },
       title: {
         play: "Jogar",
@@ -16326,7 +16392,7 @@ window.DIALOG = {
         intro: "Vai para o Discord da Wallace Labs só quando você enviar.",
         age: "Para jogadores a partir de 16 anos (ou com o OK dos pais).",
         privacy: "Política de privacidade",
-        privacyFail: "Não deu para mostrar a política de privacidade aqui.",
+        privacyFail: "Não deu para carregar a política.",
         privacyTab: "Abrir em uma nova aba",
         privacyMail: "e-mail",
         promiseNote: "(As versões de teste têm um botão Enviar feedback; nada sai até você tocar nele.)",
@@ -18074,7 +18140,8 @@ window.DIALOG = {
       },
       offline: "你不在时，甲虫们一直在捡球。+{cash}",
       firstSpecialBall: "会员遗失的球！能多换几颗橡果。",
-      firstTipBall: "小费球！趁它没消失快去捡：值{n}个球。",
+      firstTipBall: "有球手给你小费！趁金色的球消失前捡起来。",
+      chestWaiting: "之前的宝箱还在等你，去奖杯里打开。",
       firstRobot: "发条甲虫上好弦了！古斯说：滴答滴答。",
       newRange: "新球场！新草坪，新水壶。",
       milestone: [
@@ -18519,6 +18586,7 @@ window.DIALOG = {
         lanternPowered: "灯笼更亮了！",
         balls: "+{n}个球",
         tip: "小费！+{n}",
+        tipMark: "小费！",
         special: { premium: "高级球！", tour: "巡回赛球！", gold: "金球！", glow: "荧光球！" }
       },
       toast: {
@@ -18770,7 +18838,7 @@ window.DIALOG = {
         }
       },
       dialog: {
-        giftBeetle: "在小屋里找到一箱这玩意儿。发条甲虫！它们会自己去捡球。", gus: "古斯", next: "点击 ▸", nextKey: "Enter ▸" },
+        giftBeetle: "在小屋里找到这只发条甲虫。它会帮你捡球。", giftBeetle2: "你干活，它也干活。商店里还有更多。", gus: "古斯", next: "点击 ▸", nextKey: "Enter ▸" },
       intro: { presents: "出品" },
       title: {
         play: "开始",
@@ -18871,7 +18939,7 @@ window.DIALOG = {
         intro: "发到 Wallace Labs 的 Discord，点“发送”才会发出。",
         age: "适合 16 岁及以上的玩家（或已获家长同意）。",
         privacy: "隐私政策",
-        privacyFail: "无法在这里显示隐私政策。",
+        privacyFail: "无法加载隐私政策。",
         privacyTab: "在新标签页中打开",
         privacyMail: "发邮件",
         promiseNote: "（测试版有“发送反馈”按钮；你点下它之前，什么都不会发出去。）",
@@ -20894,12 +20962,13 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     },
     /** a tip ball scooped (DECISIONS 31): one clear "Tip! +X" pop, a gold sparkle ring, a coin flight and a bump */
     onTipBall(p) {
-      fx.hitstop(feel.hitStopMs.tip || 40);
-      fx.popup(tx('fx.tip', 'Tip! +{n}', { n: fmt(p.value) }), p.x, p.y - 22, { chip: true, color: '#f2c641', big: true });
-      for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; fx.sprite('sparkle', p.x + Math.cos(a) * 9, p.y - 6 + Math.sin(a) * 6); }
-      fx.particles('tip', p.x, p.y - 6, 14, { colors: ['#f2c641', '#fff2a6', '#fffaee'], speed: 70, up: 30, g: 90, life: 0.55 });
-      fx.coinFly && fx.coinFly(p.x, p.y - 8, 3);
-      haptic('bump', 0.7);
+      fx.hitstop((feel.hitStopMs.tip || 40) * (p.first ? 1.5 : 1));
+      // the first one (retention.firsts) is the bigger moment: a huge pop that isn't hushed, two sparkle rings, more coins
+      fx.popup(tx('fx.tip', 'Tip! +{n}', { n: fmt(p.value) }), p.x, p.y - 22, p.first ? { color: '#f2c641', huge: true } : { chip: true, color: '#f2c641', big: true });
+      const rings = p.first ? 2 : 1; for (let r = 0; r < rings; r++) for (let i = 0; i < 8; i++) { const a = (i + r / 2) / 8 * 6.283, d = 1 + r * 0.6; fx.sprite('sparkle', p.x + Math.cos(a) * 9 * d, p.y - 6 + Math.sin(a) * 6 * d); }
+      fx.particles('tip', p.x, p.y - 6, p.first ? 24 : 14, { colors: ['#f2c641', '#fff2a6', '#fffaee'], speed: p.first ? 85 : 70, up: 30, g: 90, life: 0.55 });
+      fx.coinFly && fx.coinFly(p.x, p.y - 8, p.first ? 6 : 3);
+      haptic('bump', p.first ? 1 : 0.7);
     },
     onHopperFull(p) {
       // the pin over the rat bounces + turns gold (class set in updatePin), the rat sags under the load
@@ -21366,6 +21435,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       // the first time), lines said, shop kinds already met (null = not looked yet). See menuFirstOpen / guideTick
       guide: { open: {}, said: {}, seen: null },
       bucketSeen: 0, // Posh Buckets tiers (DECISIONS 37): the highest bucket tier Gus has named (his line plays once per tier)
+      // the first tip ball and the first trophy chests wait for the player's bearings (Ben 2026-11-05; BALANCE.retention.firsts).
+      // Older saves have none (sanitize keeps it null): their tips and chests work as before
+      firsts: B.retention && B.retention.firsts ? B.retention.firsts.fresh() : null,
       player: null
     };
     if (st.shopIntro) st.tutorialFired.canAffordUpgrade = true; // Gus's shop line (shopIntro) replaces "You've a few acorns"
@@ -21532,6 +21604,20 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const gearShown = () => !introHides('gear');
   const upVisible = (id) => introHides(id) ? false : ESC_UP_IDS.includes(id) ? escVisible(id) : id === 'bays' && litBays() ? false : (ROBOT_UPS.includes(id) ? robotCount() >= 1 : id === 'tips' ? tipsSeen() : id === 'lights' ? !RM().alwaysNight : id === 'robots' ? !(giftAt() && state.rangeIdx === 0 && !state.tour && !state.giftedBeetle) : !(up(id) && up(id).unlockAt && lvl(id) < 1 && paceNow() < up(id).unlockAt)); // staged rows: visit pace (DECISIONS 37); a row you've bought never hides
   const tipsSeen = () => (state.stats.tipBalls | 0) > 0 || state.rangeIdx > 0 || (state.tour | 0) > 0; // Friendly Wave shows after the first tip
+  // ---- the first tip ball and the first chests (Ben, playtest 2026-11-05 evening; BALANCE.retention.firsts, the rule
+  // design/sim.js plays): a fresh game's first Mudbank visit holds every tip ball until tipReady() and every trophy chest
+  // until chestReady(). state.firsts = { tip, chest (1 = that hold is over), held: [chests set aside] }; null = an older
+  // save (or a test's quiet boot: off), which plays as before
+  const FI_ = () => (B.retention && B.retention.firsts) || null;
+  const firstsOn = () => !!(state && isObj(state.firsts) && !state.firsts.off && FI_() && (state.rangeIdx | 0) === 0 && (state.frontier | 0) === 0 && !(state.tour | 0) && !state.freeRoam && !state.freePlay);
+  let firstTipB = null; // the first tip ball while it is out (its marker, Gus's line; earned tips wait for it)
+  const tipsHeld = () => firstsOn() && (!state.firsts.tip || !!(firstTipB && firstTipB.tip));
+  const chestsHeld = () => firstsOn() && !state.firsts.chest;
+  function firstsFacts() {
+    const st = state.stats, S = state.shopIntro;
+    const shopAt = !isObj(S) ? 0 : ((S.n | 0) >= 1 || S.done) ? (S.at >= 0 ? +S.at : 0) : -1; // no intro (or an intro from before `at`): the Shop is out
+    return { t: +st.playSeconds || 0, deposited: (st.deposits | 0) > 0, shopAt, buys: Math.max(isObj(S) ? S.k | 0 : 0, st.upgradesBought | 0) };
+  }
   // ---- the Escalation Plan (DECISIONS 32): buy the range in instalments, owned ranges, portfolio, visits ----
   const ESC = () => Object.assign({ instalments: 1, portfolioPerRange: 0, visitPayMult: 1, saveRule: false }, B.escalation || {});
   const parts = () => Math.max(1, ESC().instalments | 0);
@@ -21791,6 +21877,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const used = (s.gear | 0) > 0 || Object.keys(lv).some((k) => (lv[k] | 0) > 0) || (s.rangeIdx | 0) > 0 || (s.frontier | 0) > 0 || (s.stars | 0) > 0 || (s.tour | 0) > 0 || (si && (si.n | 0) > 0 && !si.cta) || (isObj(s.stats) && (+s.stats.playSeconds || 0) > 900);
       o.guide = { open: used ? { all: 1 } : {}, said: used ? { menu: 1 } : {}, seen: null };
     }
+    if (isObj(s.firsts) && FI_()) { const F = Object.assign(FI_().fresh(), s.firsts); F.tip = F.tip ? 1 : 0; F.chest = F.chest ? 1 : 0; F.held = Array.isArray(F.held) ? F.held.filter((c) => isObj(c) && isNum(c.id)) : []; o.firsts = F; } else o.firsts = null;
     if (isObj(s.shopIntro) && SI_()) { const S = Object.assign(SI_().fresh(), s.shopIntro); S.n = clamp(S.n | 0, 0, SI_().stages.length); S.k = Math.max(0, S.k | 0); if (!isObj(S.x)) S.x = {}; if (!Array.isArray(S.fresh)) S.fresh = []; o.shopIntro = S; } else o.shopIntro = null;
     for (const k of ['cash', 'runCash', 'allTimeCash', 'stock', 'stars', 'dayT', 'tour', 'goalsDone', 'cage', 'cageT', 'paid', 'paidTotal']) if (!isNum(o[k])) o[k] = d[k];
     // stats/hopper from a hand-edited or damaged save: "10" would string-concatenate on the next `+=`
@@ -22269,15 +22356,17 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     b.st = 'air'; b.aimed = !!aimed; b.golfer = gf.bay; b.demo = mode !== 'game';
     // DECISIONS 31: golfers tip a busy range. A tip earned by any pickup (tipsDue, see pickupBy) rides on the next shot;
     // on a fresh game the first shot after firstAtSec of play is one too (Gus says so)
-    const ft = TIPB().firstAtSec, firstTip = ft != null && !state.tutorialFired._firstTip && state.rangeIdx === 0 && !(state.tour > 0) && (state.stats.playSeconds || 0) >= ft;
-    if (!b.demo && !aimed && (firstTip || tipsDue > 0)) { if (!firstTip) tipsDue--; markTip(b); }
+    // (Ben 2026-11-05, retention.firsts: a fresh game holds every tip until firsts.tip, then that first one is marked)
+    const ft = TIPB().firstAtSec, FS = firstsOn(), held = FS && tipsHeld();
+    const firstTip = !held && !state.tutorialFired._firstTip && state.rangeIdx === 0 && !(state.tour > 0) && (FS ? !!state.firsts.tip : ft != null && (state.stats.playSeconds || 0) >= ft);
+    if (!b.demo && !aimed && !held && (firstTip || tipsDue > 0)) { if (!firstTip) tipsDue--; markTip(b, firstTip && FS); }
     world.balls.push(b);
     return b;
   }
   const GRAV = 130;
   function updateBall(b, dt) {
     b.age += dt;
-    if (b.tip && b.age > (TIPB().lifeSec || 20)) { b.tip = false; emit('tipBall', { phase: 'fade' }); } // unscooped: a plain ball again
+    if (b.tip && b.age > tipLife(b)) { b.tip = false; emit('tipBall', { phase: 'fade', first: !!b.tipFirst }); } // unscooped: a plain ball again
     if (b.st === 'mag') return; // being hoovered: moved by its collector (magnetStep)
     if (b.st === 'belt') { beltStep(b, dt); return; } // on the conveyor (Escalation Plan)
     if (b.st === 'rest') { if (b.blown && !b.trapped) blowBall(b, dt); return; }
@@ -22299,6 +22388,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         else if (b.aimed && !b.landed && pl && pl.stun <= 0 && b.minD != null && b.minD < feel.hit.nearMissPx * feel.hit.nearMissPx) { emit('nearMiss', { d: Math.sqrt(b.minD) }); sfx('whiff'); fire('onNearMiss', { x: b.x, y: b.y, player: pl }); }
         if (!b.landed) {
           b.landed = true; emit('ballLand', { type: b.type, x: b.x, y: b.y });
+          if (b.tipFirst) firstTipLine(b); // Gus names the first tip ball as it lands (retention.firsts)
           if (mode === 'game') sfx('ball_land', { volume: 0.35, pitch: rand(-2, 2) });
           fire('onBallLand', { x: b.x, y: b.y, first: true, type: b.type });
           if (world.mech && world.mech.onBallLand && world.mech.onBallLand(b)) return;
@@ -22580,11 +22670,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     lastPickT = gameT; // someone is collecting (Gus doesn't nag "stock empty" over it)
     state.stats.ballsCollected++;
     if (b.lit) litPickup(robot, b); // Firefly Bays: a ball in the lantern light pays a bonus (GDD "Firefly Bays")
-    if (robot) { robot.hop[b.type] = (robot.hop[b.type] | 0) + 1; robot.hopN++; if (!(W.document && W.document.hidden) && Math.random() < tipChance()) tipsDue = Math.min(5, tipsDue + 1); return; } // beetles' balls earn tips too (only the rat scoops them)
+    if (robot) { robot.hop[b.type] = (robot.hop[b.type] | 0) + 1; robot.hopN++; if (!(W.document && W.document.hidden) && !tipsHeld() && Math.random() < tipChance()) tipsDue = Math.min(5, tipsDue + 1); return; } // beetles' balls earn tips too (only the rat scoops them)
     state.hopper[b.type] = (state.hopper[b.type] | 0) + 1;
     const p = world.player;
     const tip = b.tip ? payTip(b, p) : 0;
-    if (!tip && Math.random() < tipChance()) tipsDue = Math.min(5, tipsDue + 1); // a golfer noticed: a tip ball on a coming shot
+    if (!tip && !tipsHeld() && Math.random() < tipChance()) tipsDue = Math.min(5, tipsDue + 1); // a golfer noticed: a tip ball on a coming shot
     const pk = pickupNote(); // note 8: a rising ladder for quick pickups; a crowd in one frame stays quiet
     if (pk) sfx(special && b.type !== 'range' ? 'pickup_special' : 'pickup', { pitch: pk.step, volume: pk.vol }); // falls back to pickup if absent
     emit('pickup', { type: b.type, tip });
@@ -22628,19 +22718,103 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const tipValue = () => (TIPB().mult || 0) * swingPrice();
   function payTip(b, p) {
     if (!b || !b.tip) return 0;
-    b.tip = false;
-    const v = earn(tipValue(), 'tip'); if (!(v > 0)) return 0;
+    b.tip = false; const first = !!b.tipFirst; if (b === firstTipB) firstTipB = null;
+    const v = earn(tipValue() * (first ? (FI_() && FI_().tipFirstMult) || 1 : 1), 'tip'); if (!(v > 0)) return 0; // the first one is generous (it stands for the tips held back)
     state.stats.tipBalls = (state.stats.tipBalls | 0) + 1;
     sfxOr('tip_ball', 'cash', { pitch: 7 }); // audio/audio.js tip_ball (pitch: semitones, 7 = a fifth up)
-    emit('tipBall', { phase: 'pickup', value: v, tipBalls: state.stats.tipBalls });
-    fire('onTipBall', { x: b.x, y: b.y, player: p || world.player, value: v });
+    emit('tipBall', { phase: 'pickup', value: v, tipBalls: state.stats.tipBalls, first });
+    fire('onTipBall', { x: b.x, y: b.y, player: p || world.player, value: v, first });
     goalProgress('tip');
     return v;
   }
-  function markTip(b) {
+  function markTip(b, first) {
     b.tip = true;
+    if (first) { // the first tip ball of a fresh game (retention.firsts): longer life, a ring + "Tip!" marker, Gus speaks as it lands
+      b.tipFirst = true; b.tipLife = FI_().tipLifeSec || TIPB().lifeSec || 20; firstTipB = b;
+      state.tutorialFired._firstTip = true; // one first tip ball, even if Gus can't speak yet (he says it once it's down)
+      gusHushUntil = Math.max(gusHushUntil, gameT + 5); // his chatter keeps the slot free for it while it flies
+      emit('tipBall', { phase: 'spawn', first: true });
+      return;
+    }
     emit('tipBall', { phase: 'spawn' });
     tipIntro();
+  }
+  const tipLife = (b) => b.tipLife || TIPB().lifeSec || 20;
+  /** a moment when nothing else is asking for the player: no panel, dialog, modal, pause, trophy card, chest scene, Gus
+   *  line (said or waiting), shop-intro hush, focus block or feedback form. The firsts wait for one, so they never stack */
+  function firstsQuiet(anyHush) {
+    return mode === 'game' && !paused.user && !paused.menu && !paused.modal && !paused.dialog && !sheet && !modal && !chestScene && !bannerBusy &&
+      (anyHush || gameT >= gusHushUntil) && !uiBusyNow() && !(ui_.dialogOpen && ui_.dialogOpen()) && !(ui_.gusBusy && ui_.gusBusy()); // (the playtest feedback form pauses the game: paused.user)
+  }
+  /** Gus on the first tip ball, once it is on the grass (retried twice a second until he can speak, while it still shines) */
+  function firstTipLine(b) {
+    if (!b || b.tipSaid || !b.tip || !b.landed) return false;
+    if (focusQuiet() || (ui_.dialogOpen && ui_.dialogOpen()) || paused.menu || sheet || modal || chestScene) return false;
+    b.tipSaid = true;
+    gusHushUntil = Math.max(gusHushUntil, gameT + 8); // and nothing of his bumps it while it's read
+    const line = tpl(dstr('toasts.firstTipBall', 'A golfer tipped you! Scoop the gold ball before it fades.'), { n: TIPB().mult || 10 });
+    emit('dialog', { trigger: 'firstTipBall', kind: 'bubble', speaker: 'gus', text: line, blocking: false });
+    ui_.gusBubble && ui_.gusBubble(line, 'pleased', 1, true);
+    return true;
+  }
+  /** the held chests come out: into the Trophies tray (its badge counts them), one Gus line (quiet: no line, e.g. a test's quiet boot) */
+  function releaseHeldChests(say) {
+    const F = state.firsts; if (!isObj(F)) return;
+    F.chest = 1;
+    const held = Array.isArray(F.held) ? F.held : []; F.held = [];
+    if (!held.length) return;
+    const cs = chestState(); for (const c of held) cs.inv.push(c);
+    emit('chest', { tier: held[0].tier, ach: held[0].ach, count: cs.inv.length, held: held.length });
+    if (say) {
+      const line = dstr('toasts.chestWaiting', "You've a chest waiting from earlier. It's in Trophies.");
+      emit('dialog', { trigger: 'chestWaiting', kind: 'bubble', speaker: 'gus', text: line, blocking: false });
+      ui_.gusBubble && ui_.gusBubble(line, 'pleased', 0, true);
+    }
+    ui_.refresh && ui_.refresh(true);
+  }
+  /** twice a second: lift the holds when their moment comes (retention.firsts.tipReady / chestReady + a quiet moment) */
+  function firstsTick() {
+    if (mode !== 'game' || !state || !isObj(state.firsts)) return;
+    const F = state.firsts;
+    if (firstTipB && (!firstTipB.tip || world.balls.indexOf(firstTipB) < 0)) firstTipB = null; // scooped or faded: its marker goes
+    if (firstTipB && !firstTipB.tipSaid && firstTipB.landed) firstTipLine(firstTipB);
+    if (F.tip && F.chest) return;
+    if (!firstsOn()) { F.tip = 1; if (!F.chest) releaseHeldChests(!F.off); return; } // moved on (or switched off): nothing waits
+    const f = firstsFacts(), I = FI_();
+    if (!F.tip && I.tipReady(f) && firstsQuiet() && !state.giftTalk) { F.tip = 1; emit('firsts', { what: 'tip', t: f.t }); }
+    if (!F.chest && I.chestReady(f) && firstsQuiet() && !guideQ.length && !state.giftTalk && !(firstTipB && firstTipB.tip)) { // after any waiting guide line (the first dusk, a new item): one thing at a time
+      releaseHeldChests(true); emit('firsts', { what: 'chest', t: f.t }); }
+  }
+  // ---- Gus's gift beetle, explained (Ben's iPhone playtest 2026-11-05 20:34: "nothing explained it"). His one line at the
+  // gift was a plain bubble: queued behind a waiting "keep" line (the shop's "new in the shop" line at the same moment) it
+  // was dropped, and on a phone an open sheet hid it. Now state.giftTalk = 1 (pending) / 2 (first line said) waits for a
+  // free moment (firstsQuiet, his chatter held meanwhile), then: the beetle sparkles under a "A beetle!" marker, Gus says
+  // two short lines with priority (kept, never bumped), and his chatter waits until both are read. Saves keep it pending
+  let giftLine2At = 0, giftMarkUntil = 0;
+  function giftTalkTick() {
+    if (!state || !state.giftTalk || mode !== 'game') return;
+    if ((state.rangeIdx | 0) !== 0 || (state.tour | 0) > 0) { state.giftTalk = 0; return; } // moved on: it's no news now
+    const r0 = world.robots[0];
+    if (state.giftTalk === 1) {
+      gusHushUntil = Math.max(gusHushUntil, gameT + 1); // his chatter mustn't take the slot meanwhile
+      if (!r0 || !firstsQuiet(true)) return;
+      state.giftTalk = 2;
+      const line = tx('dialog.giftBeetle', 'Found this clockwork beetle in the shed. It fetches balls.');
+      sfx('upgrade', { pitch: 3 }); fx.sprite('sparkle', r0.x, r0.y - 8); fx.sprite('sparkle', r0.x - 6, r0.y - 4); fx.sprite('sparkle', r0.x + 6, r0.y - 5);
+      giftMarkUntil = renderMs + 9000;
+      gusHushUntil = Math.max(gusHushUntil, gameT + 14);
+      giftLine2At = nowMs() + 1800 + line.length * 55;
+      emit('dialog', { trigger: 'gus:giftBeetle', kind: 'bubble', speaker: 'gus', text: line, blocking: false });
+      ui_.gusBubble && ui_.gusBubble(line, 'pleased', 1, true);
+      return;
+    }
+    gusHushUntil = Math.max(gusHushUntil, gameT + 1);
+    if (nowMs() < giftLine2At || !firstsQuiet(true)) return; // the first line has been read; nothing else is up
+    state.giftTalk = 0;
+    const line2 = tx('dialog.giftBeetle2', 'It works while you work. More of them in the shop.');
+    gusHushUntil = Math.max(gusHushUntil, gameT + 8);
+    emit('dialog', { trigger: 'gus:giftBeetle2', kind: 'bubble', speaker: 'gus', text: line2, blocking: false });
+    ui_.gusBubble && ui_.gusBubble(line2, 'pleased', 1, true);
   }
   /** Gus, the first time a tip ball is out: one line (a peek, never blocking) */
   function tipIntro() {
@@ -22894,14 +23068,12 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       state.giftedBeetle = true; const was = lvl('robots');
       if (was < 1) { state.levels.robots = 1; syncRobots(); syncStats(); }
       emit('giftBeetle', { gave: was < 1 });
-      if (was < 1) { const r0 = world.robots[0]; sfx('upgrade', { pitch: 3 }); if (r0) { fx.sprite('sparkle', r0.x, r0.y - 8); fx.popup(tx('fx.giftBeetle', 'A beetle!'), r0.x, r0.y - 16, { color: '#a9bd5a', big: true }); } }
-      const line = dline('gus.giftBeetle', null) || tx('dialog.giftBeetle', 'Found a box of these in the shed. Clockwork beetles! They fetch balls on their own.');
-      emit('dialog', { trigger: 'gus:giftBeetle', kind: 'bubble', speaker: 'gus', text: line, blocking: false }); ui_.gusBubble && ui_.gusBubble(line, 'pleased');
-      toast(tx('toast.giftBeetle', 'Gus found a clockwork beetle in the shed!'));
+      // Gus explains it at the next free moment (giftTalkTick): Ben's iPhone playtest 2026-11-05, his line was swallowed
+      if (was < 1) state.giftTalk = 1;
       ui_.refresh && ui_.refresh(true);
     }
     T.ach = (T.ach || 0) - dt;
-    if (T.ach <= 0) { T.ach = 0.5; checkAchievements(); checkMilestones(); checkTriggers(); checkBeats(); checkBugBook(); shopIntroTick(); guideTick(0.5); }
+    if (T.ach <= 0) { T.ach = 0.5; checkAchievements(); checkMilestones(); checkTriggers(); checkBeats(); checkBugBook(); shopIntroTick(); guideTick(0.5); firstsTick(); giftTalkTick(); }
   }
 
   // ---- day / night ----
@@ -22956,7 +23128,8 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (!tpls.length) return null;
     const active = new Set(state.goals.filter(Boolean).map((g) => g.id));
     let tp = null;
-    for (let k = 0; k < tpls.length; k++) { const c = tpls[(state.goalsDone + slotIdx + k) % tpls.length]; if (!active.has(c.id) && c.id !== excludeId) { tp = c; break; } }
+    const noTip = firstsOn() && !state.firsts.tip; // no "Catch tip balls" goal before the first tip ball can come (retention.firsts)
+    for (let k = 0; k < tpls.length; k++) { const c = tpls[(state.goalsDone + slotIdx + k) % tpls.length]; if (!active.has(c.id) && c.id !== excludeId && !(noTip && c.stat === 'tipBalls')) { tp = c; break; } }
     tp = tp || tpls[0];
     const tier = Math.min(5, Math.floor(state.goalsDone / (cfg.tierEvery || 3)));
     const inc = Math.max(incomePerSec(cfg.incomeWindowSec || 30), basePrice() * bayCount() / 2.75);
@@ -23095,8 +23268,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     state.ach[a.id] = Date.now();
     const name = achName(a.id);
     const rw = a.reward || {};
-    let rewardText = ''; const chips = [];
-    if (B.chests && B.chests.tiers) { // GDD 4f: every achievement awards a trophy chest (earned only; opened from the tray)
+    let rewardText = ''; const chips = []; let held = null;
+    if (B.chests && B.chests.tiers && chestsHeld()) { // the opening (retention.firsts): the chest is set aside, the trophy is a small toast
+      const tier = B.chests.tiers[a.chest] ? a.chest : 'wood', cs = chestState();
+      cs.seq = (cs.seq | 0) + 1; held = { id: cs.seq, tier, ach: a.id, at: Date.now() }; state.firsts.held.push(held);
+    } else if (B.chests && B.chests.tiers) { // GDD 4f: every achievement awards a trophy chest (earned only; opened from the tray)
       const tier = B.chests.tiers[a.chest] ? a.chest : 'wood', cs = chestState();
       cs.seq = (cs.seq | 0) + 1; cs.inv.push({ id: cs.seq, tier, ach: a.id, at: Date.now() });
       chips.push({ kind: 'chest', tier, chestId: cs.seq, text: tpl(tx('chest.plus', '+ {tier} chest'), { tier: chestTierName(tier) }) }); // opened from the trophy (banner tap / Trophies row), not a tray
@@ -23107,12 +23283,15 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     } else if (rw.cash) { const c = rw.cash * valueMult() * pmult(); earn(c, 'achievement'); rewardText = '+' + fmt(c); chips.push({ kind: 'cash', text: tx('ach.cash', '+{n} acorns', { n: fmt(c) }) }); }
     if (!(B.chests && B.chests.tiers) && rw.cosmetic) { const [slot, id] = String(rw.cosmetic).split(':'); if (slot && id) { state.cos.owned[slot + ':' + id] = true; rewardText += (rewardText ? ' · ' : '') + cosName(slot, id); chips.push({ kind: 'cos', slot, id, text: tx('ach.unlockedItem', 'Unlocked: {name}', { name: cosName(slot, id) }) }); syncStats(); } }
     ui_.trophyChips = chips;
-    emit('achievement', { id: a.id, reward: rw, chest: chips[0] && chips[0].kind === 'chest' ? chips[0].tier : null });
+    emit('achievement', { id: a.id, reward: rw, chest: chips[0] && chips[0].kind === 'chest' ? chips[0].tier : null, held: held ? held.tier : null });
     if (chips[0] && chips[0].kind === 'chest') fire('onChestEarned', { tier: chips[0].tier });
     sfx('achievement');
     const text = tpl(dstr('toasts.achievement', 'Achievement! {name}'), { name });
-    toast(text, { silent: true }); // the banner shows it
-    ui_.banner && ui_.banner(name, rewardText, a.id);
+    if (held) { ui_.trophyChips = null; toast(text); setRatMood('proud', 1200); } // quietly: no trophy card or chest yet
+    else {
+      toast(text, { silent: true }); // the banner shows it
+      ui_.banner && ui_.banner(name, rewardText, a.id);
+    }
     const p = world.player || { x: 90, y: 160 };
     fire('onAchievement', { id: a.id, x: p.x, y: p.y });
   }
@@ -24348,16 +24527,40 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   const pondFrogCount = () => { const l = lvl('frogdivers'); return l > 0 ? Math.min(6, 1 + Math.floor(l / 5)) : 0; };
   function pondFrogPerch(z, i) { const a = [2.5, 0.55, 3.6, -0.35, 2.05, 1.0][i % 6]; return { x: z.x + Math.cos(a) * (z.rx + 3), y: z.y + Math.sin(a) * (z.ry + 2) }; }
-  function drawPixRing(g, x, y, r, a, col) { if (a <= 0) return; g.globalAlpha = a; g.fillStyle = col; const n = Math.max(8, Math.round(r * 3)); for (let i = 0; i < n; i++) { const t = i / n * 6.283; g.fillRect(Math.round(x + Math.cos(t) * r), Math.round(y + Math.sin(t) * r * 0.45), 1, 1); } g.globalAlpha = 1; }
+  function pixRingDots(g, x, y, r, a, col) { g.globalAlpha = a; g.fillStyle = col; const n = Math.max(8, Math.round(r * 3)); for (let i = 0; i < n; i++) { const t = i / n * 6.283; g.fillRect(Math.round(x + Math.cos(t) * r), Math.round(y + Math.sin(t) * r * 0.45), 1, 1); } g.globalAlpha = 1; }
+  // perf (pacing follow-up): a ring is 8-30 one-pixel fills; on the main canvas, round a centre on a whole pixel, it is a cached
+  // stamp instead (radius in 1/16 px, alpha in 1/64 steps, both baked in, so dots that land on one pixel still add up as before).
+  // Lily Lagoon's "fish here" pulse at the jetty drew ~28 fills a frame whenever the pond held balls
+  const ringCache = new Map();
+  function drawPixRing(g, x, y, r, a, col) {
+    if (a <= 0) return;
+    if (g !== ctx || g.globalAlpha !== 1 || g.globalCompositeOperation !== 'source-over' || x !== Math.round(x) || y !== Math.round(y)) { pixRingDots(g, x, y, r, a, col); return; }
+    const rq = Math.round(r * 16), aq = Math.min(64, Math.round(a * 64)); if (aq <= 0) return;
+    const RS = renderScale, k = col + rq + '.' + aq + '@' + RS; let c = ringCache.get(k);
+    const R = Math.ceil(rq / 16) + 1, H = Math.ceil(rq / 16 * 0.45) + 1;
+    if (!c) {
+      if (ringCache.size > 600) ringCache.clear();
+      c = makeCanvas((2 * R + 1) * RS, (2 * H + 1) * RS); const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.setTransform(RS, 0, 0, RS, 0, 0);
+      pixRingDots(q, R, H, rq / 16, aq / 64, col); ringCache.set(k, c);
+    }
+    g.drawImage(c, x - R, y - H, 2 * R + 1, 2 * H + 1);
+  }
   /** a sunk ball: under water just after the plop, then it bobs on the surface with a ripple round it */
-  function drawFloatBall(g, b) {
-    const since = b.sunkAt == null ? 9 : gameT - b.sunkAt; if (since < 0.45) return;
-    const x = Math.round(b.x), up = since < 0.7 ? 1 : 0, bob = RM_() ? 0 : (Math.sin(renderMs / 430 + b.x * 1.7 + b.y) > 0.3 ? 1 : 0), y = Math.round(b.y) + bob + up;
-    const col = { premium: '#f2c641', gold: '#f2c641', tour: '#fffaee', glow: '#bff3ff' }[b.type] || '#fffaee';
-    g.globalAlpha = 0.6; g.fillStyle = '#e8f6f8'; g.fillRect(x - 2, Math.round(b.y) + 1, 5, 1); g.fillRect(x - 3, Math.round(b.y), 1, 1); g.fillRect(x + 3, Math.round(b.y), 1, 1); g.globalAlpha = 1;
+  // perf (pacing follow-up): a floating ball was 6-7 fills a frame, and a full pond holds 30 (most of a Lily Lagoon visit, now
+  // that drainDay comes at 0.4 of it). The same pixels as one cached stamp per look (colour, tour dot, bob 0-2 px)
+  const FB_COL = { premium: '#f2c641', gold: '#f2c641', tour: '#fffaee', glow: '#bff3ff' }, FB_PAINT = {};
+  function paintFloatBall(g, x, yb, dy, col, tour) {
+    const y = yb + dy;
+    g.globalAlpha = 0.6; g.fillStyle = '#e8f6f8'; g.fillRect(x - 2, yb + 1, 5, 1); g.fillRect(x - 3, yb, 1, 1); g.fillRect(x + 3, yb, 1, 1); g.globalAlpha = 1;
     g.fillStyle = '#2f7f86'; g.fillRect(x - 1, y, 3, 1);                                      // waterline shadow
     g.fillStyle = col; g.fillRect(x - 1, y - 1, 3, 1); g.fillRect(x, y - 2, 1, 1);             // the dome above the water
-    if (b.type === 'tour') { g.fillStyle = '#c9473b'; g.fillRect(x, y - 1, 1, 1); }
+    if (tour) { g.fillStyle = '#c9473b'; g.fillRect(x, y - 1, 1, 1); }
+  }
+  function drawFloatBall(g, b) {
+    const since = b.sunkAt == null ? 9 : gameT - b.sunkAt; if (since < 0.45) return;
+    const x = Math.round(b.x), yb = Math.round(b.y), up = since < 0.7 ? 1 : 0, bob = RM_() ? 0 : (Math.sin(renderMs / 430 + b.x * 1.7 + b.y) > 0.3 ? 1 : 0), dy = bob + up;
+    const col = FB_COL[b.type] || '#fffaee', tour = b.type === 'tour', key = 'fball' + col + (tour ? 't' : '') + dy;
+    stamp(g, key, x, yb, 3, 2, 7, 5, FB_PAINT[key] || (FB_PAINT[key] = (q, ox, oy) => paintFloatBall(q, ox, oy, dy, col, tour)));
   }
   function drawPond(g, z) {
     const drained = pondDrained(), x = Math.round(z.x), yb = Math.round(z.y + z.ry);
@@ -25601,9 +25804,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (!collOn('life:' + it.id)) continue;
       const id = it.id, h = world.house || houseXY();
       if (id === 'robins') add(id, 2, () => F(rand(0.1, 0.9), rand(0.1, 0.9)));
-      else if (id === 'squirrels') add(id, 2, () => { const q = G.toXY(rand(0.1, 0.9), G.netD + 3); return q; });
+      else if (id === 'squirrels') add(id, 2, () => G.toXY(rand(0.1, 0.9), G.netD - 1)); // along the net, but inside the field: G.netD + 3 sat in the band phones crop under the bottom bar (device QA 2026-11-06 M1)
       else if (id === 'snails') add(id, 3, () => F(rand(0.05, 0.95), rand(0.2, 0.95)));
-      else if (id === 'ducks') add(id, 3, (i) => F(0.15 + i * 0.05, 0.97));
+      else if (id === 'ducks') add(id, 3, (i) => F(0.15 + i * 0.05, 0.93)); // 0.97 sat on the field's bottom edge: "birds cut off" on Ben's iPhone (M1)
       else if (id === 'frogs') add(id, 2, () => { const gr = pick(world.greens || []) || F(0.5, 0.5); return { x: gr.x + rand(-12, 12), y: gr.y + rand(-2, 3) }; });
       else if (id === 'shedcat') add(id, 1, () => ({ x: h.x + 4, y: h.y - 19, sleep: true, perch: true }));
       else if (id === 'butterflies') add(id, 3, () => F(rand(0.1, 0.9), rand(0.05, 0.6)));
@@ -25616,7 +25819,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     for (const c of world.critters || []) {
       c.t -= dt;
       const scared = p && mode === 'game' && !c.perch && d2(p.x, p.y, c.x, c.y) < 18 * 18;
-      if (scared) { const a = Math.atan2(c.y - p.y, c.x - p.x); c.tx = c.x + Math.cos(a) * 26; c.ty = c.y + Math.sin(a) * 18; const q = clampToField({ x: c.tx, y: c.ty }, 4); if (c.id !== 'squirrels' && c.id !== 'ducks') { c.tx = q.x; c.ty = q.y; } c.t = 1.5; c.hop = 0.3; }
+      if (scared) { const a = Math.atan2(c.y - p.y, c.x - p.x); c.tx = c.x + Math.cos(a) * 26; c.ty = c.y + Math.sin(a) * 18; const q = clampToField({ x: c.tx, y: c.ty }, 4); if (c.id !== 'squirrels') { c.tx = q.x; c.ty = q.y; } else c.ty = Math.min(c.ty, G.netD - 1); /* ducks fled down past the field (y 306 -> 335, under the bottom bar); squirrels may run along the net, never into it (M1) */ c.t = 1.5; c.hop = 0.3; }
       else if (c.t <= 0 && !c.perch) {
         c.t = { snails: 6, robins: rand(1, 3), ducks: rand(2, 4), frogs: rand(3, 6), bees: rand(0.5, 1.2), butterflies: rand(1, 2), squirrels: rand(2, 5) }[c.id] || 3;
         const r = c.id === 'bees' ? 12 : c.id === 'snails' ? 6 : c.id === 'squirrels' ? 30 : 22;
@@ -26705,7 +26908,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // tip ball: a soft warm halo plus one twinkle circling it (its mark is the acorn on top, ball_tip); the halo
     // blinks in its last 4 s (steady with flashes off)
     if (b.tip && b.st !== 'air') {
-      const bx = Math.round(b.x), by = Math.round(y), left = (TIPB().lifeSec || 20) - b.age;
+      const bx = Math.round(b.x), by = Math.round(y), left = tipLife(b) - b.age;
+      if (b.tipFirst) { // the first one (retention.firsts): a slow ring pulsing out of it plus two more twinkles; reduced motion: one still ring
+        g.save(); g.strokeStyle = '#fff2a6'; g.lineWidth = 1;
+        if (RM_()) { g.globalAlpha = 0.85; g.beginPath(); g.ellipse(bx + 0.5, by - 1, 10, 7.5, 0, 0, 6.283); g.stroke(); }
+        else for (let k = 0; k < 2; k++) { const ph = ((renderMs / 1500) + k / 2) % 1; g.globalAlpha = 0.9 * (1 - ph); g.beginPath(); g.ellipse(bx + 0.5, by - 1, 6 + ph * 9, 4.8 + ph * 6.8, 0, 0, 6.283); g.stroke(); }
+        g.restore();
+        g.fillStyle = '#fffaee'; for (let k = 1; k < 3; k++) { const a2 = (RM_() ? 0 : renderMs / 520) + k * 2.094; g.fillRect(Math.round(bx + Math.cos(a2) * 8), Math.round(by - 1 + Math.sin(a2) * 6), 1, 1); }
+      }
       if (left > 4 || noFlash() || (renderMs / 200 | 0) % 2) { const k = Math.sin(renderMs / 160); g.save(); g.globalAlpha = 0.7 + 0.25 * k; g.strokeStyle = '#f2c641'; g.lineWidth = 1; g.beginPath(); g.ellipse(bx + 0.5, by - 1, 5.5 + 0.5 * k, 4.5 + 0.5 * k, 0, 0, 6.283); g.stroke(); g.restore(); }
       const a = (renderMs / 380) % 6.283; g.fillStyle = '#fff2a6'; g.fillRect(Math.round(bx + Math.cos(a) * 7), Math.round(by - 1 + Math.sin(a) * 5.5), 1, 1);
       const bob = Math.round(Math.sin(renderMs / 180) * 1.5); g.fillStyle = '#f2c641'; g.fillRect(bx, by - 8 + bob, 1, 1); g.fillRect(bx - 1, by - 9 + bob, 3, 1); g.fillRect(bx, by - 10 + bob, 1, 1); // a little twinkle overhead
@@ -26936,10 +27146,17 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const c = bugFrameCanvas(type, fr, r.flip), ox = r.flip ? e.w - 1 - e.ox : e.ox;
     g.drawImage(c, Math.round(r.x - ox * sx), Math.round(r.y - e.oy * sy), Math.max(1, Math.round(e.w * sx)), Math.max(1, Math.round(e.h * sy)));
   }
-  function drawBallTrail(g, b) {
-    const sp = Math.hypot(b.vx, b.vy); if (sp < 40) return;
+  // the short motion trail of a ball high and fast in the air. perf (pacing follow-up): dot i of every trail has the same alpha,
+  // so all the trails are one path fill per dot (5 fills a frame, was 5 per ball: ~30-55 with the keen golfers' shots up)
+  const trailOn = (b) => b.st === 'air' && b.z > 3 && !b.landed && Math.hypot(b.vx, b.vy) >= 40;
+  function drawBallTrails(g) {
+    if (!world.balls.some(trailOn)) return;
     g.fillStyle = '#fffaee';
-    for (let i = 1, di = GFX.part < 1 ? 2 : 1; i <= 5; i += di) { const k = i * 0.02; /* Graphics level >= 1: 3 trail dots, not 5 */ g.globalAlpha = 0.5 - i * 0.09; g.fillRect(Math.round(b.x - b.vx * k), Math.round(b.y - b.vy * k - (b.z - b.vz * k)), 1, 1); }
+    for (let i = 1, di = GFX.part < 1 ? 2 : 1; i <= 5; i += di) { // Graphics level >= 1: 3 trail dots, not 5
+      const k = i * 0.02; g.globalAlpha = 0.5 - i * 0.09; g.beginPath();
+      for (const b of world.balls) if (trailOn(b)) g.rect(Math.round(b.x - b.vx * k), Math.round(b.y - b.vy * k - (b.z - b.vz * k)), 1, 1);
+      g.fill();
+    }
     g.globalAlpha = 1;
   }
   function render() {
@@ -27034,7 +27251,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (mode === 'game') wadeDrawTop(g); // splash droplets
     if (mode === 'game' && world.bayFx && world.bayFx.length) drawBayFx(g); // a bay just bought: a glow on its mat (Ben: make bay upgrades obvious)
     // airborne balls on top, with a short motion trail while high and fast
-    for (const b of world.balls) if (b.st === 'air') { if (b.z > 3 && !b.landed) drawBallTrail(g, b); drawBall(g, b); }
+    drawBallTrails(g); for (const b of world.balls) if (b.st === 'air') drawBall(g, b);
     // visual flyers (deposit stream, ballstock drop)
     for (const f of flyers) if (f.t >= 0) drawSprite(g, f.sprite, f.x, f.y);
     if (world.mech && world.mech.render) world.mech.render(g, 'top');
@@ -28794,7 +29011,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-bubble{position:absolute;transform:translate(-50%,-100%);width:max-content;max-width:min(230px,90%);overflow-wrap:normal;padding:5px 8px;border-radius:9px;background:var(--rr-badge);border:1px solid #6a5040;font-size:calc(15px*var(--rr-fs));line-height:1.3;color:var(--rr-text)}
 .rr-bubble.below{transform:translate(-50%,0)}
 .rr-bubble.below:after{bottom:auto;top:-6px;border-top:0;border-bottom:5px solid var(--rr-badge)}
-.rr-bubble:after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:var(--rr-badge);border-bottom:0}
+.rr-bubble:after{content:"";position:absolute;left:calc(50% + var(--rr-tail,0px));bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:var(--rr-badge);border-bottom:0}
 .rr-bubble .rr-who{display:block;font-family:var(--rr-font-label);font-weight:700;font-size:calc(13px*var(--rr-fs));color:var(--rr-gold)}
 .rr-wind{position:absolute;left:6px;top:6px;padding:3px 8px;border-radius:8px;background:var(--rr-badge);font-family:var(--rr-font-label);font-weight:700;font-size:calc(15px*var(--rr-fs));display:none;align-items:center;gap:4px}
 .rr-wind i{display:inline-block;font-style:normal;transition:transform .5s}
@@ -28975,6 +29192,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-roll .l{font-size:calc(15px*var(--rr-fs));line-height:1.5;background:var(--rr-badge);display:inline-block;padding:0 8px;border-radius:6px;margin:1px 0}
 .rr-roll .big{font-family:var(--rr-font-head);font-weight:600;font-size:calc(32px*var(--rr-fs));color:var(--rr-gold);background:none;text-shadow:2px 2px 0 #2a1c16}
 .rr-skip{position:absolute;right:8px;top:8px;z-index:41}
+.rr-tipmark{position:absolute;transform:translate(-50%,-100%);pointer-events:none;opacity:0;transition:opacity .25s;z-index:2}
+.rr-tipmark .bob{display:flex;flex-direction:column;align-items:center;animation:rr-tipbob 1s ease-in-out infinite}
+.rr-tipmark b{padding:1px 8px;border-radius:8px;background:#f2c641;border:2px solid #2a1c16;color:#2a1c16;font-family:var(--rr-font-label);font-weight:800;font-size:calc(16px*var(--rr-fs));line-height:1.25;white-space:nowrap;box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.rr-tipmark i{width:0;height:0;margin-top:-1px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #2a1c16}
+.rr-tipmark.fading b{background:#e8d9a0}.rr-tipmark.beetle b{background:#a9bd5a}
+@keyframes rr-tipbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.rr-reduced .rr-tipmark .bob{animation:none}
+.rr-root-title .rr-tipmark{visibility:hidden}
 .rr-pin{position:absolute;transform:translate(-50%,-100%);transform-origin:50% 100%;padding:2px 8px;border-radius:8px;background:var(--rr-badge);font-weight:700;font-size:calc(15px*var(--rr-fs));white-space:nowrap;pointer-events:none;transition:opacity .2s}
 .rr-pin .bar{display:block;height:4px;margin-top:2px;border-radius:2px;background:#1a110c;overflow:hidden}.rr-pin .bar i{display:block;height:100%;background:var(--rr-green)}
 .rr-debug{position:absolute;right:4px;top:58px;z-index:50;display:flex;gap:4px;align-items:center;font:12px monospace;background:rgba(0,0,0,.6);padding:2px 4px;border-radius:6px;pointer-events:auto}
@@ -30047,15 +30272,34 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   }
   // ---- trophy card: the live achievement moment (~4s: 0.35s in, 3s hold, 0.35s out). Queued, never stacked. ----
   const bannerQ = []; let bannerBusy = false;
-  ui_.banner = (name, reward, id) => { bannerQ.push({ name, reward, id, chips: ui_.trophyChips || [] }); ui_.trophyChips = null; if (!bannerBusy) nextBanner(); setRatMood('proud', 1600); };
+  ui_.banner = (name, reward, id) => { bannerQ.push({ name, reward, id, chips: ui_.trophyChips || [] }); ui_.trophyChips = null; if (bannerHeld()) { for (const t of trophyTabs()) t.classList.add('rr-has-new'); } else if (!bannerBusy) nextBanner(); setRatMood('proud', 1600); }; // held (a sheet / modal open): the Trophies button's dot says so now
   const TROPHY = { inMs: 350, holdMs: 3000, outMs: 350, gapMs: 180 };
   const TROPHY_CTA = { wood: '#d29a55', silver: '#a9d6e8', gold: '#f2c641' }; // the card's "Open chest" call to action, by chest tier
   function chipHTML(c, claimed) {
     const ic = c.kind === 'cash' ? `<img alt="" src="${iconURL('coin', 2)}">` : c.kind === 'chest' ? `<img alt="" src="${chestIconURL(c.tier, false)}">` : `<img alt="" src="${anyCosIconURL(c.slot, c.id)}">`;
     return `<span class="rr-chip ${c.kind}${claimed ? ' claimed' : ''}">${ic}<span>${esc(c.text)}</span></span>`;
   }
+  // UX audit 2026-11-06 #5 (phone): the card sat over the Shop sheet's header and the While you were away card. While a
+  // sheet or modal is open (any layout: the engine's sheets, the Journal sheet, modals) the cards wait in bannerQ; one
+  // that was just showing when it opened goes back to the front of the queue (it had no time to be read). They play
+  // ~0.3 s after the last one closes; the Trophies button keeps its "new" dot meanwhile. Otherwise unchanged.
+  const BAN_HOLD = { pollSec: 0.1, freeSec: 0.3, keepMs: 1500 };
+  let banCur = null, banPollT = 0, banFreeT = 0;
+  function bannerHeld() { const r = layout.root; return !!(sheet || modal || (r && r.querySelector('.rr-sheet.on, .rr-modal'))); }
+  function bannerTick(dt) {
+    if (!banCur && (bannerBusy || !bannerQ.length)) { banFreeT = 0; return; }
+    banPollT -= dt; if (banPollT > 0) return; banPollT = BAN_HOLD.pollSec;
+    if (bannerHeld()) {
+      banFreeT = 0;
+      if (banCur) { const c = banCur; if (!c.it.requeued && nowMs() - c.at < BAN_HOLD.keepMs) bannerQ.unshift(Object.assign({}, c.it, { requeued: true })); c.hide(); }
+      return;
+    }
+    banFreeT += BAN_HOLD.pollSec;
+    if (!bannerBusy && bannerQ.length && banFreeT >= BAN_HOLD.freeSec) nextBanner();
+  }
   function nextBanner() {
-    const b = els().banner; let it = bannerQ.shift(); if (!it || !b) { bannerBusy = false; return; }
+    const b = els().banner; if (bannerHeld()) { bannerBusy = false; return; } // waits in the queue: bannerTick() plays it after the sheet / modal
+    let it = bannerQ.shift(); if (!it || !b) { bannerBusy = false; return; }
     bannerBusy = true;
     // a burst of unlocks (e.g. a big stat jump): show the next one, then fold the rest into one "+N more" card
     if (bannerQ.length >= 3 && !it.more) { const rest = bannerQ.splice(1); bannerQ.push({ more: rest.length + 1, name: tx('ach.more', '{n} more trophies!', { n: rest.length + 1 }), id: rest[0].id, chips: [], reward: rest.map((r) => r.name).slice(0, 3).join(tx('units.sep', ', ')) + (rest.length > 3 ? '…' : '') }); }
@@ -30078,7 +30322,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     emit('fx', { kind: 'achievement', id: it.id });
     pulseTrophyTab();
     let done = false, timer = 0;
-    function hide() { if (done) return; done = true; clearTimeout(timer); b.classList.remove('on'); b.onclick = null; if (fw) fw.style.removeProperty('--rr-banh'); setTimeout(nextBanner, TROPHY.outMs + TROPHY.gapMs); }
+    function hide() { if (done) return; done = true; if (banCur && banCur.hide === hide) banCur = null; clearTimeout(timer); b.classList.remove('on'); b.onclick = null; if (fw) fw.style.removeProperty('--rr-banh'); setTimeout(nextBanner, TROPHY.outMs + TROPHY.gapMs); }
+    banCur = { it, at: nowMs(), hide };
     timer = setTimeout(hide, TROPHY.inMs + (bannerQ.length > 1 ? TROPHY.holdMs * 0.6 : TROPHY.holdMs) * (chc ? 1.5 : 1)); // a chest to tap: a little longer to reach it
   }
   function trophyTabs() { return [...document.querySelectorAll('[data-b=achievements],[data-rl-tab=achievements]')]; }
@@ -30108,6 +30353,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const b = el('div', 'rr-bubble'); b.innerHTML = `<span class="rr-who">${esc(g.name)}</span>${esc(line)}`; ui_._bark = b;
     const p = toPx(clamp(g.x, 60, G.W - 60), g.y + 6); b.classList.add('below'); b.style.left = p.x + 'px'; b.style.top = p.y + 'px';
     fxl.appendChild(b);
+    // keep the whole bubble on the field: centred on the golfer it was wider than the 60 px margin on every phone, and the
+    // stage cut its first letters ("ight session hits"). The tail still points at the golfer (device QA 2026-11-06 S2)
+    { const half = b.offsetWidth / 2 + 4, W2 = fxl.clientWidth; if (W2) { const x = clamp(p.x, half, Math.max(half, W2 - half)); b.style.left = x + 'px'; if (x !== p.x) b.style.setProperty('--rr-tail', clamp(p.x - x, 10 - half, half - 10) + 'px'); } }
     talkBlips(line, 'golfer');
     setTimeout(() => { try { const a = b.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }); a.onfinish = () => b.remove(); } catch (er) { b.remove(); } }, 2600 + line.length * 25);
   };
@@ -30366,7 +30614,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     wTick();
     switchTab(name);
     requestAnimationFrame(() => { scrim.classList.add('on'); sh.classList.add('on'); });
-    setTimeout(() => { const f = sh.querySelector('.rr-sheetbody [role=tab][aria-selected=true]') || sh.querySelector('.rr-sheetbody button:not([disabled]), .rr-sheetbody input') || sh.querySelector('[data-close]'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 60);
+    setTimeout(() => { if (sh.contains(document.activeElement)) return; /* already placed (restoreReturn: the button that left Settings) */ const f = sh.querySelector('.rr-sheetbody [role=tab][aria-selected=true]') || sh.querySelector('.rr-sheetbody button:not([disabled]), .rr-sheetbody input') || sh.querySelector('[data-close]'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 60);
     emit('fx', { kind: 'popup', target: 'sheet' });
   }
   function switchTab(name) {
@@ -30406,7 +30654,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const h = settingsHost(); let r = null;
     if (h) {
       const pn = h.el.querySelector('[data-stp]'), body = h.el.querySelector('.rr-sheetbody') || h.el, pv = h.prev;
-      r = { kind: h.kind, mode, tab: setTabGet(), sp: pn ? pn.scrollTop : 0, bt: body.scrollTop, k: (btn && btn.dataset && btn.dataset.k) || null, prev: pv || null, prevK: (pv && pv.dataset && pv.dataset.k) || null };
+      // user: the Pause button's hold (Settings from the pause card). Credits leaves the game (mode 'credits' clears it), so
+      // the return point carries it and restoreReturn() puts it back, pause card under Settings (UX audit 2026-11-06 #4)
+      r = { kind: h.kind, mode, tab: setTabGet(), sp: pn ? pn.scrollTop : 0, bt: body.scrollTop, k: (btn && btn.dataset && btn.dataset.k) || null, prev: pv || null, prevK: (pv && pv.dataset && pv.dataset.k) || null, user: !!paused.user };
       if (h.kind === 'sheet') closeSheet(true); else closeModal();
     }
     retPending = null; clearTimeout(retTimer); retNext = r;
@@ -30421,7 +30671,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const live = (e, k) => (e && e.isConnected ? e : k && layout.root ? layout.root.querySelector(`[data-k="${k}"]`) : null);
     setTabSet(r.tab);
     let host = null;
-    if (r.kind === 'sheet') { if (mode !== 'game') return; layout.openPanel('settings'); if (sheet) { host = sheet.sh; sheet.prevFocus = live(r.prev, r.prevK); } }
+    if (r.kind === 'sheet') { if (mode !== 'game') return; if (r.user && !paused.user) setUserPause(true); /* first: the pause card (and its Settings button, Settings' focus return) exists again before Settings opens over it */ layout.openPanel('settings'); if (sheet) { host = sheet.sh; sheet.prevFocus = live(r.prev, r.prevK); } }
     else { if (mode !== 'title') return; const m = openTitleSettings(); if (m && modal) { host = m; modal.prev = live(r.prev, r.prevK); } }
     if (!host) return;
     const put = () => {
@@ -30430,7 +30680,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       if (pn) pn.scrollTop = r.sp; body.scrollTop = r.bt;
       const b = r.k && host.querySelector(`[data-k="${r.k}"]`); if (b) try { b.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
     };
-    put(); setTimeout(put, 90); // again after openSheet's / openModal's own first-focus timers (60 / 30 ms)
+    put(); setTimeout(put, 90); // again after openSheet's / openModal's own first-focus timers (60 / 30 ms; they leave focus alone once it is inside)
   }
 
   // ---- modals ----
@@ -30445,7 +30695,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     modal = { m, scrim, prev: document.activeElement, ret };
     paused.modal = true;
     modalCloseX(m);
-    setTimeout(() => { const f = m.querySelector('[role=tab][aria-selected=true]') || m.querySelector('button:not(.rr-modalx)') || m.querySelector('button'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 30);
+    setTimeout(() => { if (m.contains(document.activeElement)) return; /* already placed (restoreReturn) */ const f = m.querySelector('[role=tab][aria-selected=true]') || m.querySelector('button:not(.rr-modalx)') || m.querySelector('button'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 30);
     try { m.animate([{ transform: 'translate(-50%,-50%) scale(.85)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }], { duration: 200, easing: 'ease-out' }); } catch (e) { /* ignore */ }
     return m;
   }
@@ -31206,6 +31456,27 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const lx = q.x + 'px', ty = q.y + 'px'; if (pinEl._l !== lx) { pinEl._l = lx; pinEl.style.left = lx; } if (pinEl._tp !== ty) { pinEl._tp = ty; pinEl.style.top = ty; }
     op(1);
   }
+  // the first tip ball's marker (retention.firsts; Ben 2026-11-05): a small "Tip!" tag with an arrow over it, bobbing (still
+  // with reduced motion: CSS), until it is scooped or fades. Later tip balls have only their halo
+  // + the gift beetle's "A beetle!" marker for a few seconds while Gus explains it (giftTalkTick)
+  const fieldMarks = {};
+  function fieldMark(key, cls, text, x, y, fading) {
+    const fxl = els().fx; let m = fieldMarks[key];
+    if (text == null || !fxl || mode !== 'game') { if (m && m._on) { m._on = false; m.style.opacity = '0'; } return; }
+    if (!m || !m.isConnected) { m = fieldMarks[key] = el('div', 'rr-tipmark ' + cls); m.setAttribute('aria-hidden', 'true'); m.innerHTML = `<span class="bob"><b></b><i></i></span>`; fxl.appendChild(m); m._on = false; }
+    if (m._t !== text) { m._t = text; m.querySelector('b').textContent = text; }
+    const q = toPx(clamp(x, 12, G.W - 12), Math.max(22, y));
+    const lx = q.x + 'px', ty = q.y + 'px'; if (m._l !== lx) { m._l = lx; m.style.left = lx; } if (m._tp !== ty) { m._tp = ty; m.style.top = ty; }
+    m.classList.toggle('fading', !!fading);
+    if (!m._on) { m._on = true; m.style.opacity = '1'; }
+  }
+  function updateTipMark() {
+    const b = firstTipB;
+    const show = !!(b && b.tip && b.landed && !b.trapped && world.balls.indexOf(b) >= 0); // from its first bounce (Gus speaks then too)
+    fieldMark('tip', 'tip', show ? tx('fx.tipMark', 'Tip!') : null, show ? b.x : 0, show ? b.y - b.z - 11 : 0, show && tipLife(b) - b.age < 4);
+    const r0 = renderMs < giftMarkUntil ? world.robots[0] : null;
+    fieldMark('beetle', 'beetle', r0 ? tx('fx.giftBeetle', 'A beetle!') : null, r0 ? r0.x : 0, r0 ? r0.y - 10 : 0, false);
+  }
   ui_.goalEl = (i) => els().goalsdock && els().goalsdock.querySelector(`[data-goal="${i}"]`);
   ui_.refresh = (force) => { if (mode !== 'game') return; updateHud(force); refreshPanels(force); };
 
@@ -31420,7 +31691,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
     updateTweens(dtReal * 1000); updateParticles(dtReal); updateFlyers(dtReal * 1000); updateFx(dtReal);
     if (mode !== 'game') for (const s of [world.player, world.house].concat(world.golfers, world.robots)) if (s && s.sq) updateSpring(s.sq, dtReal); // perf: no array per game frame
-    updateDialog(); updatePeek(dtReal * 1000); updatePin(dtReal); updateDodgeBtn(); updateAutoBtn(); updateChestBtn();
+    updateDialog(); updatePeek(dtReal * 1000); updatePin(dtReal); updateTipMark(); bannerTick(dtReal); updateDodgeBtn(); updateAutoBtn(); updateChestBtn();
     if (mode === 'game' && !(paused.modal || paused.dialog)) updateCritters(dtReal);
     if (mode === 'game' && !(paused.modal || paused.dialog || paused.user || paused.menu)) try { livingTick(dtReal); } catch (e) { frameError('living', e); } // §I3 living range
     a11yFrame(dtReal); // gamepad polling + screen-reader announcer (a11y pass)
@@ -31941,6 +32212,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     initSprites(); // SPR.cache + swapCache: frames are rebuilt lazily by getSprite
     scaledCache = new WeakMap(); silCache = new WeakMap(); silScratch = null; sqScratch_.c = null;
     for (const m of [ratScratchCache, stampCache, bugTintCache, grassTileCache, iconCache]) for (const k in m) delete m[k];
+    ringCache.clear();
     fullBubbleCv = null; dropCv = null;
     bgCanvas = makeCanvas(G.W, G.H); lightCanvas = makeCanvas(G.W, G.H); bgDirty = true;
     AMB.bgHi = AMB.glowHi = AMB.skyC = AMB.gradC = AMB.winC = AMB.maskC = AMB.lightC = AMB.glowC = null; AMB.ls = AMB.lsA = null; AMB.moonC = {}; AMB.sunC = {};
@@ -32194,8 +32466,20 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** popup tests (tests/e2e/test_phone_popups.py): a toast / a Gus peek line, through the real paths */
       toast(text) { toast(String(text), { now: true }); return true; },
       gus(line, mood) { ui_.gusBubble && ui_.gusBubble(String(line), mood || 'neutral'); return true; },
+      /** a golfer bark from bay golfer `i` (or the one furthest `side` 'left' / 'right'), e.g. for the bubble-fits-the-field check */
+      bark(i, line, side) { let g = world.golfers[i | 0]; if (side) g = world.golfers.slice().sort((a, c) => (side === 'right' ? c.x - a.x : a.x - c.x))[0]; if (!g || !ui_.bark) return false; ui_.bark(g, String(line)); return !!(ui_._bark && ui_._bark.isConnected); },
       /** round 4 tester T4: the first-open hold. { held, user, open: {panel: 1}, said: {menu: 1}, note: Gus's line on show } */
       menu() { const G = guideState(); return { held: !!paused.menu, user: !!paused.user, open: G ? Object.assign({}, G.open) : null, said: G ? Object.assign({}, G.said) : null, note: menuNote && menuNote.isConnected ? menuNote.textContent : null }; },
+      /** the first tip ball / held chests (retention.firsts): the save's record, the live facts, the first tip ball while it is
+       *  out ({ tip, landed, said, life, age, x, y }) and whether its "Tip!" marker shows. null record = an older save */
+      firsts() {
+        const F = state && state.firsts, b = firstTipB, m = fieldMarks.tip, I = FI_();
+        return { F: isObj(F) ? JSON.parse(JSON.stringify(F)) : null, on: firstsOn(), tipsHeld: tipsHeld(), chestsHeld: chestsHeld(), facts: firstsFacts(),
+          tipReady: !!(I && I.tipReady(firstsFacts())), chestReady: !!(I && I.chestReady(firstsFacts())),
+          ball: b ? { tip: !!b.tip, landed: !!b.landed, said: !!b.tipSaid, life: tipLife(b), age: b.age, x: b.x, y: b.y, st: b.st } : null,
+          tips: world.balls.filter((x) => x.tip).map((x) => ({ first: !!x.tipFirst, st: x.st })),
+          mark: !!(m && m.isConnected && m._on), markEl: !!m, beetleMark: !!(fieldMarks.beetle && fieldMarks.beetle.isConnected && fieldMarks.beetle._on), giftTalk: state ? state.giftTalk | 0 : 0 };
+      },
       quietUI(on) { const q = on !== false; layout.root && layout.root.classList.toggle('rr-quietui', q); return q; },
       /** ?debug=1 only: a chest in the tray, optionally with a staged outcome: force = [{kind:'acorns'} | {kind:'cos', r?, slot?}] */
       grantChest(tier, ach, force) { if (!DEBUG) return false; const cs = chestState(); cs.seq = (cs.seq | 0) + 1; cs.inv.push({ id: cs.seq, tier: tier || 'wood', ach: ach || 'first_pickup', at: Date.now(), force: Array.isArray(force) ? force : undefined }); emit('chest', { tier: tier || 'wood', ach: ach || 'debug', count: cs.inv.length }); return cs.seq; },

@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-a99d4413-36274a83">
+<meta name="rr-pwa" content="2026-11-06-4122a235-234e30c6">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-a99d4413">
+<meta name="range-rat-build" content="2026-11-06-4122a235">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-06-a99d4413", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-06-4122a235", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-a99d4413", "builtAt": "2026-11-06T17:06:29Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-4122a235", "builtAt": "2026-11-06T18:40:47Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -8637,7 +8637,7 @@ window.DIALOG = {
       tours: "Grand Tours",
       time: "Time played"
     },
-    pin: { hedge: "Digging…", pond: "Fishing…", bunker: "Raking…", work: "Working…" },
+    pin: { hedge: "Digging…", pond: "Netting…", bunker: "Raking…", work: "Working…" },
     helpers: {
       speed: "Speed",
       basket: "Basket",
@@ -11519,7 +11519,7 @@ window.DIALOG = {
         tours: "Grand Tours",
         time: "Spielzeit"
       },
-      pin: { hedge: "Graben…", pond: "Fischen…", bunker: "Harken…", work: "Arbeiten…" },
+      pin: { hedge: "Graben…", pond: "Keschern…", bunker: "Harken…", work: "Arbeiten…" },
       helpers: {
         speed: "Tempo",
         basket: "Korb",
@@ -14325,7 +14325,7 @@ window.DIALOG = {
         tours: "Grandes Giras",
         time: "Tiempo jugado"
       },
-      pin: { hedge: "Cavando…", pond: "Pescando…", bunker: "Rastrillando…", work: "Trabajando…" },
+      pin: { hedge: "Cavando…", pond: "Con la red…", bunker: "Rastrillando…", work: "Trabajando…" },
       helpers: {
         speed: "Velocidad",
         basket: "Cesta",
@@ -17032,7 +17032,7 @@ window.DIALOG = {
         tours: "Grandes Turnês",
         time: "Tempo de jogo"
       },
-      pin: { hedge: "Cavando…", pond: "Pescando…", bunker: "Rastelando…", work: "Trabalhando…" },
+      pin: { hedge: "Cavando…", pond: "Com a rede…", bunker: "Rastelando…", work: "Trabalhando…" },
       helpers: {
         speed: "Velocidade",
         basket: "Cestinho",
@@ -26674,7 +26674,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     p.trapWork.need = 1 / rate; p.trapWork.t += dt;
     let best = null, bd = Infinity;
     for (const b of world.balls) if (b.trapped && b.zone === zi) { const d = d2(b.x, b.y, p.x, p.y); if (d < bd) { bd = d; best = b; } }
-    if (best) { p.trapWork.tx = best.x; p.trapWork.ty = best.y; }
+    if (best) { p.trapWork.tx = best.x; p.trapWork.ty = best.y; p.trapWork.ball = true; }
     if (p.trapWork.t < p.trapWork.need || !best) return;
     p.trapWork.t = 0;
     world.balls.splice(world.balls.indexOf(best), 1); best.trapped = false;
@@ -26750,7 +26750,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     g.fillStyle = '#7d5636'; for (let k = yb - 7; k < yb + 3; k += 2) g.fillRect(x - 3, k, 7, 1);
     g.fillStyle = '#b8864f'; g.fillRect(x - 3, yb - 8, 7, 1);
     const w = world.player, fishing = w && w.trapWork && w.trapWork.fish;
-    if (!fishing) { g.fillStyle = '#7d5636'; for (let k = 0; k < 7; k++) g.fillRect(x + 5 + (k >> 1), yb + 2 - k, 1, 1); g.fillStyle = '#2a1c16'; g.fillRect(x + 8, yb - 7, 3, 1); g.fillRect(x + 8, yb - 5, 3, 1); g.fillRect(x + 8, yb - 6, 1, 1); g.fillRect(x + 10, yb - 6, 1, 1); }
+    if (!fishing) drawLandingNet(g, x + 5, yb + 2, x + 9, yb - 5, 3, null, false); // the landing net leaning on the jetty
     // "fish here": a soft pulse at the jetty while balls are waiting and the rat is elsewhere
     const n = trapCount();
     if (!drained && n >= 3 && w && !fishing && d2(w.x, w.y, x, yb) > 30 * 30 && !RM_()) { const k = (renderMs % 1400) / 1400; drawPixRing(g, x, yb - 2, 4 + k * 6, 0.7 * (1 - k), '#fffaee'); }
@@ -26772,13 +26772,31 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const p = world.player, tw = p && p.trapWork;
     if (tw && tw.fish && tw.tx != null) {
       const hx = p.x + (p.flip ? -3 : 3), hy = p.y - 7, dx = tw.tx - hx, dy = tw.ty - hy, L = Math.hypot(dx, dy) || 1;
-      const f = clamp(tw.t / (tw.need || 1), 0, 1), reach = Math.min(L, 10 + Math.min(6, lvl('fishnet') / 5)), sw = RM_() ? 0 : Math.sin(f * Math.PI * 2) * 2.5;
-      const ex = hx + dx / L * reach - dy / L * sw, ey = hy + dy / L * reach + dx / L * sw + (f > 0.8 ? -(f - 0.8) * 10 : 0);
-      g.fillStyle = '#7d5636'; for (let s = 0; s <= 1; s += 1 / Math.max(4, reach)) g.fillRect(Math.round(lerp(hx, ex, s)), Math.round(lerp(hy, ey, s)), 1, 1);
-      const hr = 2 + Math.min(2, Math.floor(lvl('fishnet') / 10)); drawPixRing(g, ex, ey + 1, hr, 1, '#2a1c16');
-      g.globalAlpha = 0.6; g.fillStyle = '#fffaee'; g.fillRect(Math.round(ex) - 1, Math.round(ey) + 1, 2, 1); g.globalAlpha = 1;
-      if (f > 0.15 && f < 0.8 && Math.random() < 0.15 && !RM_()) fx.particles('splash', ex, ey + 1, 1, { colors: ['#e8f6f8'], speed: 20, up: 18, g: 120, life: 0.3, size: 1 });
+      // Ben 18:38: "should be using a net instead of fishing". A short two-pixel handle and a big round hoop with a mesh bag,
+      // not a long thin pole with a dot at the end (that read as a rod and line). Dip, sweep through the water, lift the ball out.
+      const f = clamp(tw.t / (tw.need || 1), 0, 1), reach = Math.min(L, 7 + Math.min(4, lvl('fishnet') / 8)), sw = RM_() ? 0 : Math.sin(f * Math.PI * 2) * 2;
+      const lift = f > 0.75 ? (f - 0.75) * 16 : 0, ex = hx + dx / L * reach - dy / L * sw, ey = hy + dy / L * reach + dx / L * sw - lift;
+      drawLandingNet(g, hx, hy, ex, ey, 4 + Math.min(2, Math.floor(lvl('fishnet') / 12)), f > 0.75 ? tw.ball : null, f < 0.75);
+      if (f > 0.15 && f < 0.75 && Math.random() < 0.18 && !RM_()) fx.particles('splash', ex, ey + 2, 1, { colors: ['#e8f6f8'], speed: 20, up: 18, g: 120, life: 0.3, size: 1 });
     }
+  }
+  /** the landing net: handle from (hx,hy) to the hoop at (ex,ey); r = hoop radius; ball = the catch, shown in the bag; wet = in the water */
+  function drawLandingNet(g, hx, hy, ex, ey, r, ball, wet) {
+    const L = Math.hypot(ex - hx, ey - hy) || 1, n = Math.max(3, Math.round(L));
+    g.fillStyle = '#5a3d26'; for (let i = 0; i <= n; i++) { const x = Math.round(lerp(hx, ex, i / n)), y = Math.round(lerp(hy, ey, i / n)); g.fillRect(x, y, 1, 2); } // a stout handle (2 px)
+    const cx = Math.round(ex), cy = Math.round(ey), ry = Math.max(2, Math.round(r * 0.6));
+    // the bag hangs under the hoop (under the water line when wet: only its top shows)
+    if (!wet) { g.globalAlpha = 0.85; g.fillStyle = '#d9cfb4'; for (let k = 1; k <= 3; k++) { const w = r - k + 1; for (let x = -w; x <= w; x++) if ((x + k) & 1) g.fillRect(cx + x, cy + ry + k - 1, 1, 1); } g.globalAlpha = 1; }
+    // mesh inside the hoop: a light criss-cross
+    g.globalAlpha = wet ? 0.45 : 0.75; g.fillStyle = '#e8e0c8';
+    for (let y = -ry + 1; y < ry; y++) for (let x = -r + 1; x < r; x++) if ((x * x) / (r * r) + (y * y) / (ry * ry) < 0.8 && ((x + y) & 1) === 0) g.fillRect(cx + x, cy + y, 1, 1);
+    g.globalAlpha = 1;
+    if (ball) { g.fillStyle = '#fffaee'; g.fillRect(cx - 1, cy + ry - 1, 2, 2); g.fillStyle = '#c9c2ae'; g.fillRect(cx, cy + ry, 1, 1); }
+    // the hoop's rim: dark wood, a little highlight on top
+    g.fillStyle = '#2a1c16';
+    for (let a = 0; a < 28; a++) { const t = a / 28 * Math.PI * 2; g.fillRect(Math.round(cx + Math.cos(t) * r), Math.round(cy + Math.sin(t) * ry), 1, 1); }
+    g.fillStyle = '#b8864f'; for (let x = -r + 2; x <= r - 2; x++) g.fillRect(cx + x, cy - ry, 1, 1);
+    if (wet) { g.globalAlpha = 0.7; g.fillStyle = '#e8f6f8'; g.fillRect(cx - r, cy + 1, 1, 1); g.fillRect(cx + r, cy + 1, 1, 1); g.globalAlpha = 1; } // ripples where the hoop cuts the water
   }
   function pondModule() {
     return { name: 'pond', update(dt) { pondTick(dt); }, render(g, layer) { if (layer === 'top') drawPondTop(g); } };
@@ -27530,7 +27548,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (!(sec > 0) || !isNum(rate) || rate <= 0 || (state.tour | 0) > 0 || state.freeRoam || state.freePlay) return 0;
     return Math.max(0, Math.round(sec * rate - state.cash));
   }
+  let introLater = false; // Ben 18:36: bought Lily Lagoon at the agent, tapped Done, and Gus told the range's story over the town street
   function rangeIntro() {
+    if (W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.showing) { introLater = true; return; } // said when you walk back to the range (frame loop)
+    introLater = false;
     let lines = dget('ranges.' + rangeId() + '.intro');
     lines = Array.isArray(lines) ? lines.slice() : [];
     const mech = dget('mechanics.' + rangeId());
@@ -33387,6 +33408,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     sh.querySelector('[data-close]').addEventListener('click', () => { sfx('ui_tap'); closeSheet(); });
     sh.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { sfx('ui_tap'); switchTab(b.dataset.tab); }));
     sheet = { sh, scrim, prevFocus: document.activeElement, name };
+    scrollGuard(sh.querySelector('.rr-sheetbody'));
     syncInert();
     const wB = sh.querySelector('[data-wallet]'), wR = sh.querySelector('[data-rate]');
     const wTick = () => {
@@ -33407,13 +33429,40 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     setTimeout(() => { if (sh.contains(document.activeElement)) return; /* already placed (restoreReturn: the button that left Settings) */ const f = sh.querySelector('.rr-sheetbody [role=tab][aria-selected=true]') || sh.querySelector('.rr-sheetbody button:not([disabled]), .rr-sheetbody input') || sh.querySelector('[data-close]'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 60);
     emit('fx', { kind: 'popup', target: 'sheet' });
   }
+  /** Ben's iPhone (2026-11-06, 18:40, after three fixes that all pass in Chromium): the Shop still jumped back to the top while
+   *  he read it. Whatever WebKit does there, the list only moves when YOU move it: a scroll up of more than a screenful that
+   *  no finger, wheel or key started (and that isn't the list getting shorter under you) is put straight back. Counted in
+   *  sheetGuard (tests, the dev panel). */
+  const SG = { restored: 0, last: null, userT: -1e9 }; // userT: the pad's navigation scrolls on purpose too (no DOM event)
+  function scrollGuard(body) {
+    if (!body || body.__guard) return; body.__guard = 1; body.__good = 0;
+    let scrollT = -1e9, touching = false;
+    const now = () => performance.now();
+    const user = () => { SG.userT = now(); };
+    for (const ev of ['touchstart', 'touchmove', 'wheel', 'pointerdown', 'keydown', 'mousedown']) body.addEventListener(ev, (e) => { user(); if (ev === 'touchstart') touching = true; }, { passive: true, capture: true });
+    for (const ev of ['touchend', 'touchcancel']) body.addEventListener(ev, () => { touching = false; user(); }, { passive: true, capture: true });
+    sheet && sheet.sh.addEventListener('click', user, true); // Gus's line: "show me" scrolls on purpose
+    body.addEventListener('scroll', () => {
+      const t = now(), top = body.scrollTop, maxTop = body.scrollHeight - body.clientHeight;
+      // a finger, a wheel, a key, or momentum still running from one (scroll events keep coming while it glides)
+      const byUser = touching || t - SG.userT < 1500 || (t - scrollT < 120 && t - SG.userT < 6000);
+      scrollT = t;
+      if (byUser || top >= maxTop - 2) { body.__good = top; return; }
+      const good = body.__good | 0, drop = good - top;
+      if (drop > Math.max(160, body.clientHeight * 0.5) && good <= maxTop + 2) {
+        body.scrollTop = good; SG.restored++; SG.last = { from: good, to: top, at: Math.round(t), tab: sheetTab };
+        return;
+      }
+      body.__good = top;
+    }, { passive: true });
+  }
   function switchTab(name) {
     if (!sheet) return;
     sheetTab = name;
     menuFirstOpen(name, sheet.sh); // a tab seen for the first time (Style in the Shop sheet) holds the range too
     sheet.sh.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
     if (sheetInst) sheetInst.destroy();
-    const body = sheet.sh.querySelector('.rr-sheetbody'); body.innerHTML = ''; body.scrollTop = 0;
+    const body = sheet.sh.querySelector('.rr-sheetbody'); body.innerHTML = ''; body.scrollTop = 0; body.__good = 0;
     const host = el('div'); body.appendChild(host);
     sheetInst = mountPanel(name, host);
   }
@@ -34714,6 +34763,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const deskSkip = DESK.on && (deskHidden() || !(DESK.dirty || mode !== 'game' || particles.length || fxState.hitStop > 0 || fxState.shake > 0 || fxState.flash > 0 || creditsAnim || chestScene));
     if (DESK.on) { DESK.frames++; if (deskSkip) DESK.skipped++; else { DESK.renders++; DESK.dirty = false; } }
     const townCovers = !!(W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.covers && W.RANGE_RAT_TOWN.covers()); // the town covers the field: the sim runs, nothing is drawn
+    if (introLater && mode === 'game' && !(W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.showing)) rangeIntro(); // the town just closed: Gus tells the new range's story now
     if (!deskSkip && !townCovers && !(sideMode && sideMode.paused) && !(chestScene && (++chestSkipN & 7))) try { const _pt = nowMs(); render(); perfPush('frame', nowMs() - _pt); } catch (e) { if (!render._warned) { render._warned = true; console.error('[RangeRat] render', e); } }
     hudTick += dtReal; if (hudTick > (chestScene || DESK.on ? 0.5 : 0.1) && mode === 'game' && !(sideMode && sideMode.paused)) { checkReveals(hudTick); try { focusTick(); } catch (e) { frameError('focus', e); } hudTick = 0; updateHud(); refreshPanels(false); }
     if (fpsEl) { fpsAcc += dtReal; fpsN++; if (fpsAcc > 0.5) { fpsEl.textContent = Math.round(fpsN / fpsAcc) + ' fps' + (lowPower() ? ' (low)' : '') + ' ×' + timeScale; fpsAcc = 0; fpsN = 0; } }
@@ -35027,7 +35077,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       const s = along + across * 2.2; if (s < bs) { bs = s; best = e; }
     }
     if (!best) { const i = list.indexOf(cur); best = list[(i + (dir === 'up' || dir === 'left' ? list.length - 1 : 1)) % list.length]; }
-    gp.navEl = best;
+    gp.navEl = best; SG.userT = performance.now();
     try { best.focus({ preventScroll: false }); best.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) { /* ignore */ }
   }
   // After Hours (canvas side mode) speaks keyboard: the pad is translated into its keys.
@@ -35588,6 +35638,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       toast(text) { toast(String(text), { now: true }); return true; },
       gus(line, mood) { ui_.gusBubble && ui_.gusBubble(String(line), mood || 'neutral'); return true; },
       dline(path) { return dline(String(path), null); },
+      sheetGuard() { return { restored: SG.restored, last: SG.last }; }, // tests: the shop sheet put back after a jump nobody asked for
       forceRoll(on) { rollForced = on !== false; return true; }, // tests: the spread-out line picker (test_lines_spread.py)
       /** a golfer bark from bay golfer `i` (or the one furthest `side` 'left' / 'right'), e.g. for the bubble-fits-the-field check */
       bark(i, line, side) { let g = world.golfers[i | 0]; if (side) g = world.golfers.slice().sort((a, c) => (side === 'right' ? c.x - a.x : a.x - c.x))[0]; if (!g || !ui_.bark) return false; ui_.bark(g, String(line)); return !!(ui_._bark && ui_._bark.isConnected); },

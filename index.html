@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-cb48e30-9353f49b">
+<meta name="rr-pwa" content="2026-11-06-2f8b614-8252610b">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-cb48e30">
+<meta name="range-rat-build" content="2026-11-06-2f8b614">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,7 +40,7 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-cb48e30", "builtAt": "2026-11-06T12:33:22Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-2f8b614", "builtAt": "2026-11-06T13:02:49Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -31023,7 +31023,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           // preventScroll: a plain focus() scrolled the focused button into view; on iOS a tap doesn't focus, so the focus stayed
           // on the sheet's first button and every rebuild after a buy jumped the Shop back to the top
           if (focused) { const f = el.querySelector(`[data-k="${focused.replace(/"/g, '')}"]`); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
-          if (anc && inst.state.hlShown === hl0) { if (W.RANGE_RAT_HELP && W.RANGE_RAT_HELP.decorate) W.RANGE_RAT_HELP.decorate(el); scrollRestore(el, scr, anc); } // (the shop introduction's first highlight scrolls itself into view once)
+          if (anc && inst.state.hlShown === hl0) { if (W.RANGE_RAT_HELP && W.RANGE_RAT_HELP.decorate) W.RANGE_RAT_HELP.decorate(el); scrollRestore(el, scr, anc); } // (the shop introduction's highlight scrolls itself into view once, on the shop's first render only)
         };
         inst.destroy = () => { inst.destroyed = true; W.removeEventListener('pointerup', release, true); W.removeEventListener('pointercancel', release, true); const i = mounted.indexOf(inst); if (i >= 0) mounted.splice(i, 1); el.innerHTML = ''; };
         el.classList.add('rr-p-host');
@@ -31411,7 +31411,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         costLog = null;
         return h + '</div>';
       },
-      bind(inst) { bindBuys(inst); { const r = inst.el.querySelector('.rr-introhl'); if (r && !inst.state.hlShown && r.getClientRects().length) { inst.state.hlShown = 1; try { r.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } } } inst.el.querySelectorAll('[data-amt]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.amt; state.settings.buyAmt = v === 'max' ? 'max' : +v; sfx('ui_tap'); fx.bounce(b); inst.update(true); })); const s = inst.el.querySelector('[data-sell]'); if (s) s.addEventListener('click', () => { sfx('ui_tap'); confirmSell(); }); const lg = inst.el.querySelector('[data-ledger]'); if (lg) lg.addEventListener('click', () => { sfx('ui_tap'); openLedger(); }); }
+      bind(inst) { bindBuys(inst); { const first = !inst.state.bound; inst.state.bound = 1; const r = inst.el.querySelector('.rr-introhl'); if (r && first && !inst.state.hlShown && r.getClientRects().length) { inst.state.hlShown = 1; try { r.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } } } inst.el.querySelectorAll('[data-amt]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.amt; state.settings.buyAmt = v === 'max' ? 'max' : +v; sfx('ui_tap'); fx.bounce(b); inst.update(true); })); const s = inst.el.querySelector('[data-sell]'); if (s) s.addEventListener('click', () => { sfx('ui_tap'); confirmSell(); }); const lg = inst.el.querySelector('[data-ledger]'); if (lg) lg.addEventListener('click', () => { sfx('ui_tap'); openLedger(); }); }
     }),
     wardrobe: component('wardrobe', {
       sig: (inst) => [inst.state.slot, inst.state.try, JSON.stringify(state.cos), Math.floor(Math.log2(state.cash + 1) * 4), state.gear, chestState().inv.length, ratLook()].join('|'),

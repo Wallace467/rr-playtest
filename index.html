@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-67df927-6e1f6b13">
+<meta name="rr-pwa" content="2026-11-06-2a6da81-cdb4807e">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-67df927">
+<meta name="range-rat-build" content="2026-11-06-2a6da81">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,7 +40,7 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-67df927", "builtAt": "2026-11-06T14:06:38Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-2a6da81", "builtAt": "2026-11-06T14:30:24Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -30971,6 +30971,51 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   const ACH_HINTS = { timesStunned: 'Some lessons are learned the hard way.', cosmeticsOwned: 'A rat of many looks...', goldBalls: 'All that glitters...', nightShifts: 'Some work best after dark.' };
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const mounted = [];
+  // ---- in-place panel updates (Ben's iPhone, 2026-11-06: the Shop still scrolled back up). Replacing the open list's
+  // innerHTML, even with the place restored after, lost to WebKit (it clamps / cancels the momentum mid-scroll). Panels with
+  // `morph` now patch the DOM they already have: a row keeps its element (same tag, same key, same kinds of action), only
+  // its text, attributes and classes change; rows come and go only when the list itself changes, and the scroller is never
+  // emptied. What ui/help.js (ⓘ, New) and ui/reveal.js (New tags) and the first-time pointer add is left alone. Event
+  // handlers are bound once per element (on1), and read what they need from the element when clicked.
+  const MORPH_KEEP_CLS = /^(rh-|rv-|rr-fpoint|rr-has-new)/;
+  const MORPH_KEEP_ATTR = /^(data-rh|data-rl$|aria-describedby$|title$)/;
+  // the attributes a panel's bind() hangs a handler on: an element only stays (and keeps its handler) if it has the same ones
+  const MORPH_ACTION = /^data-(buy|equip|sell|amt|slot|grp|coll|look|try|ledger|chests|openchest|one|x|go|next|tab|tog|del|keep|close|play|reroll|collect)$/;
+  const isForeign = (n) => !!n && ((n.nodeType === 1 && typeof n.className === 'string' && /(^|\s)(rh-|rv-tag)/.test(n.className)) || (n.nodeType === 3 && !n.nodeValue.trim() && n.nextSibling && n.nextSibling.nodeType === 1 && typeof n.nextSibling.className === 'string' && /(^|\s)(rh-|rv-tag)/.test(n.nextSibling.className)));
+  const morphKey = (e) => (e.nodeType === 1 ? (e.getAttribute('data-k') || e.getAttribute('data-help') || e.getAttribute('data-id') || '') : '');
+  function morphAct(e) { let o = ''; for (const a of e.attributes) if (MORPH_ACTION.test(a.name)) o += a.name + ' '; return o; }
+  function morphSame(a, b) {
+    if (a.nodeType !== b.nodeType) return false;
+    if (a.nodeType !== 1) return true;
+    return a.tagName === b.tagName && morphKey(a) === morphKey(b) && morphAct(a) === morphAct(b);
+  }
+  function morphNode(f, t) {
+    if (f.nodeType !== 1) { if (f.nodeValue !== t.nodeValue) f.nodeValue = t.nodeValue; return; }
+    for (const a of t.attributes) if (a.name !== 'class' && f.getAttribute(a.name) !== a.value) f.setAttribute(a.name, a.value);
+    for (const a of [...f.attributes]) if (a.name !== 'class' && !t.hasAttribute(a.name) && !MORPH_KEEP_ATTR.test(a.name)) f.removeAttribute(a.name);
+    const want = (t.getAttribute('class') || '').split(/\s+/).filter(Boolean), keep = [...f.classList].filter((c) => MORPH_KEEP_CLS.test(c) && !want.includes(c));
+    const cls = want.concat(keep).join(' '); if ((f.getAttribute('class') || '') !== cls) { if (cls) f.setAttribute('class', cls); else f.removeAttribute('class'); }
+    if (f.tagName === 'CANVAS' || f.tagName === 'TEXTAREA' || f.tagName === 'INPUT') return; // a canvas keeps its pixels; a field keeps what's typed
+    morphChildren(f, t);
+  }
+  function morphChildren(from, to) {
+    let f = from.firstChild, t = to.firstChild;
+    while (t) {
+      const tn = t.nextSibling;
+      while (f && isForeign(f)) f = f.nextSibling;
+      if (!f) { from.appendChild(t); t = tn; continue; }
+      if (morphSame(f, t)) { morphNode(f, t); f = f.nextSibling; t = tn; continue; }
+      let m = null; const k = morphKey(t);
+      if (k) for (let x = f.nextSibling; x; x = x.nextSibling) if (!isForeign(x) && morphKey(x) === k && morphSame(x, t)) { m = x; break; }
+      if (m) { while (f && f !== m) { const nx = f.nextSibling; if (!isForeign(f)) from.removeChild(f); f = nx; } morphNode(m, t); f = m.nextSibling; }
+      else from.insertBefore(t, f);
+      t = tn;
+    }
+    while (f) { const nx = f.nextSibling; if (!isForeign(f)) from.removeChild(f); f = nx; }
+  }
+  const bound1 = new WeakMap();
+  /** addEventListener once per element and type (morphed panels keep their elements across updates) */
+  function on1(elm, type, fn, opt) { let s = bound1.get(elm); if (!s) bound1.set(elm, s = new Set()); if (s.has(type)) return; s.add(type); elm.addEventListener(type, fn, opt); }
   /** the scroll anchor of a panel rebuild: an element's key ([data-k], else [data-buy], else a row's [data-help]) */
   function anchorKey(e) {
     if (!e || !e.getAttribute) return null;
@@ -31026,7 +31071,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           // in view) exactly where it was on screen, whatever changed above it (Gus's card, a row added or maxed away).
           const scr = scrollerOf(el), anc = scr ? scrollAnchor(el, scr, tapK) : null;
           const sc = el.scrollTop, hl0 = inst.state.hlShown;
-          el.innerHTML = def.html(inst);
+          if (def.morph && (typeof def.morph !== 'function' || def.morph(inst)) && el.firstChild) { const tp = document.createElement('template'); tp.innerHTML = def.html(inst); morphChildren(el, tp.content); inst.morphs = (inst.morphs | 0) + 1; }
+          else { el.innerHTML = def.html(inst); inst.rebuilds = (inst.rebuilds | 0) + 1; }
           el.scrollTop = sc;
           if (def.resig) inst.sig = def.sig(inst); // sig depends on what html() just recorded (shop: the costs on screen)
           if (def.bind) def.bind(inst);
@@ -31059,7 +31105,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     return `<button class="rr-buy ${maxed ? '' : can ? '' : 'off'}" data-buy="${kind}:${esc(id)}" data-k="${esc(opts.k || 'buy-' + kind + '-' + id)}"${opts.one ? ' data-one="1"' : ''} ${maxed ? 'disabled' : ''} ${!maxed && !can ? 'aria-disabled="true"' : ''} aria-label="${esc(maxed ? tx('shop.maxedAria', '{name}: maxed', { name: opts.name || id }) : tx(can ? 'shop.buyAria' : 'shop.needAria', can ? '{name}: buy for {n} acorns' : '{name}: need {n} acorns', { name: opts.name || id, n: fmt(cost) }) + (sub && !can ? ', ' + sub : ''))}"><i class="fill" style="width:${can || maxed ? 0 : Math.round(frac * 100)}%"></i><span>${coin}${esc(label)}</span>${sub || qty ? `<small class="sub">${qty ? `<b>${esc(qty)}</b>` : ''}${qty && sub ? ' · ' : ''}${sub ? `<span class="eta" data-cost="${cost}">${esc(sub)}</span>` : ''}</small>` : ''}</button>`;
   };
   function bindBuys(inst) {
-    inst.el.querySelectorAll('[data-buy]').forEach((b) => b.addEventListener('click', (e) => {
+    inst.el.querySelectorAll('[data-buy]').forEach((b) => on1(b, 'click', (e) => {
       e.stopPropagation(); unlockAudio();
       const [kind, ...rest] = b.dataset.buy.split(':');
       buy(kind, rest.join(':'), b, b.dataset.one ? 1 : undefined); // data-one: the "Gus would buy" card buys one
@@ -31381,7 +31427,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       // visible rows, Gus's pick). Fill bars and ETAs in between are updated in place by tick(). It used to rebuild on
       // every ~9% of cash and 5% of the cheapest price: several full innerHTML renders a second in the late game.
       sig: (inst) => [gusCardOn() || gusPickOn() ? gusPickKey() : '-', buyAmt(), state.gear, JSON.stringify(state.levels), JSON.stringify((state.esc && state.esc.perm) || 0), shopExtraSig(), robotCount(), prestigeAvailable() ? 'p' + starsForSale() : '', state.rangeIdx, bayCount(), allUpIds().filter(upVisible).length, lockedUpgrades().length, introSig(), shopCashSig(inst)].join('|'),
-      resig: true,
+      resig: true, morph: true,
       tick: (inst) => shopTick(inst),
       html(inst) {
         costLog = []; if (inst) inst.state.costs = costLog;
@@ -31422,9 +31468,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         costLog = null;
         return h + '</div>';
       },
-      bind(inst) { bindBuys(inst); { const first = !inst.state.bound; inst.state.bound = 1; const r = inst.el.querySelector('.rr-introhl'); if (r && first && !inst.state.hlShown && r.getClientRects().length) { inst.state.hlShown = 1; try { r.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } } } inst.el.querySelectorAll('[data-amt]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.amt; state.settings.buyAmt = v === 'max' ? 'max' : +v; sfx('ui_tap'); fx.bounce(b); inst.update(true); })); const s = inst.el.querySelector('[data-sell]'); if (s) s.addEventListener('click', () => { sfx('ui_tap'); confirmSell(); }); const lg = inst.el.querySelector('[data-ledger]'); if (lg) lg.addEventListener('click', () => { sfx('ui_tap'); openLedger(); }); }
+      bind(inst) { bindBuys(inst); { const first = !inst.state.bound; inst.state.bound = 1; const r = inst.el.querySelector('.rr-introhl'); if (r && first && !inst.state.hlShown && r.getClientRects().length) { inst.state.hlShown = 1; try { r.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } } } inst.el.querySelectorAll('[data-amt]').forEach((b) => on1(b, 'click', () => { const v = b.dataset.amt; state.settings.buyAmt = v === 'max' ? 'max' : +v; sfx('ui_tap'); fx.bounce(b); inst.update(true); })); const s = inst.el.querySelector('[data-sell]'); if (s) on1(s, 'click', () => { sfx('ui_tap'); confirmSell(); }); const lg = inst.el.querySelector('[data-ledger]'); if (lg) on1(lg, 'click', () => { sfx('ui_tap'); openLedger(); }); }
     }),
     wardrobe: component('wardrobe', {
+      morph: (inst) => (inst.state.slot || 'hat') !== 'look', // (the rat look picker binds its own keys: rebuilt, it's a short list)
       sig: (inst) => [inst.state.slot, inst.state.try, JSON.stringify(state.cos), Math.floor(Math.log2(state.cash + 1) * 4), state.gear, chestState().inv.length, ratLook()].join('|'),
       html(inst) {
         const slot = inst.state.slot || 'hat';
@@ -31449,12 +31496,12 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       },
       bind(inst) {
         bindBuys(inst);
-        inst.el.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { sfx('ui_tap'); inst.state.slot = b.dataset.slot; inst.state.try = null; inst.update(true); }));
-        inst.el.querySelectorAll('[data-grp]').forEach((b) => b.addEventListener('click', () => { sfx('ui_tap'); inst.state.slot = b.dataset.grp === 'range' ? 'flag' : 'hat'; inst.state.try = null; inst.update(true); }));
-        inst.el.querySelectorAll('[data-coll]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const key = b.dataset.coll; state.cos.active = state.cos.active || {}; state.cos.active[key] = !collOn(key); const [cs2, ci2] = key.split(':'); collectionsChanged(cs2, ci2); sfx(collOn(key) ? 'equip' : 'ui_tap'); emit('equip', { slot: cs2, id: ci2, on: collOn(key) }); fire('onEquip', { slot: cs2, id: ci2, x: (world.player || { x: 90 }).x, y: (world.player || { y: 160 }).y, player: world.player, el: b }); save(); inst.update(true); }));
-        inst.el.querySelectorAll('[data-chests]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeSheet(); openChestTray(); }));
-        inst.el.querySelectorAll('[data-equip]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const [s, i] = b.dataset.equip.split(':'); equip(s, i, b); }));
-        inst.el.querySelectorAll('[data-try]').forEach((r) => r.addEventListener('click', () => { inst.state.try = r.dataset.try; sfx('ui_tap', { volume: 0.5 }); inst.update(true); }));
+        inst.el.querySelectorAll('[data-slot]').forEach((b) => on1(b, 'click', () => { sfx('ui_tap'); inst.state.slot = b.dataset.slot; inst.state.try = null; inst.update(true); }));
+        inst.el.querySelectorAll('[data-grp]').forEach((b) => on1(b, 'click', () => { sfx('ui_tap'); inst.state.slot = b.dataset.grp === 'range' ? 'flag' : 'hat'; inst.state.try = null; inst.update(true); }));
+        inst.el.querySelectorAll('[data-coll]').forEach((b) => on1(b, 'click', (e) => { e.stopPropagation(); const key = b.dataset.coll; state.cos.active = state.cos.active || {}; state.cos.active[key] = !collOn(key); const [cs2, ci2] = key.split(':'); collectionsChanged(cs2, ci2); sfx(collOn(key) ? 'equip' : 'ui_tap'); emit('equip', { slot: cs2, id: ci2, on: collOn(key) }); fire('onEquip', { slot: cs2, id: ci2, x: (world.player || { x: 90 }).x, y: (world.player || { y: 160 }).y, player: world.player, el: b }); save(); inst.update(true); }));
+        inst.el.querySelectorAll('[data-chests]').forEach((b) => on1(b, 'click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeSheet(); openChestTray(); }));
+        inst.el.querySelectorAll('[data-equip]').forEach((b) => on1(b, 'click', (e) => { e.stopPropagation(); const [s, i] = b.dataset.equip.split(':'); equip(s, i, b); }));
+        inst.el.querySelectorAll('[data-try]').forEach((r) => on1(r, 'click', () => { inst.state.try = r.dataset.try; sfx('ui_tap', { volume: 0.5 }); inst.update(true); }));
         if (inst.el.querySelector('[data-look]')) { drawLookPreviews(inst.el, false); bindLookPicker(inst.el, (id, b) => { const was = ratLook(); setRatLook(id); if (id !== was) { sfx('equip'); const pl = world.player; fire('onEquip', { slot: 'look', id, x: (pl || { x: 90 }).x, y: (pl || { y: 160 }).y, player: pl, el: b }); } inst.update(true); const nb = inst.el.querySelector(`[data-look="${id}"]`); if (nb) try { nb.focus({ preventScroll: true }); } catch (er) { /* ignore */ } }); }
       },
       tick(inst) { // live preview, animated

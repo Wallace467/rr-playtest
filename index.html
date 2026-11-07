@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-06-bff542a7-5a914d47">
+<meta name="rr-pwa" content="2026-11-07-fedd28cc-c9db7ca6">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-06-bff542a7">
+<meta name="range-rat-build" content="2026-11-07-fedd28cc">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-06-bff542a7", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-fedd28cc", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-06-bff542a7", "builtAt": "2026-11-06T22:53:28Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-fedd28cc", "builtAt": "2026-11-07T01:16:55Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -7423,11 +7423,9 @@ window.DIALOG = {
     idle: [
       "Kettle's on. Kettle's always on.",
       "Mind the good mower. That's the good mower.",
-      "Forty years I've run this range. Feels like fifty.",
       "Don't tell anyone, but you're not bad at this.",
       "Biscuit? No. They're mine. Just asking.",
       "Badgers don't hurry. We amble. With purpose.",
-      "My stripes went grey on this range. Worth it. Mostly.",
       "Proper cup of tea fixes most things. Not the net, though."
     ],
     stockEmpty: [
@@ -7465,7 +7463,7 @@ window.DIALOG = {
       "You could buy the place. I'd throw in the kettle.",
       "Your reputation's growing. Time to move up, maybe?",
       "Got the acorns? Pay the next part. Then it's yours.",
-      "I'll miss this place. Well. I'll mostly miss it."
+      "That's a part paid, if you want it. No rush."
     ],
     grandTour: [
       "Back at Mudbank. The puddles missed you. So did I.",
@@ -9811,7 +9809,7 @@ window.DIALOG = {
       },
       "buy": {
         "starsGain": "+{n} ★ → {p} income for good",
-        "starsWhy": "{n} stars: +{p}% income on every range, for good."
+        "starsWhy": "{n} stars: {p} income on every range, for good."
       },
       "hud": {
         "starsIncome": "{p} income"
@@ -10293,8 +10291,8 @@ window.DIALOG = {
     "help": {
       "carry": {
         "title": "Moving on",
-        "sign": "You'll take {n} acorns with you. The rest ({over}) becomes a moving crate: {b} Clockwork Beetles waiting at {next}.",
-        "signAll": "You'll take all {n} acorns with you. Up to {cap} can come; anything over becomes a moving crate of {b} beetles, nothing more.",
+        "sign": "You'll take {n} acorns with you. The rest ({over}) becomes a moving crate: {b} Clockwork Beetles waiting at {next}. Nothing more, whatever the amount.",
+        "signAll": "You'll take all {n} acorns with you. Up to {cap} can come; anything over becomes a moving crate of {b} beetles, nothing more, whatever the amount.",
         "note": "Saving more won't come with you. Spend it on upgrades here, or sign and move on.",
         "explain": "When you sign, up to {cap} acorns come with you to {next}. Anything over becomes {b} beetles, so spend it here.",
         "what": "Signing a range's last part takes your acorns on to the next range, up to a set amount. The sign card and the estate agent show how much.",
@@ -10314,6 +10312,55 @@ window.DIALOG = {
   });
 })(window.DIALOG);
 /* ---- end of the carry-over cap block ---- */
+
+/* ---- fresh-eyes QA 2026-11-06 night: the next range unnamed until it's revealed (sign card, goal ⓘ, the Clubhouse plate),
+ * the crate is the same whatever the amount, the trial's free play says what the unlock takes on, goal toasts that
+ * waited fold into one, the town's lines after the trial's sale and before the first part, Gus's Mudbank-only lines.
+ * New keys only, merged like the blocks above; every locale file carries the same block at its end. */
+(function (D) {
+  if (!D) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D, {
+    "help": {
+      "carry": {
+        "signHidden": "You'll take {n} acorns with you. The rest ({over}) becomes a moving crate: {b} Clockwork Beetles at the next range. Nothing more, whatever the amount.",
+        "signNone": "Up to {cap} acorns can come with you. Anything over becomes a moving crate of {b} beetles, nothing more, whatever the amount.",
+        "explainHidden": "When you sign, up to {cap} acorns come with you to the next range. Anything over becomes {b} beetles, so spend it here.",
+        "free": "When you unlock the full game, up to {cap} acorns come with you to {next}. Anything over that doesn't come."
+      }
+    },
+    "text": {
+      "toast": {
+        "freePlayCap": "Up to {n} acorns can go on with you to {next}.",
+        "goalsDone": "{n} goals done! +{c}"
+      }
+    },
+    "town": {
+      "gus": {
+        "trialDone": "{name}'s ours, deeds and all. I'll keep it ticking over."
+      },
+      "agent": {
+        "say": {
+          "start": "{name}'s on the market. Pay a part when you like."
+        }
+      },
+      "club": {
+        "lockPlateNext": "Opens at the next range, after part 1"
+      }
+    },
+    "gus": {
+      "idleMuni": [
+        "Forty years I've run this range. Feels like fifty.",
+        "My stripes went grey on this range. Worth it. Mostly."
+      ],
+      "prestigeReadyMuni": [
+        "I'll miss this place. Well. I'll mostly miss it."
+      ]
+    }
+  });
+})(window.DIALOG);
+/* ---- end of the QA 2026-11-06 night block ---- */
 
 /* ---- locales (accessibility & localisation pass) ----
  * The tables above are English and are also the fallback for every other locale.
@@ -10439,11 +10486,9 @@ window.DIALOG = {
       idle: [
         "Der Kessel ist an. Der Kessel ist immer an.",
         "Vorsicht mit dem guten Mäher. Das ist der gute Mäher.",
-        "Vierzig Jahre führ ich die Range. Fühlt sich an wie fünfzig.",
         "Sag's keinem, aber du bist gar nicht schlecht.",
         "Keks? Nein. Die sind meine. Ich frag ja nur.",
         "Dachse hetzen nicht. Wir schlendern. Mit Absicht.",
-        "Meine Streifen sind hier grau geworden. Hat sich gelohnt. Fast.",
         "Eine gute Tasse Tee richtet fast alles. Nur das Netz nicht."
       ],
       stockEmpty: [
@@ -10481,7 +10526,7 @@ window.DIALOG = {
         "Du könntest den Laden kaufen. Den Kessel gibt's dazu.",
         "Dein Ruf wächst. Zeit für was Größeres, vielleicht?",
         "Genug Eicheln? Zahl die nächste Rate. Dann ist sie deine.",
-        "Ich werd den Laden vermissen. Na ja. Größtenteils."
+        "Eine Rate wäre drin, wenn du willst. Keine Eile."
       ],
       grandTour: [
         "Zurück in Mudbank. Die Pfützen haben dich vermisst. Ich auch.",
@@ -12648,7 +12693,7 @@ window.DIALOG = {
       },
       "buy": {
         "starsGain": "+{n} ★ → {p} Einkommen für immer",
-        "starsWhy": "{n} Sterne: +{p} % Einkommen auf jeder Range, für immer."
+        "starsWhy": "{n} Sterne: {p} Einkommen auf jeder Range, für immer."
       },
       "hud": {
         "starsIncome": "{p} Einkommen"
@@ -13152,8 +13197,8 @@ window.DIALOG = {
     "help": {
       "carry": {
         "title": "Umzug",
-        "sign": "Du nimmst {n} Eicheln mit. Der Rest ({over}) wird zur Umzugskiste: {b} Aufziehkäfer warten in {next}.",
-        "signAll": "Du nimmst alle {n} Eicheln mit. Bis zu {cap} gehen mit; alles darüber wird eine Umzugskiste mit {b} Käfern, mehr nicht.",
+        "sign": "Du nimmst {n} Eicheln mit. Der Rest ({over}) wird zur Umzugskiste: {b} Aufziehkäfer warten in {next}. Mehr nicht, egal wie viel.",
+        "signAll": "Du nimmst alle {n} Eicheln mit. Bis zu {cap} gehen mit; alles darüber wird eine Umzugskiste mit {b} Käfern, mehr nicht, egal wie viel.",
         "note": "Mehr Sparen kommt nicht mit. Gib es hier für Upgrades aus oder unterschreib und zieh weiter.",
         "explain": "Beim Unterschreiben kommen bis zu {cap} Eicheln mit nach {next}. Der Rest wird zu {b} Käfern, also gib ihn hier aus.",
         "what": "Mit der letzten Rate einer Range nimmst du deine Eicheln mit zur nächsten, bis zu einer festen Menge. Die Karte und der Makler zeigen, wie viel.",
@@ -13173,6 +13218,52 @@ window.DIALOG = {
   });
 })(window.DIALOG);
 /* ---- end of the carry-over cap block ---- */
+
+/* ---- fresh-eyes QA 2026-11-06 night. Same keys as the block in dialog/dialog.js. */
+(function (D) {
+  if (!D || !D.locales || !D.locales["de"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["de"], {
+    "help": {
+      "carry": {
+        "signHidden": "Du nimmst {n} Eicheln mit. Der Rest ({over}) wird zur Umzugskiste: {b} Aufziehkäfer für die nächste Range. Mehr nicht, egal wie viel.",
+        "signNone": "Bis zu {cap} Eicheln gehen mit. Alles darüber wird eine Umzugskiste mit {b} Käfern, mehr nicht, egal wie viel.",
+        "explainHidden": "Beim Unterschreiben kommen bis zu {cap} Eicheln mit zur nächsten Range. Der Rest wird zu {b} Käfern, also gib ihn hier aus.",
+        "free": "Wenn du das ganze Spiel freischaltest, kommen bis zu {cap} Eicheln mit nach {next}. Mehr kommt nicht mit."
+      }
+    },
+    "text": {
+      "toast": {
+        "freePlayCap": "Bis zu {n} Eicheln können mit nach {next}.",
+        "goalsDone": "{n} Ziele geschafft! +{c}"
+      }
+    },
+    "town": {
+      "gus": {
+        "trialDone": "{name} gehört uns, samt Urkunde. Ich halt alles am Laufen."
+      },
+      "agent": {
+        "say": {
+          "start": "{name} ist zu haben. Zahl eine Rate, wann du magst."
+        }
+      },
+      "club": {
+        "lockPlateNext": "Öffnet in der nächsten Range, nach Rate 1"
+      }
+    },
+    "gus": {
+      "idleMuni": [
+        "Vierzig Jahre führ ich die Range. Fühlt sich an wie fünfzig.",
+        "Meine Streifen sind hier grau geworden. Hat sich gelohnt. Fast."
+      ],
+      "prestigeReadyMuni": [
+        "Ich werd den Laden vermissen. Na ja. Größtenteils."
+      ]
+    }
+  });
+})(window.DIALOG);
+/* ---- end of the QA 2026-11-06 night block ---- */
 
 </script>
 <script>/* ---- dialog/locales/es.js ---- */
@@ -13239,11 +13330,9 @@ window.DIALOG = {
       idle: [
         "La tetera está al fuego. Siempre está al fuego.",
         "Ojo con la cortadora buena. Esa es la cortadora buena.",
-        "Cuarenta años llevo con este campo. Parecen cincuenta.",
         "No se lo digas a nadie, pero no se te da nada mal.",
         "¿Una galleta? No. Son mías. Solo preguntaba.",
         "Los tejones no corremos. Paseamos. Con determinación.",
-        "Mis rayas se volvieron grises aquí. Valió la pena. Casi.",
         "Un buen té lo arregla casi todo. La red no, eso sí."
       ],
       stockEmpty: [
@@ -13281,7 +13370,7 @@ window.DIALOG = {
         "Podrías comprar el sitio. Te regalo la tetera.",
         "Tu reputación crece. ¿Toca subir de categoría, quizá?",
         "¿Tienes bellotas? Paga la siguiente parte. Y será tuyo.",
-        "Voy a extrañar este sitio. Bueno. Casi todo."
+        "Ahí tienes una parte pagada, si quieres. Sin prisa."
       ],
       grandTour: [
         "De vuelta en Barrizal. Los charcos te extrañaron. Y yo.",
@@ -15401,7 +15490,7 @@ window.DIALOG = {
       },
       "buy": {
         "starsGain": "+{n} ★ → {p} de ingresos para siempre",
-        "starsWhy": "{n} estrellas: +{p} % de ingresos en cada campo, siempre."
+        "starsWhy": "{n} estrellas: {p} de ingresos en cada campo, siempre."
       },
       "hud": {
         "starsIncome": "{p} de ingresos"
@@ -15905,8 +15994,8 @@ window.DIALOG = {
     "help": {
       "carry": {
         "title": "La mudanza",
-        "sign": "Te llevas {n} bellotas. El resto ({over}) se convierte en una caja de mudanza: {b} escarabajos de cuerda te esperan en {next}.",
-        "signAll": "Te llevas tus {n} bellotas. Pueden venir hasta {cap}; lo que pase de ahí será una caja de mudanza con {b} escarabajos, nada más.",
+        "sign": "Te llevas {n} bellotas. El resto ({over}) será una caja de mudanza: {b} escarabajos de cuerda te esperan en {next}. Nada más, sea cual sea la cantidad.",
+        "signAll": "Te llevas tus {n} bellotas. Pueden venir hasta {cap}; lo que pase de ahí será una caja de mudanza con {b} escarabajos, nada más, sea cual sea la cantidad.",
         "note": "Ahorrar más no viaja contigo. Gástalo aquí en mejoras, o firma y sigue adelante.",
         "explain": "Al firmar, vienen contigo a {next} hasta {cap} bellotas. Lo que sobre se convierte en {b} escarabajos, así que gástalo aquí.",
         "what": "Al firmar la última parte de un campo, tus bellotas van al siguiente, hasta una cantidad fija. La tarjeta de firma y la inmobiliaria dicen cuánto.",
@@ -15926,6 +16015,52 @@ window.DIALOG = {
   });
 })(window.DIALOG);
 /* ---- end of the carry-over cap block ---- */
+
+/* ---- fresh-eyes QA 2026-11-06 night. Same keys as the block in dialog/dialog.js. */
+(function (D) {
+  if (!D || !D.locales || !D.locales["es"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["es"], {
+    "help": {
+      "carry": {
+        "signHidden": "Te llevas {n} bellotas. El resto ({over}) será una caja de mudanza: {b} escarabajos de cuerda para el siguiente campo. Nada más, sea cual sea la cantidad.",
+        "signNone": "Pueden venir contigo hasta {cap} bellotas. Lo que pase de ahí será una caja de mudanza con {b} escarabajos, nada más, sea cual sea la cantidad.",
+        "explainHidden": "Al firmar, vienen contigo al siguiente campo hasta {cap} bellotas. Lo que sobre se convierte en {b} escarabajos, así que gástalo aquí.",
+        "free": "Cuando desbloquees el juego completo, vienen contigo a {next} hasta {cap} bellotas. Lo que pase de ahí no viene."
+      }
+    },
+    "text": {
+      "toast": {
+        "freePlayCap": "Hasta {n} bellotas pueden ir contigo a {next}.",
+        "goalsDone": "¡{n} objetivos cumplidos! +{c}"
+      }
+    },
+    "town": {
+      "gus": {
+        "trialDone": "{name} ya es nuestro, escrituras y todo. Yo lo mantengo."
+      },
+      "agent": {
+        "say": {
+          "start": "{name} está a la venta. Paga una parte cuando quieras."
+        }
+      },
+      "club": {
+        "lockPlateNext": "Abre en el siguiente campo, tras la parte 1"
+      }
+    },
+    "gus": {
+      "idleMuni": [
+        "Cuarenta años llevo con este campo. Parecen cincuenta.",
+        "Mis rayas se volvieron grises aquí. Valió la pena. Casi."
+      ],
+      "prestigeReadyMuni": [
+        "Voy a extrañar este sitio. Bueno. Casi todo."
+      ]
+    }
+  });
+})(window.DIALOG);
+/* ---- end of the QA 2026-11-06 night block ---- */
 
 </script>
 <script>/* ---- dialog/locales/pt-BR.js ---- */
@@ -15991,11 +16126,9 @@ window.DIALOG = {
       idle: [
         "A chaleira tá no fogo. A chaleira sempre tá no fogo.",
         "Cuidado com o cortador bom. Aquele é o cortador bom.",
-        "Quarenta anos tocando este campo. Parece cinquenta.",
         "Não conta pra ninguém, mas você até que leva jeito.",
         "Biscoito? Não. É tudo meu. Só perguntei.",
         "Texugo não tem pressa. A gente passeia. Com propósito.",
-        "Minhas listras ficaram grisalhas aqui. Valeu a pena. Quase.",
         "Uma boa xícara de chá resolve quase tudo. A rede, não."
       ],
       stockEmpty: [
@@ -16033,7 +16166,7 @@ window.DIALOG = {
         "Você podia comprar o lugar. A chaleira vai de brinde.",
         "Sua fama tá crescendo. Hora de subir na vida, quem sabe?",
         "Tem bolotas? Pague a próxima parcela. E é seu.",
-        "Vou sentir saudade daqui. Bom. De quase tudo."
+        "Dá pra pagar uma parcela, se quiser. Sem pressa."
       ],
       grandTour: [
         "De volta ao Lamaçal. As poças sentiram sua falta. Eu também.",
@@ -18145,7 +18278,7 @@ window.DIALOG = {
       },
       "buy": {
         "starsGain": "+{n} ★ → {p} de renda para sempre",
-        "starsWhy": "{n} estrelas: +{p}% de renda em todo campo, para sempre."
+        "starsWhy": "{n} estrelas: {p} de renda em todo campo, para sempre."
       },
       "hud": {
         "starsIncome": "{p} de renda"
@@ -18649,8 +18782,8 @@ window.DIALOG = {
     "help": {
       "carry": {
         "title": "A mudança",
-        "sign": "Você leva {n} bolotas. O resto ({over}) vira uma caixa de mudança: {b} besouros de corda esperando em {next}.",
-        "signAll": "Você leva todas as {n} bolotas. Podem ir até {cap}; o que passar disso vira uma caixa de mudança com {b} besouros, só isso.",
+        "sign": "Você leva {n} bolotas. O resto ({over}) vira uma caixa de mudança: {b} besouros de corda esperando em {next}. Só isso, seja qual for o valor.",
+        "signAll": "Você leva todas as {n} bolotas. Podem ir até {cap}; o que passar disso vira uma caixa de mudança com {b} besouros, só isso, seja qual for o valor.",
         "note": "Juntar mais não vai com você. Gaste aqui em melhorias, ou assine e siga em frente.",
         "explain": "Ao assinar, até {cap} bolotas vão com você para {next}. O que passar vira {b} besouros, então gaste aqui.",
         "what": "Ao assinar a última parcela de um campo, suas bolotas vão para o próximo, até um valor fixo. O cartão de assinatura e a imobiliária mostram quanto.",
@@ -18670,6 +18803,52 @@ window.DIALOG = {
   });
 })(window.DIALOG);
 /* ---- end of the carry-over cap block ---- */
+
+/* ---- fresh-eyes QA 2026-11-06 night. Same keys as the block in dialog/dialog.js. */
+(function (D) {
+  if (!D || !D.locales || !D.locales["pt-BR"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["pt-BR"], {
+    "help": {
+      "carry": {
+        "signHidden": "Você leva {n} bolotas. O resto ({over}) vira uma caixa de mudança: {b} besouros de corda para o próximo campo. Só isso, seja qual for o valor.",
+        "signNone": "Até {cap} bolotas podem ir com você. O que passar disso vira uma caixa de mudança com {b} besouros, só isso, seja qual for o valor.",
+        "explainHidden": "Ao assinar, até {cap} bolotas vão com você para o próximo campo. O que passar vira {b} besouros, então gaste aqui.",
+        "free": "Quando você desbloquear o jogo completo, até {cap} bolotas vão com você para {next}. O que passar disso não vai."
+      }
+    },
+    "text": {
+      "toast": {
+        "freePlayCap": "Até {n} bolotas podem ir com você para {next}.",
+        "goalsDone": "{n} metas cumpridas! +{c}"
+      }
+    },
+    "town": {
+      "gus": {
+        "trialDone": "{name} é nosso, com escritura e tudo. Eu cuido de tudo."
+      },
+      "agent": {
+        "say": {
+          "start": "{name} está à venda. Pague uma parcela quando quiser."
+        }
+      },
+      "club": {
+        "lockPlateNext": "Abre no próximo campo, após a parcela 1"
+      }
+    },
+    "gus": {
+      "idleMuni": [
+        "Quarenta anos tocando este campo. Parece cinquenta.",
+        "Minhas listras ficaram grisalhas aqui. Valeu a pena. Quase."
+      ],
+      "prestigeReadyMuni": [
+        "Vou sentir saudade daqui. Bom. De quase tudo."
+      ]
+    }
+  });
+})(window.DIALOG);
+/* ---- end of the QA 2026-11-06 night block ---- */
 
 </script>
 <script>/* ---- dialog/locales/qps.js ---- */
@@ -18778,11 +18957,9 @@ window.DIALOG = {
       idle: [
         "水壶烧着呢。水壶永远烧着。",
         "当心那台好割草机。那可是台好割草机。",
-        "这球场我管了四十年。感觉像五十年。",
         "别跟别人说啊，你干得还真不赖。",
         "饼干？不行。那是我的。问问而已。",
         "獾从不着急。我们溜达。有目的地溜达。",
-        "我这身条纹是在这儿熬白的。值。大概吧。",
         "一杯好茶能解决大部分问题。球网除外。"
       ],
       stockEmpty: [
@@ -18820,7 +18997,7 @@ window.DIALOG = {
         "你可以把这里买下来。水壶算我送的。",
         "你名气越来越大了。也许该往上走走了？",
         "橡果够了？付下一期吧。付完就归你了。",
-        "我会想这地方的。嗯。大部分时候会想。"
+        "想付的话，这一期够了。不着急。"
       ],
       grandTour: [
         "又回泥滩了。水坑想你了。我也是。",
@@ -20973,7 +21150,7 @@ window.DIALOG = {
       },
       "buy": {
         "starsGain": "+{n}星 → 收入永久{p}",
-        "starsWhy": "{n}颗星：每个球场的收入永久+{p}%。"
+        "starsWhy": "{n}颗星：每个球场的收入永久{p}。"
       },
       "hud": {
         "starsIncome": "收入{p}"
@@ -21477,8 +21654,8 @@ window.DIALOG = {
     "help": {
       "carry": {
         "title": "搬家",
-        "sign": "你能带走 {n} 橡果。其余的（{over}）会变成一只搬家箱：{b} 只发条甲虫在{next}等你。",
-        "signAll": "你的 {n} 橡果都能带走。最多可带 {cap}；超出的部分只会变成一只装着 {b} 只甲虫的搬家箱，仅此而已。",
+        "sign": "你能带走 {n} 橡果。其余的（{over}）会变成一只搬家箱：{b} 只发条甲虫在{next}等你。不管多出多少，都只有这些。",
+        "signAll": "你的 {n} 橡果都能带走。最多可带 {cap}；超出的部分只会变成一只装着 {b} 只甲虫的搬家箱，不管多出多少，仅此而已。",
         "note": "再攒下去也带不走。在这里买升级，或者签约搬走吧。",
         "explain": "签约时，最多 {cap} 橡果跟你去{next}。超出的会变成 {b} 只甲虫，所以在这里花掉吧。",
         "what": "签下球场的最后一期时，你的橡果会带到下一个球场，但有上限。签约卡和地产经纪会写明多少。",
@@ -21498,6 +21675,52 @@ window.DIALOG = {
   });
 })(window.DIALOG);
 /* ---- end of the carry-over cap block ---- */
+
+/* ---- fresh-eyes QA 2026-11-06 night. Same keys as the block in dialog/dialog.js. */
+(function (D) {
+  if (!D || !D.locales || !D.locales["zh-CN"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["zh-CN"], {
+    "help": {
+      "carry": {
+        "signHidden": "你能带走 {n} 橡果。其余的（{over}）会变成一只搬家箱：{b} 只发条甲虫去下一个球场。不管多出多少，都只有这些。",
+        "signNone": "最多 {cap} 橡果能跟你走。超出的部分只会变成一只装着 {b} 只甲虫的搬家箱，不管多出多少，仅此而已。",
+        "explainHidden": "签约时，最多 {cap} 橡果跟你去下一个球场。超出的会变成 {b} 只甲虫，所以在这里花掉吧。",
+        "free": "解锁完整游戏后，最多 {cap} 橡果跟你去{next}。超出的部分带不走。"
+      }
+    },
+    "text": {
+      "toast": {
+        "freePlayCap": "最多 {n} 橡果能跟你去{next}。",
+        "goalsDone": "完成了 {n} 个目标！+{c}"
+      }
+    },
+    "town": {
+      "gus": {
+        "trialDone": "{name}归我们了，契约都签好了。我会把它照看好。"
+      },
+      "agent": {
+        "say": {
+          "start": "{name}在出售了。想付哪一期都行，不着急。"
+        }
+      },
+      "club": {
+        "lockPlateNext": "在下一个球场付完第 1 期后开门"
+      }
+    },
+    "gus": {
+      "idleMuni": [
+        "这球场我管了四十年。感觉像五十年。",
+        "我这身条纹是在这儿熬白的。值。大概吧。"
+      ],
+      "prestigeReadyMuni": [
+        "我会想这地方的。嗯。大部分时候会想。"
+      ]
+    }
+  });
+})(window.DIALOG);
+/* ---- end of the QA 2026-11-06 night block ---- */
 
 </script>
 <script>/* ---- loop/game.js ---- */
@@ -21584,13 +21807,15 @@ window.DIALOG = {
   function mulberry(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 
-  /** One number formatter for the whole game: 999, 1.2K, 3.4M, 5.6B, 7.8T, then aa, ab ... */
+  /** One number formatter for the whole game: 999, 1.2K, 3.4M, 5.6B, 7.8T, then the named units Qa Qi Sx Sp Oc No Dc, then
+   *  aa, ab ... (QA 2026-11-06 night: Gullhaven's price read "3.7aa", unexplained; Qa is the next named unit) */
   const SUFFIX = ['', 'K', 'M', 'B', 'T'];
   // locale-aware bits (set by applyLocale from DIALOG.meta): decimal separator + K/M/B/T suffixes
   const NUM = { dec: '.', suf: SUFFIX };
   const dec1 = (v) => { const s = (Math.floor(v * 10) / 10).toFixed(1).replace(/\.0$/, ''); return NUM.dec === '.' ? s : s.replace('.', NUM.dec); };
-  /** the suffix for 1000^k: K M B T (localised), then aa, ab ... (fmt and fmtAs) */
-  function sufOf(k) { const SF = NUM.suf; if (k < SF.length) return SF[k]; const i = k - SF.length; return String.fromCharCode(97 + (Math.floor(i / 26) % 26)) + String.fromCharCode(97 + (i % 26)); }
+  /** the suffix for 1000^k: K M B T (localised), then Qa Qi Sx Sp Oc No Dc, then aa, ab ... (fmt and fmtAs) */
+  const NAMED_SUF = ['Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+  function sufOf(k) { const SF = NUM.suf; if (k < SF.length) return SF[k]; let i = k - SF.length; if (i < NAMED_SUF.length) return NAMED_SUF[i]; i -= NAMED_SUF.length; return String.fromCharCode(97 + (Math.floor(i / 26) % 26)) + String.fromCharCode(97 + (i % 26)); }
   function fmt(n) {
     if (!isNum(n)) return '0';
     const neg = n < 0; n = Math.abs(n);
@@ -21613,6 +21838,7 @@ window.DIALOG = {
     if (k < 1) return fmt(n);
     const v = Math.abs(n) / Math.pow(1000, k);
     const small = v > 0 && v < 0.1 ? (Math.floor(v * 100) / 100).toFixed(2).replace(/\.?0+$/, '') : null; // 80 of 175K: "0.08K", not "0K"
+    if (small === '0' && Math.abs(n) >= 1) return fmt(n); // QA 2026-11-06 night: 1.2K of 8.5M read "0M / 8.5M": a small amount in its own unit
     return (n < 0 ? '-' : '') + (small != null ? (NUM.dec === '.' ? small : small.replace('.', NUM.dec)) : v < 100 ? dec1(v) : String(Math.floor(v))) + sufOf(k);
   }
   function tpl(str, vars) {
@@ -23053,7 +23279,15 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const isUnlocked = () => !!(state && (state.unlocked || (FULL_GAME && state.playtestUnlock)));
   /** what going from `from` to `to` stars does to income, as the HUD, the Journal and the buy toast say it: "+24%", or
    *  "×27.2K" once it's past x11 (late stars come by the million: a % would be a wall of digits) */
-  function starBoost(from, to) { const per = B.prestige.multPerStar || 0, r = (1 + Math.max(0, to) * per) / (1 + Math.max(0, from) * per); return r < 11 ? '+' + Math.round((r - 1) * 1000) / 10 + '%' : '×' + fmt(r); }
+  /** what going from `from` stars to `to` does to income: THE one star figure (QA 2026-11-06 night: the agent's card, the signed
+   *  card and the toast gave three different numbers for the same stars). One format: +2.5% under 10%, +34% up to +999%,
+   *  then ×18.3 under 100, ×470, then fmt (×1.2K) */
+  function starBoost(from, to) {
+    const per = B.prestige.multPerStar || 0, r = (1 + Math.max(0, +to || 0) * per) / (1 + Math.max(0, +from || 0) * per), p = (r - 1) * 100;
+    const r1 = (v) => { const t = (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, ''); return NUM.dec === '.' ? t : t.replace('.', NUM.dec); };
+    if (!(p < 999.5)) return '×' + (r < 99.95 ? r1(r) : r < 999.5 ? String(Math.round(r)) : fmt(r));
+    return '+' + (p < 9.95 ? r1(Math.max(0, p)) : String(Math.round(p))) + '%';
+  }
   const valueMult = () => (range().valueMult || 1) * portfolioMult() * visitPayMult(); // every payout: the range, your portfolio, a visit
   const isNight = () => alwaysNight() || state.dayT >= B.dayNight.dayLengthSec;
   // lights are auto-owned wherever it's always night: Firefly Bays, and every range on a Grand Tour 'night' lap (that lap
@@ -23126,6 +23360,12 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   let rollForced = false; // tests: _test.forceRoll(true) keeps the roll on a phone page (the dodge mechanics' own tests)
   const rollAllowed = () => rollForced || !phoneOnly() || inputMode === 'pad';
   const dodgeVisible = () => rollAllowed() && (dodgeState().owned || ((state.stats.timesStunned | 0) >= 1 && !dodgeHeld()));
+  /** the trophies this device can earn (QA 2026-11-06 night): with no Dodge Roll on a phone, Twinkle Paws and By a Whisker
+   *  can't be won there, so they're hidden and left out of the total; one already won stays. Desktop / pad keep them (and
+   *  the Steam achievements, desktop/app/achievements.json, are unchanged) */
+  const ROLL_ACH = new Set(['dodge_25', 'dodge_perfect_10']);
+  const achShown = (a) => !!a && (!ROLL_ACH.has(a.id) || rollAllowed() || !!(state && state.ach && state.ach[a.id]));
+  const achList = () => B.achievements.filter(achShown);
   const dodgeUpName = (id) => dstr('dodge.' + id + '.name', ((dodgeCfg().upgrades || {})[id] || {}).name || titleCase(id));
   /** DECISIONS 42 (feel audit #3): the golfers' swing + landing volume, x min(1, 2 / sqrt(bays playing)): the same at 4 bays,
    *  x0.47 at 18. Late game the bed (115 swings a minute) sat ~8 dB over the rat's pickups on a phone speaker */
@@ -23267,6 +23507,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   function rangeName(id) { const r = B.ranges.find((x) => x.id === id); return dstr('ranges.' + id + '.name', (r && r.name) || titleCase(id)); }
   const rangeShort = (id) => dstr('ranges.' + id + '.short', rangeName(id));
+  /** has the player seen range i's name yet? The same rule as the route map (ui/layout.js knownRanges): up to the one you're
+   *  buying, one you own or sold, any Grand Tour lap, after the credits. Until then it's ??? and its tease everywhere (QA
+   *  2026-11-06 night: the sign card and the goal's ⓘ named the next range while Coming up showed ???) */
+  function rangeKnown(i) {
+    const r = B.ranges[i | 0]; if (!r || !state) return false;
+    const sold = (state.stats && state.stats.rangesSold) || {};
+    return (state.tour | 0) > 0 || !!state.creditsSeen || (i | 0) <= (state.frontier | 0) || (i | 0) <= (state.rangeIdx | 0) || isOwned(r.id) || (sold[r.id] | 0) > 0;
+  }
   function upName(id) { return dstr('upgrades.' + id + '.name', (up(id) && up(id).name) || titleCase(id)); }
   const tierName = (id) => dstr('tiers.' + id + '.name', titleCase(id));
   function gearName(i) { const g = gearDef(i); return dstr('gear.' + g.id + '.name', g.name || titleCase(g.id)); }
@@ -25119,6 +25367,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function goalProgress(kind) {
     checkGoals();
   }
+  let goalSwapToastAt = -1e9; const GOAL_SWAP_TOAST_SEC = 300;
   function checkGoals() {
     if (mode !== 'game') return;
     ensureGoals();
@@ -25137,7 +25386,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         const now = state.stats.playSeconds || 0, gap = R().goals.manualRerollSec || 0;
         if (staleDone || now - Math.max(state.goalStaleAt == null ? -1e9 : state.goalStaleAt, state.goalRerollAt == null ? -1e9 : state.goalRerollAt) < gap) continue;
         staleDone = true; state.goalStaleAt = now;
-        rerollGoalSlot(i, 'stale'); toast(tx('toast.goalSwapped', 'Gus swapped a stuck goal.')); continue;
+        rerollGoalSlot(i, 'stale');
+        // QA 2026-11-06 night: "Gus swapped a stuck goal." x4 in 5 game-minutes. The swaps go on; the word at most every GOAL_SWAP_TOAST_SEC
+        if (!(now - goalSwapToastAt < GOAL_SWAP_TOAST_SEC)) { goalSwapToastAt = now; toast(tx('toast.goalSwapped', 'Gus swapped a stuck goal.')); }
+        continue;
       }
       const pr = goalProg(g); if (g._last != null && pr > g._last && g.target <= 400 && typeof noteGoalTick === 'function') { noteGoalTick(g); fire('onGoalTick', { id: g.id, el: ui_.goalEl && ui_.goalEl(i) }); } g._last = pr;
       if (goalProg(g) >= g.target) {
@@ -25147,7 +25399,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         emit('goalDone', { id: g.id, target: g.target, reward });
         sfx('upgrade', { pitch: 5 }); setTimeout(() => sfx('cash'), 120);
         const line = dline('toasts.goalDone', 'Goal done!');
-        toast(line + ' +' + fmt(reward));
+        toast(line + ' +' + fmt(reward), { goal: reward });
         const p = world.player || { x: 90, y: 160 };
         fire('onGoalDone', { id: g.id, slot: i, x: p.x, y: p.y - 10, el: ui_.goalEl && ui_.goalEl(i) });
         const gpop = () => fx.popup('+' + fmt(reward), p.x, p.y - 24, { color: '#a9bd5a', big: true }), gw = firstTipPopUntil - nowMs();
@@ -25498,12 +25750,17 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     return true;
   }
   const frPrio = (e) => e.prio | 0;
+  /** QA 2026-11-06 night: while the town shows, Gus's slot is the town's. A line pointing at something on the field (the
+   *  glow ball's sat there >170 s) can't take it and block the town's own (the first visit's, pointing at the agent):
+   *  only town lines, or lines with no field pointer, go while it's up */
+  const frTownOk = (e) => !(e.point && e.point.world);
   function frNext(F, c) {
-    let best = null, be = null;
+    let best = null, be = null; const town = !!(W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.showing);
     for (const q of F.q) {
       const e = FR_().byId[q.id]; if (!e || (frOff() && !e.core) || (e.range && e.range !== c.range)) continue;
+      if (town && !frTownOk(e)) continue;
       if (e.live && !frTry(e.live, c, frCtx[q.id])) continue; // dormant: waits for the next occurrence
-      if (e.on === 'shopRow' && !frShopSideOpen()) continue; // Ben (2026-11-06): a new shop item is explained in the Shop, not on the range
+      if (e.on === 'shopRow' && (!frShopSideOpen() || !frShopHere(e))) continue; // Ben (2026-11-06): a new shop item is explained in the Shop, not on the range
       if (!best || frPrio(e) > frPrio(be)) { best = q; be = e; }
     }
     return best ? { q: best, e: be } : null;
@@ -25539,7 +25796,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   // button "New" (ui/reveal.js shopk_<id>). Wide / duo: the line goes in Gus's dock while the side panel shows the Shop
   // (frNext). Phone: the Shop sheet covers the field, so the line sits at the top of the sheet (like the first-open note),
   // one at a time, newest first, its row pulsing (scrolled into view only as the Shop opens); said once read
-  const frShopQ = () => { const F = frState(); if (!F || !FR_()) return []; return F.q.filter((q) => { const e = FR_().byId[q.id]; return !!e && e.on === 'shopRow' && !(frOff() && !e.core) && (!e.live || frTry(e.live, frC(), frCtx[q.id])); }); };
+  // only while its row is in this range's shop (QA 2026-11-06 night: Oakridge's hedge rows were explained at Lily Lagoon,
+  // where they aren't in the shop; their lines wait for Oakridge)
+  const frShopHere = (e) => !e.shop || frRowOpen(e.shop);
+  const frShopQ = () => { const F = frState(); if (!F || !FR_()) return []; return F.q.filter((q) => { const e = FR_().byId[q.id]; return !!e && e.on === 'shopRow' && !(frOff() && !e.core) && (!e.live || frTry(e.live, frC(), frCtx[q.id])) && frShopHere(e); }); };
   function frShopSideOpen() {
     const r = layout.root; if (!r || sheet) return false;
     const L = W.RANGE_RAT_LAYOUT; if (!L || L.tab !== 'shop' || (L.layout !== 'wide' && L.layout !== 'duo')) return false;
@@ -25575,7 +25835,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     emit('dialog', Object.assign({ speaker: 'gus', text, blocking: false, first: e.id, bubble: 0, where: 'shop' }, tg));
     frLogPush({ id: e.id, ev: 'start', b: 0, text, where: 'shop' });
   }
-  let frShopGapT = 0, frShopGap = 0, frShopOpenedAt = 0;
+  let frShopGapT = 0, frShopGap = 0, frShopOpenedAt = 0; const FR_SHOP_SAID_MS = 1500;
   /** the row the line is about: pulse it; as the Shop opens, bring it into view (never later: the list must not move) */
   function frShopRow(cur) {
     const row = [...sheet.sh.querySelectorAll(`.rr-row[data-help="${cur.e.shop || ('upgrade:' + cur.e.kind)}"]`)].find((x) => x.getClientRects().length) || (cur.e.kind === 'gear' ? [...sheet.sh.querySelectorAll('.rr-row[data-kind=gear]')].find((x) => x.getClientRects().length) : null);
@@ -25589,7 +25849,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function frShopEnd(keepNote) {
     const cur = frShop; frShop = null; if (!cur) return;
     if (cur.row) cur.row.classList.remove('rr-fpoint');
-    if (!cur.done) { if (cur.vis >= cur.need) frFinish(cur.q, cur.e, 'read'); else frLogPush({ id: cur.e.id, ev: 'bumped', b: 0, vis: Math.round(cur.vis), why: 'shop closed' }); }
+    // QA 2026-11-06 night: closing the Shop before the full read time restarted the line at every open ("More Pins" x3). It
+    // sits there whole (no typing): FR_SHOP_SAID_MS on screen counts as said
+    if (!cur.done) { if (cur.vis >= Math.min(cur.need, FR_SHOP_SAID_MS)) frFinish(cur.q, cur.e, 'read'); else frLogPush({ id: cur.e.id, ev: 'bumped', b: 0, vis: Math.round(cur.vis), why: 'shop closed' }); }
     if (!keepNote && cur.el && cur.el.isConnected) cur.el.remove();
   }
   /** the shop kinds waiting for their line (ui/reveal.js tags the Shop button "New" for each) */
@@ -25637,6 +25899,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       }
       // read, and another first-time line (or this one's next bubble) is ready: this one has had its time (calm, not idle)
       if (cur.acked && onPeek && !cur.retired && cur.vis >= cur.need + 600) { const nx = frNext(frState(), frC()); if (nx) { cur.retired = true; peekT = Math.min(peekT, 0); } }
+      // the dock (wide, and the town's slot) keeps a line up until the next one replaces it: once read, it steps aside for the
+      // next first-time line like the peek box does (QA 2026-11-06 night: a read line held the town's slot for good)
+      if (cur.acked && onDock && cur.vis >= cur.need + 600) { const nx = frNext(frState(), frC()); if (nx) { frEnd('next'); return; } }
       return;
     }
     if (!cur.seen && (peekQ.some((x) => x.first === cur) || nowMs() - cur.t0 < 600)) return; // still on its way out
@@ -25659,7 +25924,8 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   // ---- the pointer (R7): a DOM pulse + chevron, or a field ring + chevron (+ an optional label) on the target
   let frPtrEls = [], frChev = null, frPtrT = 0;
   function frDomTarget(e) {
-    const R2 = FR_(), pt = e.point, vis = (x) => !!x && x.getClientRects().length > 0 && getComputedStyle(x).visibility !== 'hidden';
+    const TWp = W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.panel; // a town building's sheet covers the street: its shops aren't on screen (the Tailor's arrow poked through the sheet's header, QA 2026-11-06 night)
+    const R2 = FR_(), pt = e.point, vis = (x) => !!x && x.getClientRects().length > 0 && getComputedStyle(x).visibility !== 'hidden' && !(TWp && x.closest && x.closest('.rt-bld'));
     const out = [];
     if (e.shop) { const row = [...document.querySelectorAll(`.rr-row[data-help="${e.shop}"]`)].find(vis); if (row) out.push(row); } // wide: the row itself is on screen
     if (pt && pt.dom && !(out.length && pt.dom === 'shop')) { for (const s of (R2.DOM[pt.dom] || [pt.dom])) { const x = [...document.querySelectorAll(s)].find(vis); if (x) { out.push(x); break; } } }
@@ -25750,7 +26016,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const rr = root.getBoundingClientRect(), r = target.getBoundingClientRect();
     const below = r.top - rr.top < 26; // a HUD read-out at the very top: point up at it from below
     frChev.classList.toggle('up', below);
-    frChev.style.left = Math.round(r.left - rr.left + r.width / 2) + 'px'; frChev.style.top = Math.round(below ? r.bottom - rr.top + 2 : r.top - rr.top - 2) + 'px';
+    frChev.style.left = Math.round(r.left - rr.left + (r.width > 160 ? 18 : r.width / 2)) + 'px'; /* a wide strip (the main goal): at its icon, not over its words (QA 2026-11-06 night) */ frChev.style.top = Math.round(below ? r.bottom - rr.top + 2 : r.top - rr.top - 2) + 'px';
     frChev.style.opacity = '1';
   }
   // a card entry (an Escalation Plan "New here" card): once it's closed, the Shop pulses a few seconds (its row is there, tagged)
@@ -25846,7 +26112,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const now = gameT; if (lastBubble[cat] != null && now - lastBubble[cat] < (minGap || 0)) return false;
     if (ui_.dialogOpen && ui_.dialogOpen()) return false;
     if (!nagOk(cat)) return false;
-    const line = dline('gus.' + cat, null); if (!line) return false;
+    // QA 2026-11-06 night: "Forty years I've run this range" and "I'll miss this place" were said at every range. Lines about
+    // Mudbank itself live in gus.<cat>Muni and join the pool there only (in their share of it)
+    const base = dget('gus.' + cat), mu = rangeId() === B.ranges[0].id ? dget('gus.' + cat + 'Muni') : null;
+    const muni = Array.isArray(mu) && mu.length && Math.random() < mu.length / (mu.length + (Array.isArray(base) ? base.length : 0));
+    const line = dline('gus.' + cat + (muni ? 'Muni' : ''), null); if (!line) return false;
     lastBubble[cat] = now; nagSaid(cat);
     emit('dialog', { trigger: 'gus:' + cat, kind: 'bubble', speaker: 'gus', text: line, blocking: false });
     ui_.gusBubble && ui_.gusBubble(line, moodFor(cat));
@@ -26191,10 +26461,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function hedgeBadge(g, z, cnt, cy, full) {
     const n = Math.min(99, cnt), digits = n >= 10 ? 2 : 1, w = 6 + digits * 4, h = 7;
     const cx = z.side < 0 ? z.x1 + 2 : z.x0 - 2 - w, y = Math.round(clamp(cy, z.y0 + 10, z.y1 - 4) - 12 + (RM_() ? 0 : Math.sin(renderMs / 260) * 1.2)), x = Math.round(cx);
+    if (stOn('hb') && g === ctx && g.globalAlpha === 1) { stamp(g, 'hb:' + n + (full ? 'f' : '') + (z.side < 0 ? 'l' : 'r'), x, y, 2, 2, w + 4, h + 4, (q, X, Y) => hedgeBadgePx(q, X, Y, n, w, h, full, z.side)); return; } // perf: one blit (was ~20 fills)
+    hedgeBadgePx(g, x, y, n, w, h, full, z.side);
+  }
+  function hedgeBadgePx(g, x, y, n, w, h, full, side) {
     g.fillStyle = '#2a1c16'; g.fillRect(x, y, w, h); g.fillRect(x + 1, y - 1, w - 2, h + 2);
     g.fillStyle = full ? '#f0a640' : '#fffaee'; g.fillRect(x + 2, y + 1, 2, 1); g.fillRect(x + 1, y + 2, 4, 2); g.fillRect(x + 2, y + 4, 2, 1); g.fillStyle = '#2a1c16'; g.fillRect(x + 2, y + 2, 1, 1); // a ball (with a dimple)
     g.fillStyle = full ? '#f0a640' : '#fffaee'; const s = String(n); for (let d = 0; d < s.length; d++) { const m = DIG3[s.charCodeAt(d) - 48]; for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (m[r] & (4 >> c)) g.fillRect(x + 6 + d * 4 + c, y + 1 + r, 1, 1); }
-    const tx_ = z.side < 0 ? x - 1 : x + w; g.fillStyle = '#2a1c16'; g.fillRect(tx_, y + 3, 1, 1); // a nub pointing at the hedge
+    const tx_ = side < 0 ? x - 1 : x + w; g.fillStyle = '#2a1c16'; g.fillRect(tx_, y + 3, 1, 1); // a nub pointing at the hedge
   }
   function trapZonesFor(cfg) {
     const z = [];
@@ -26509,17 +26783,27 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
    *  change (windInfo.shifting, 5 s warning) it whips about. The HUD has no wind read-out any more. */
   function windFlagXY() { const p = G.toXY(0.46, fieldD(0.68)); return { x: Math.round(p.x), y: Math.round(p.y) }; }
   function drawWindFlag(g, info) {
-    const { x, y } = windFlagXY(), H = 24, top = y - H, rm = reducedMotion();
+    const { x, y } = windFlagXY(), H = 24, rm = reducedMotion();
     const m = clamp(info.str, 0, 1.4), dir = info.dir < 0 ? -1 : 1;
+    // the cloth's shape this frame: its rows (the sine is sampled here, so the stamp key says exactly what is drawn)
+    let segs = null;
+    if (m >= 0.15) {
+      const len = Math.round(5 + 6 * Math.min(1, m)), hgt = 6, spd = rm ? 0 : (info.shifting ? 55 : 150 - 60 * Math.min(1, m));
+      const amp = info.shifting ? 1.6 : 1.1 * (1.1 - Math.min(1, m) * 0.6), sag = (1 - Math.min(1, m)) * 3; segs = [];
+      for (let i = 0; i < len; i++) { const u = (i + 1) / len, wave = spd ? Math.sin(renderMs / spd - i * 0.9) * amp * u : 0; segs.push(Math.round(y - H + 1 + sag * u + wave) - y, Math.max(2, Math.round(hgt - u * 2))); }
+    }
+    if (stOn('wf') && g === ctx && g.globalAlpha === 1) { stamp(g, 'wf:' + dir + ':' + (segs ? segs.join(',') : 'limp'), x, y, 14, H + 4, 29, H + 6, (q, X, Y) => windFlagPx(q, X, Y, dir, segs)); return; } // perf: one blit (was ~21 fills)
+    windFlagPx(g, x, y, dir, segs);
+  }
+  function windFlagPx(g, x, y, dir, segs) {
+    const H = 24, top = y - H;
     g.fillStyle = 'rgba(26,17,12,.25)'; g.fillRect(x - 1, y, 4, 1); // shadow at the foot
     g.fillStyle = '#e8e2d0'; g.fillRect(x, top, 1, H); g.fillStyle = '#9a927c'; g.fillRect(x, top + 3, 1, H - 3); // white pole, shaded
     g.fillStyle = '#f2c641'; g.fillRect(x - (dir < 0 ? 1 : 0), top - 1, 2, 1); // finial
-    if (m < 0.15) { g.fillStyle = '#d24c3c'; g.fillRect(x + dir, top + 1, 1, 7); g.fillRect(x + 2 * dir, top + 1, 1, 6); g.fillStyle = '#fffaee'; g.fillRect(x + dir, top + 4, 1, 1); return; } // limp
-    const len = Math.round(5 + 6 * Math.min(1, m)), hgt = 6, spd = rm ? 0 : (info.shifting ? 55 : 150 - 60 * Math.min(1, m));
-    const amp = info.shifting ? 1.6 : 1.1 * (1.1 - Math.min(1, m) * 0.6), sag = (1 - Math.min(1, m)) * 3;
+    if (!segs) { g.fillStyle = '#d24c3c'; g.fillRect(x + dir, top + 1, 1, 7); g.fillRect(x + 2 * dir, top + 1, 1, 6); g.fillStyle = '#fffaee'; g.fillRect(x + dir, top + 4, 1, 1); return; } // limp
+    const len = segs.length / 2;
     for (let i = 0; i < len; i++) {
-      const u = (i + 1) / len, wave = spd ? Math.sin(renderMs / spd - i * 0.9) * amp * u : 0;
-      const yy = Math.round(top + 1 + sag * u + wave), h = Math.max(2, Math.round(hgt - u * 2)), xx = x + dir * (i + 1);
+      const yy = y + segs[2 * i], h = segs[2 * i + 1], xx = x + dir * (i + 1);
       g.fillStyle = '#d24c3c'; g.fillRect(xx, yy, 1, h);
       g.fillStyle = '#fffaee'; g.fillRect(xx, yy + (h >> 1) - (h > 3 ? 1 : 0), 1, 1); // a white band along the middle
       if (i === len - 1 && h > 2) { g.fillStyle = '#a8352a'; g.fillRect(xx, yy + h - 1, 1, 1); } // shaded tip
@@ -27356,7 +27640,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (front && !isUnlocked() && i > 0) return false; // the trial: the next range stays locked
     const from = rangeId();
     if ((state.rangeIdx | 0) === (state.frontier | 0)) state.frontierRate = steadyRate({ active: true }) || 0; // the visit cap (visitCapK)
-    refundSwings(); syncWorldToState(); stashSite(from);
+    refundSwings(); syncWorldToState(); stashSite(from); toastNewRange();
     const fromFree = !!state.freePlay;
     if (state.freePlay) state.freePlay = null; // the trial's free play ends when you leave Mudbank
     state.rangeIdx = i;
@@ -27674,10 +27958,13 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const had = loadSite(B.ranges[0].id); if (!had) resetRun(true); // Mudbank as you left it (it's yours now)
     if (mode === 'game') { resetWorld(!had); buildHud(); ui_.refresh && ui_.refresh(true); }
     emit('trialFreePlay', { range: state.freePlay }); save();
+    toastNewRange();
     toast(tx('toast.freePlay', 'Back to Mudbank. Play as long as you like.'));
+    // QA 2026-11-06 night: the carry-over cap applies when the unlock moves you on, and nothing said so (DECISIONS 47)
+    { const fc = freePlayCapInfo(); if (fc) toast(tx('toast.freePlayCap', 'Up to {n} acorns can go on with you to {next}.', { n: fmt(fc.cap), next: rangeShort(fc.next) })); }
     return true;
   }
-  function endFreePlay() {
+  function endFreePlay(noIntro) {
     if (!state.freePlay) return false;
     // keep free-play Mudbank. Outside play (a full-game build opening a free-play save, startGame on the title) the state
     // already is the saved range, with no world to sync (review r4 #2: it used to be dropped and Mudbank lost its progress)
@@ -27685,18 +27972,46 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     stashSite(rangeId());
     state.freePlay = null; state.rangeIdx = state.frontier = Math.max(1, Math.min(state.frontier | 0, B.ranges.length - 1));
     const had = loadSite(rangeId()); if (!had) resetRun(true);
-    freePlayCarry();
-    if (mode === 'game') { resetWorld(!had); buildHud(); if (!had) rangeIntro(); ui_.refresh && ui_.refresh(true); }
+    const heldCarry = Array.isArray(state.heldArrival) && state.heldArrival.some((x) => x && x.k === 'carried');
+    freePlayCarry(heldCarry); // the sale's held "came with you" toast says it, with the wallet as it is now (heldArrivalRelease)
+    if (mode === 'game') { resetWorld(!had); buildHud(); if (!had && !noIntro) rangeIntro(); ui_.refresh && ui_.refresh(true); heldArrivalRelease(true); }
+    else if (Array.isArray(state.heldArrival)) state.heldArrival = state.heldArrival.filter((x) => isObj(x) && x.k !== 'float').map((x) => (x.k === 'carried' ? Object.assign({}, x, { free: 1 }) : x)); // released by startGame
     emit('freePlayEnd', { range: rangeId() }); save(); return true;
+  }
+  /** the trial sale's arrival toasts (held in buyComplete), now the unlock has brought you to the next range. viaFree: after
+   *  the trial's free play: the acorns are what came with you now (the cap applied again), and Gus's float went into the
+   *  free play's wallet long ago, so it isn't news */
+  function heldArrivalRelease(viaFree) {
+    if (!state || mode !== 'game') return false; // (startGame releases it: the unlock came on the title, or a full-game build opened the save)
+    const H = Array.isArray(state.heldArrival) ? state.heldArrival : null; state.heldArrival = null;
+    if (!H || !H.length) return false;
+    toastNewRange(); arrivalCalm();
+    for (const x of H) {
+      if (!isObj(x)) continue;
+      const free = viaFree || !!x.free;
+      if (x.k === 'float') {
+        const amt = +x.amount || 0; if (free || !(amt > 0)) continue;
+        emit('arrivalFloat', { range: rangeId(), amount: amt, rate: +x.rate || 0 });
+        if (!(frOwns('float') && !frSaid('float'))) toast(tx('buy.float', 'Gus left a float in the till: {n} acorns to get you going.', { n: fmt(amt) }));
+      } else if (x.k === 'carried' && free) toast(tx('buy.carried', '{n} acorns came with you, and {b} beetles in a crate.', { n: fmt(Math.floor(state.cash || 0)), b: x.b | 0 }));
+      else if (typeof x.text === 'string' && x.text) toast(x.text);
+    }
+    return true;
+  }
+  /** the trial's free play: how many acorns the unlock will take on, and where (null otherwise: the potter after the credits) */
+  function freePlayCapInfo() {
+    if (!state || !state.freePlay || isUnlocked() || state.creditsSeen || (state.tour | 0) > 0) return null;
+    const i = Math.max(1, Math.min(state.frontier | 0, B.ranges.length - 1)), r = B.ranges[i], cap = carryCap(r);
+    return cap == null ? null : { cap, next: r.id };
   }
   /** the carry-over cap after the trial's free play (DECISIONS 47): Mudbank's free-play earnings go on to the range you're
    *  buying only up to its allowance, like signing (the crate came with the signing) */
-  function freePlayCarry() {
+  function freePlayCarry(quiet) {
     if (state.freeRoam || (state.tour | 0) > 0 || (state.paid | 0) > 0) return;
     const cap = carryCap(range()); if (cap == null || !(state.cash > cap)) return;
     const over = Math.floor(state.cash - cap); state.cash = cap;
     emit('carryCap', { range: rangeId(), kept: cap, over, beetles: 0, freePlay: true });
-    toast(tx('buy.carriedFree', "{n} acorns came with you. That's all a move can take.", { n: fmt(cap) }));
+    if (!quiet) toast(tx('buy.carriedFree', "{n} acorns came with you. That's all a move can take.", { n: fmt(cap) }));
   }
   /** the unlock button's price: the store wrapper sets RANGE_RAT_CONFIG.price (localised string); never a placeholder */
   const priceLabel = () => { const c = W.RANGE_RAT_CONFIG; return c && c.price ? String(c.price) : tx('unlock.priceTbd', 'Price set at launch'); };
@@ -27709,7 +28024,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       state.paid = k + 1;
       emit('instalment', { range: rangeId(), part: k + 1, of: n, cost });
       sfx('instalment'); const p = world.player || { x: 90, y: 160 }; fire('onInstalment', { x: world.house.x, y: world.house.y - 10, part: k + 1, of: n, player: p });
-      toast(tx('buy.part' + (k + 1), 'Part {n} of {m} paid.', { n: k + 1, m: n, name: rangeName(rangeId()) }));
+      toast(tx('buy.part' + (k + 1), 'Part {n} of {m} paid.', { n: k + 1, m: n, name: rangeName(rangeId()) }), { front: true }); // QA 2026-11-06 night: ahead of anything waiting
       checkAchievements(); save(); ui_.refresh && ui_.refresh(true);
       return true;
     }
@@ -27757,9 +28072,15 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     resetWorld(!kept);
     const p = world.player; fire('onPrestige', { x: p.x, y: p.y, stars: gained });
     // what the stars mean, said where you get them (owner: "I'm not sure what these stars are"): +N stars -> +X% income for good
-    toast(tx('buy.bought', '{name} is yours!', { name: rangeName(rid) }) + ' ' + tx('buy.starsGain', '+{n} ★ → {p} income for good', { n: fmt(gained), p: starBoost(state.stars - gained, state.stars) }));
-    if (carried) toast(tx('buy.carried', '{n} acorns came with you, and {b} beetles in a crate.', { n: fmt(carried.cap), b: carried.beetles }));
-    if (floatAmt > 0) { emit('arrivalFloat', { range: newId, amount: floatAmt, rate: leavingRate }); if (!(frOwns('float') && !frSaid('float'))) toast(tx('buy.float', 'Gus left a float in the till: {n} acorns to get you going.', { n: fmt(floatAmt) })); }
+    // the trial's sale (QA 2026-11-06 night): the player isn't at Oakridge yet (the unlock screen, or Not now and back to
+    // Mudbank, where the crate's beetles are behind the paywall). Its arrival toasts and Gus's float wait in
+    // state.heldArrival until the unlock takes them there (heldArrivalRelease)
+    if (!trialSale) toastNewRange(); // QA 2026-11-06 night: toasts still queued from the range you left don't follow you
+    const held = trialSale ? [] : null, say = (k, text, x) => { if (held) held.push(Object.assign({ k, text }, x || {})); else if (text) toast(text); };
+    say('bought', tx('buy.bought', '{name} is yours!', { name: rangeName(rid) }) + ' ' + tx('buy.starsGain', '+{n} ★ → {p} income for good', { n: fmt(gained), p: starBoost(state.stars - gained, state.stars) }));
+    if (carried) say('carried', tx('buy.carried', '{n} acorns came with you, and {b} beetles in a crate.', { n: fmt(carried.cap), b: carried.beetles }), { b: carried.beetles });
+    if (floatAmt > 0) { if (held) say('float', '', { amount: floatAmt, rate: leavingRate }); else { emit('arrivalFloat', { range: newId, amount: floatAmt, rate: leavingRate }); if (!(frOwns('float') && !frSaid('float'))) toast(tx('buy.float', 'Gus left a float in the till: {n} acorns to get you going.', { n: fmt(floatAmt) })); } }
+    if (held) state.heldArrival = held;
     checkAchievements();
     save();
     if (firstFinale) { state.creditsSeen = true; save(); const fin = B.ranges.findIndex((r) => r.id === rid); setTimeout(() => showCredits(true, fin), 600); } // the credits roll over the range just bought
@@ -27798,8 +28119,13 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function carryLine(ci) {
     if (!ci) return '';
     const v = { n: fmt(ci.keep), cap: fmt(ci.cap), over: fmt(ci.over), b: ci.crate, next: rangeShort(ci.next) };
-    return tpl(ci.over > 0 ? dstr('help.carry.sign', "You'll take {n} acorns with you. The rest ({over}) becomes a moving crate: {b} Clockwork Beetles waiting at {next}.")
-      : dstr('help.carry.signAll', "You'll take all {n} acorns with you. Up to {cap} can come; anything over becomes a moving crate of {b} beetles, nothing more."), v);
+    // QA 2026-11-06 night: the next range isn't named until it's revealed (Coming up shows ???); the crate is the same whatever
+    // the amount over; and never "You'll take all 0 acorns"
+    const hid = !rangeKnown(rIdx(ci.next));
+    if (ci.over > 0) return tpl(hid ? dstr('help.carry.signHidden', "You'll take {n} acorns with you. The rest ({over}) becomes a moving crate: {b} Clockwork Beetles at the next range. Nothing more, whatever the amount.")
+      : dstr('help.carry.sign', "You'll take {n} acorns with you. The rest ({over}) becomes a moving crate: {b} Clockwork Beetles waiting at {next}. Nothing more, whatever the amount."), v);
+    if (!(ci.keep > 0)) return tpl(dstr('help.carry.signNone', 'Up to {cap} acorns can come with you. Anything over becomes a moving crate of {b} beetles, nothing more, whatever the amount.'), v);
+    return tpl(dstr('help.carry.signAll', "You'll take all {n} acorns with you. Up to {cap} can come; anything over becomes a moving crate of {b} beetles, nothing more, whatever the amount."), v);
   }
   /** apply the cap on arrival (after resetRun at the new range): the wallet down to the allowance, the crate's beetles in */
   function applyCarry(ci) {
@@ -29492,6 +29818,36 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (b.type === 'glow' && name === 'ball_glow') { const k = glowShow(); if (k < 1) { if (k <= 0.02) name = 'ball_range'; else { const a = g.globalAlpha; drawBall(g, Object.assign({}, b, { type: 'range' })); g.globalAlpha = a * k; drawBallBody(g, b, name); g.globalAlpha = a; return; } } }
     drawBallBody(g, b, name);
   }
+  /** what drawBallBody draws for a plain ball in the air, as one cached stamp: the exact integer geometry of the live draw
+   *  (shadow, drop line, body, glint, as drawSprite / blitScaled place and scale them) is the key, so the picture is the same
+   *  bar the shadow's alpha, which is stepped to 1/255 */
+  function drawAirStamp(g, b, name, fr) {
+    const e = getSprite(name), es = getSprite('ball_shadow'); if (!e || !es || (e.res || 1) !== 1 || (es.res || 1) !== 1) return false;
+    const fi = ((fr | 0) % e.frames.length + e.frames.length) % e.frames.length, X = Math.round(b.x), Y = Math.round(b.y), y = b.y - b.z;
+    const hgt = clamp(b.z / 40, 0, 1), ssx = 1.2 - hgt * 0.5, sa = Math.round((0.5 - hgt * 0.25) * 255);
+    const sw = Math.max(1, Math.round(es.w * ssx)), sh = es.h, sX = Math.round(b.x - es.ox * ssx) - X, sY = Math.round(b.y - es.oy) - Y;
+    const km = b.z > 6 ? Math.ceil(b.z - 3) - 1 : 0;
+    let bw = e.w, bh = e.h, bX, bY, gl = b.z > 4;
+    if (gl) { const sc = 1 + clamp(b.z / 60, 0, 0.6); bw = Math.max(1, Math.round(e.w * sc)); bh = Math.max(1, Math.round(e.h * sc)); bX = Math.round(b.x - e.ox * sc) - X; bY = Math.round(y - e.oy * sc) - Y; }
+    else { bX = Math.round(b.x - e.ox) - X; bY = Math.round(y - e.oy) - Y; }
+    const gx = Math.round(b.x) - 1 - X, gy = Math.round(y) - 2 - Y;
+    const top = Math.max(-bY, km, -sY, -gy) + 2, left = Math.max(-bX, -sX, 2) + 1, W2 = left + Math.max(bX + bw, sX + sw, 2) + 1, H2 = top + Math.max(bY + bh, sY + sh, 1) + 1;
+    if (top > 120 || W2 > 40) return false;
+    stamp(g, 'air:' + name + ':' + fi + ':' + [sX, sY, sw, sa, km, bX, bY, bw, bh, gl ? 1 : 0].join(','), X, Y, left, top, W2, H2, (q, ax, ay) => {
+      const si = es.frames[0]; q.globalAlpha = sa / 255; q.drawImage(sw === si.width && sh === si.height ? si : scaledImg(si, sw, sh), ax + sX, ay + sY); q.globalAlpha = 1;
+      if (km >= 3) q.drawImage(dropLine(), 0, DROP_H - 1 - km, 1, km + 1, ax, ay - km, 1, km + 1);
+      const bi = e.frames[fi]; q.drawImage(bw === bi.width && bh === bi.height ? bi : scaledImg(bi, bw, bh), ax + bX, ay + bY);
+      if (gl) { q.fillStyle = '#ffffff'; q.fillRect(ax + gx, ay + gy, 1, 1); }
+    });
+    return true;
+  }
+  /** a sprite frame scaled on the LOGICAL grid (blitScaled's cache), for drawing 1:1 */
+  function scaledImg(img, w, h) {
+    let m = scaledCache.get(img); if (!m) { m = new Map(); scaledCache.set(img, m); }
+    const k = w * 65536 + h; let c = m.get(k);
+    if (!c) { if (m.size >= 48) m.clear(); c = makeCanvas(w, h); const cg = c.getContext('2d'); cg.imageSmoothingEnabled = false; cg.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h); m.set(k, c); }
+    return c;
+  }
   // feel audit #11: the first tip ball is drawn GOLD (Gus says "scoop the gold ball"): ball_tip with its white body swapped
   // to gold (the acorn on top stays), so it still differs from the gold ball TYPE by shape: the acorn + the "+" twinkle
   // over it, against the gold type's crown marker (a11y S11)
@@ -29519,6 +29875,8 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // ground vs air must read at a glance (owner): in the air the ball floats over a shadow that shrinks and fades
     // with height, and the ball itself grows a touch; on the ground it sits on a tight dark contact shadow
     const air = b.z > 0.5;
+    // perf: a plain ball in the air (shadow + drop line + body + glint, up to 4 calls) is one cached stamp per whole px of height
+    if (air && stOn('air') && b.z < 90 && !b.lit && !b.aimed && !sw && !marked && !hcOn() && g === ctx && g.globalAlpha === 1) { if (drawAirStamp(g, b, name, fr)) return; }
     if (air) {
       const hgt = clamp(b.z / 40, 0, 1);
       drawSprite(g, 'ball_shadow', b.x, b.y, { alpha: 0.5 - hgt * 0.25, sx: 1.2 - hgt * 0.5, sy: 1 });
@@ -29568,6 +29926,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   /** "worth extra": a tiny pixel acorn (the HUD's money) hovering over a ball (special balls, tip balls) */
   function drawWorthMark(g, bx, by) {
+    if (stOn('worth') && g === ctx && g.globalAlpha === 1 && bx === Math.round(bx) && by === Math.round(by)) { stamp(g, 'worth', bx, by, 3, 13, 6, 8, worthPaint); return; } // perf: one blit (was 7 fills)
+    worthPaint(g, bx, by);
+  }
+  function worthPaint(g, bx, by) {
     g.fillStyle = '#2a1c16'; g.fillRect(bx - 2, by - 11, 5, 3); g.fillRect(bx - 1, by - 8, 3, 2); g.fillRect(bx, by - 12, 1, 1);
     g.fillStyle = '#7d5636'; g.fillRect(bx - 1, by - 10, 3, 1);
     g.fillStyle = '#f2c641'; g.fillRect(bx - 1, by - 8, 3, 1); g.fillRect(bx, by - 7, 1, 1);
@@ -30085,6 +30447,38 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (q >= 64) return (L[q] = lightSprite(kind));
     const c = makeCanvas(64, 64), cg = c.getContext('2d'); cg.globalAlpha = q / 64; cg.drawImage(lightSprite(kind), 0, 0); return (L[q] = c);
   }
+  /** the night mask with every resting glow ball's light already cut (see the per-frame light pass). GLM.map: ball -> where
+   *  it was cut. Returns the canvas; its _dirty lists the squares that changed this frame (the light layer re-copies them) */
+  const GLM = { map: new Map(), c: null };
+  function glowMaskSync(mc) {
+    let c = GLM.c; const full = !c || c.width !== mc.width || c.height !== mc.height || c._mk !== mc._key;
+    if (!c || c.width !== mc.width || c.height !== mc.height) { c = GLM.c = makeCanvas(mc.width, mc.height); c._v = 0; }
+    const q = c.getContext('2d'), M = GLM.map, R8 = 8, cut = (x, y) => blob(q, 'white', x, y, R8, R8, 0.85);
+    q.setTransform(1, 0, 0, 1, 0, 0);
+    if (full) {
+      q.globalCompositeOperation = 'copy'; q.drawImage(mc, 0, 0); q.globalCompositeOperation = 'destination-out'; M.clear();
+      for (const b of world.balls) if (b.type === 'glow' && b._rl && RL.map.has(b) && !b.demo) { const x = b.x, y = b.y - b.z; M.set(b, [x, y]); cut(x, y); }
+      q.globalCompositeOperation = 'source-over'; c._mk = mc._key; c._v++; c._key = mc._key + '#' + c._v; c._dirty = null; return c;
+    }
+    let dirty = null; const gone = [];
+    for (const [b, p] of M) { if (!(b._rl && b.type === 'glow' && RL.map.has(b) && b.x === p[0] && b.y - b.z === p[1])) gone.push(b); } // RL.map: resting and still on the field this frame
+    if (gone.length > 12) { c._mk = null; return glowMaskSync(mc); } // a lot moved at once (a new range, a sweep): rebuild
+    q.globalCompositeOperation = 'destination-out';
+    for (const b of gone) { // restore its square from the mask, then re-cut whoever else lit it
+      const p = M.get(b); M.delete(b);
+      const x0 = Math.max(0, Math.floor(p[0] - R8) - 1), y0 = Math.max(0, Math.floor(p[1] - R8) - 1), x1 = Math.min(c.width, Math.ceil(p[0] + R8) + 1), y1 = Math.min(c.height, Math.ceil(p[1] + R8) + 1);
+      if (x1 <= x0 || y1 <= y0) continue;
+      q.globalCompositeOperation = 'source-over'; q.clearRect(x0, y0, x1 - x0, y1 - y0); q.drawImage(mc, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
+      q.globalCompositeOperation = 'destination-out';
+      q.save(); q.beginPath(); q.rect(x0, y0, x1 - x0, y1 - y0); q.clip();
+      for (const [o, op] of M) if (Math.abs(op[0] - p[0]) < 2 * R8 + 2 && Math.abs(op[1] - p[1]) < 2 * R8 + 2) cut(op[0], op[1]);
+      q.restore();
+      (dirty || (dirty = [])).push([x0, y0, x1 - x0, y1 - y0]);
+    }
+    for (const b of world.balls) if (b.type === 'glow' && b._rl && RL.map.has(b) && !b.demo && !M.has(b)) { const x = b.x, y = b.y - b.z; M.set(b, [x, y]); cut(x, y); (dirty || (dirty = [])).push([x - R8 - 1, y - R8 - 1, 2 * R8 + 2, 2 * R8 + 2]); }
+    q.globalCompositeOperation = 'source-over';
+    c._dirty = dirty; return c;
+  }
   function blob(g, kind, x, y, rx, ry, a) {
     if (!(a > 0.004)) return;
     const r2 = ry == null ? rx : ry; const ga = g.globalAlpha;
@@ -30253,8 +30647,16 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     return out;
   }
   function drawTerraceLamps(g) {
-    const lamps = hasLights_();
-    for (const [i, q] of terraceLamps().entries()) {
+    const lamps = hasLights_(), L = terraceLamps(); if (!L.length) return;
+    if (stOn('terr') && g === ctx && g.globalAlpha === 1) { // perf: the whole row is one blit (was ~35 fills), keyed by where the lamps are and which are lit
+      let k = 'terr:' + (lamps ? 1 : 0), x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (const [i, q] of L.entries()) { k += ':' + q.x + ',' + q.y + ',' + q.rail + (lamps && AMB.lampOn[lid('terr', i)] > 0 ? 'o' : ''); x0 = Math.min(x0, q.x - 2); x1 = Math.max(x1, q.x + 3); y0 = Math.min(y0, q.y - 1); y1 = Math.max(y1, q.rail + 1); }
+      stamp(g, k, x0, y0, 0, 0, x1 - x0, y1 - y0, (q2, ax, ay) => terraceLampsPx(q2, L, lamps, ax - x0, ay - y0)); return;
+    }
+    terraceLampsPx(g, L, lamps, 0, 0);
+  }
+  function terraceLampsPx(g, L, lamps, ox, oy) {
+    for (const [i, q0] of L.entries()) { const q = { x: q0.x + ox, y: q0.y + oy, rail: q0.rail + oy };
       g.fillStyle = '#2a1c16'; g.fillRect(q.x - 1, q.y + 1, 3, q.rail - q.y); g.fillStyle = '#7d5636'; g.fillRect(q.x, q.y + 2, 1, q.rail - q.y - 1);
       if (lamps) { g.fillStyle = '#2a1c16'; g.fillRect(q.x - 2, q.y, 5, 1); g.fillStyle = '#565c64'; g.fillRect(q.x - 1, q.y - 1, 3, 1); g.fillStyle = AMB.lampOn[lid('terr', i)] > 0 ? '#fff2a6' : '#b98a2c'; g.fillRect(q.x, q.y + 1, 1, 1); }
     }
@@ -30358,19 +30760,25 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = 'source-over';
       }
       // per frame: copy the static mask, cut the moving lights (rat, glow balls, lamp beetles, flickering lamps), blit once
+      // perf (2026-11-07): the resting glow balls' light is cut once into a cached copy of the mask (src), kept in step ball by
+      // ball (a new one is cut, a gone one's square is restored from the mask and its neighbours re-cut); only the moving
+      // ones are cut per frame. destination-out commutes, so the picture is the same
+      const src = stOn('glow') ? glowMaskSync(mc) : mc;
       const lc = backingCanvas('lightC'), l2 = lc.getContext('2d');
       l2.setTransform(1, 0, 0, 1, 0, 0);
       // perf: copy the whole mask only when it changed; otherwise restore just last frame's cut rectangles from it
       // (1:1 integer-rect copies, so the layer is pixel-identical to a full copy at a quarter of the fill area)
       // Graphics level >= 2 (lite): the moving lights are re-cut every other frame (30 Hz); the layer is reused in between
-      const liteSkip = GFX.lite && lc._mk === mc._key && !!lc._rects && (AMB.liteFlip = !AMB.liteFlip);
+      const liteSkip = GFX.lite && lc._mk === src._key && !!lc._rects && (AMB.liteFlip = !AMB.liteFlip);
       if (!liteSkip) {
-      if (lc._mk !== mc._key || !lc._rects || lc._rects.length > 4 * 10) { l2.globalCompositeOperation = 'copy'; l2.drawImage(mc, 0, 0); l2.globalCompositeOperation = 'source-over'; lc._mk = mc._key; }
+      if (src !== mc && src._dirty && lc._rects) { for (const r of src._dirty) lc._rects.push(r[0], r[1], r[2], r[3]); } // squares the cached mask changed this frame
+      if (src !== mc) src._dirty = null;
+      if (lc._mk !== src._key || !lc._rects || lc._rects.length > 4 * 10) { l2.globalCompositeOperation = 'copy'; l2.drawImage(src, 0, 0); l2.globalCompositeOperation = 'source-over'; lc._mk = src._key; }
       else {
         const Rc = lc._rects;
         for (let i = 0; i < Rc.length; i += 4) {
           const x0 = Math.max(0, Math.floor(Rc[i]) - 1), y0 = Math.max(0, Math.floor(Rc[i + 1]) - 1), x1 = Math.min(lc.width, Math.ceil(Rc[i] + Rc[i + 2]) + 1), y1 = Math.min(lc.height, Math.ceil(Rc[i + 1] + Rc[i + 3]) + 1);
-          if (x1 > x0 && y1 > y0) { l2.clearRect(x0, y0, x1 - x0, y1 - y0); l2.drawImage(mc, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0); }
+          if (x1 > x0 && y1 > y0) { l2.clearRect(x0, y0, x1 - x0, y1 - y0); l2.drawImage(src, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0); }
         }
       }
       lc._rects = l2._rects = [];
@@ -30378,7 +30786,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       lampHoles(l2, false);
       { const lr = game ? swarmDef().lightRadius : 0; if (lr) for (const r of world.robots) blob(l2, 'white', r.x, r.y - 3, lr * 1.3, lr * 1.3, 0.9); }
       if (p && game) { blob(l2, 'white', p.x, p.y - 4, th.night ? 20 : 15, th.night ? 20 : 15, th.night ? 0.85 : 0.6); torchCut(l2, p); }
-      for (const b of world.balls) if (b.type === 'glow') blob(l2, 'white', b.x, b.y - b.z, 8, 8, 0.85);
+      for (const b of world.balls) if (b.type === 'glow' && !(src !== mc && GLM.map.has(b))) blob(l2, 'white', b.x, b.y - b.z, 8, 8, 0.85); // resting ones: in src
       l2._rects = null;
       l2.setTransform(1, 0, 0, 1, 0, 0); l2.globalCompositeOperation = 'source-over';
       } // !liteSkip
@@ -30516,9 +30924,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
    *  fillRects per bucket / post per frame). Only for shapes drawn at integer logical coords on the main canvas at full
    *  alpha with source-over, where the blit is pixel-identical; anything else draws directly. */
   const stampCache = {};
+  // perf 2026-11-07 (wip/perf-1107): the in-air balls, the worth acorn, the hedge badges, the terrace lamps, the wind flag and
+  // the ball house's pile are cached stamps, and the resting glow balls' light cuts a cached mask. STAMPS.on = false draws
+  // them live as before (RANGE_RAT._test.stampsCheck() compares the two pictures at one clock)
+  const STAMPS = { on: true, n: 0, off: {} }; const stOn = (k) => STAMPS.on && !STAMPS.off[k];
   function stamp(g, key, x, y, ox, oy, w, h, paint) {
     if (g !== ctx || g.globalAlpha !== 1 || g.globalCompositeOperation !== 'source-over') { paint(g, x, y); return; }
     const RS = renderScale, k = key + '@' + RS; let c = stampCache[k];
+    if (!c && ++STAMPS.n > 2000) { for (const q in stampCache) delete stampCache[q]; STAMPS.n = 1; } // bounded (the wind flag's shapes, balls by height): rebuilt lazily
     if (!c) { c = stampCache[k] = makeCanvas(w * RS, h * RS); const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.setTransform(RS, 0, 0, RS, 0, 0); paint(q, ox, oy); }
     g.drawImage(c, x - ox, y - oy, w, h);
   }
@@ -30576,17 +30989,30 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const e = getSprite('ball_house'); if (!e || e.fallback) return;
     const dp = (e.meta && e.meta.dropoff) || { x: 14, y: 21 }, cx = dp.x, tray = dp.y - 2;
     const sx = sqX(h.sq), sy = sqY(h.sq);
-    const px = (lx, ly, col, w, hh) => { g.fillStyle = col; g.fillRect(Math.round(h.x + (lx - e.ox) * sx), Math.round(h.y + (ly - e.oy) * sy), Math.max(1, Math.round((w || 1) * sx)), Math.max(1, Math.round((hh || 1) * sy))); };
-    px(cx - 3, tray - 6, '#2a1c16', 6, 5); px(cx - 4, tray, '#7d5636', 8, 1);
     const live = mode === 'game', f = live ? clamp(state.stock / Math.max(1, circulation()), 0, 1) : 0.7;
     let n = live && state.stock > 0 ? Math.max(1, Math.round(f * 20)) : live ? 0 : 14;
+    const lampOn = AMB.lampOn.house > 0;
+    // perf: at rest (no squash) the tray, its pile and the lamp are one blit (was ~24 fills); squashing, drawn live
+    const empty = live && state.stock <= 0;
+    if (stOn('house') && !empty && g === ctx && g.globalAlpha === 1 && sx === 1 && sy === 1 && h.x === Math.round(h.x) && h.y === Math.round(h.y)) {
+      stamp(g, 'hpile:' + n + (lampOn ? 'o' : '') + ':' + e.ox + ',' + e.oy + ':' + cx + ',' + tray, h.x, h.y, e.ox, e.oy, e.w, e.h, (q, X, Y) => housePilePx(q, X, Y, 1, 1, e, cx, tray, n, lampOn, true));
+      return;
+    }
+    housePilePx(g, h.x, h.y, sx, sy, e, cx, tray, n, lampOn, false);
+    if (empty) { const q = houseLocal(h, cx, tray - 4); drawBringBalls(g, q.x, q.y); } // empty: invite the rat in, never a "keep out" sign (owner, 2026-10-28)
+    housePilePx(g, h.x, h.y, sx, sy, e, cx, tray, -1, lampOn, true);
+  }
+  /** n < 0: only the lamp (it goes over the "bring balls" invite) */
+  function housePilePx(g, hx, hy, sx, sy, e, cx, tray, n, lampOn, lamp) {
+    const px = (lx, ly, col, w, hh) => { g.fillStyle = col; g.fillRect(Math.round(hx + (lx - e.ox) * sx), Math.round(hy + (ly - e.oy) * sy), Math.max(1, Math.round((w || 1) * sx)), Math.max(1, Math.round((hh || 1) * sy))); };
+    if (n >= 0) {
+    px(cx - 3, tray - 6, '#2a1c16', 6, 5); px(cx - 4, tray, '#7d5636', 8, 1);
     const slots = [];
     for (let x = 0; x < 8; x++) slots.push([cx - 4 + x, tray]);
     for (const [row, x0, w] of [[1, -3, 6], [2, -2, 4], [3, -1, 2]]) for (let x = 0; x < w; x++) slots.push([cx + x0 + x, tray - 1 - row]);
     for (let i = 0; i < Math.min(n, slots.length); i++) { const [x, y] = slots[i]; px(x, y, i % 7 === 3 ? '#c9473b' : (x + y) % 3 === 0 ? '#efdfb6' : '#fffaee'); }
-    if (live && state.stock <= 0) { const q = houseLocal(h, cx, tray - 4); drawBringBalls(g, q.x, q.y); } // empty: invite the rat in, never a "keep out" sign (owner, 2026-10-28)
-    const lampOn = AMB.lampOn.house > 0;
-    px(cx, tray - 9, '#2a1c16'); px(cx - 1, tray - 8, lampOn ? '#fff2a6' : '#b98a2c', 3, 1);
+    }
+    if (lamp) { px(cx, tray - 9, '#2a1c16'); px(cx - 1, tray - 8, lampOn ? '#fff2a6' : '#b98a2c', 3, 1); }
   }
   function drawPost(g, x, lamp, on) { // a bay divider post (with a little lamp once lights are owned)
     stamp(g, 'post' + (lamp ? 1 : 0) + (on ? 1 : 0), x | 0, G.teeD - 12, 2, 2, 5, 15, (q, X, Y0) => postPx(q, X, Y0, lamp, on));
@@ -32657,11 +33083,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }),
     achievements: component('achievements', {
       // order: NEW (unlocked, unseen) -> in progress by % desc (nearest on top) -> other locked -> unlocked
-      sig: () => [Object.keys(state.ach).length, chestState().inv.map((c) => c.id).join(','), B.achievements.map((a) => state.ach[a.id] ? 1 : Math.floor(Math.min(1, achValue(a) / (a.target || 1)) * 50)).join('')].join('|'),
+      sig: () => [Object.keys(state.ach).length, chestState().inv.map((c) => c.id).join(','), achList().map((a) => state.ach[a.id] ? 1 : Math.floor(Math.min(1, achValue(a) / (a.target || 1)) * 50)).join('')].join('|'),
       html(inst) {
         const seen = achSeenMap(), CR = chestRows(); // the chest waiting on each unlocked trophy (owner: open it from the trophy)
-        const n = B.achievements.filter((a) => state.ach[a.id]).length, N = B.achievements.length;
-        const rows = B.achievements.map((a, i) => {
+        const AL = achList(), n = AL.filter((a) => state.ach[a.id]).length, N = AL.length; // achList: this device's trophies (no roll ones on a phone)
+        const rows = AL.map((a, i) => {
           const done = !!state.ach[a.id], hide = a.hidden && !done, v = Math.min(achValue(a), a.target || 1), f = v / (a.target || 1);
           const cat = done ? (seen[a.id] ? 3 : 0) : (!hide && v > 0 ? 1 : 2);
           return { a, i, done, hide, v, f, cat, ch: done ? CR.by[a.id] : undefined };
@@ -33217,9 +33643,19 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (o && (o.now || o.silent)) return false;
     const arr = toastPaced();
     if (!toastHeld.length && !arr && !toastCovered()) return false;
-    if (!toastHeld.some((x) => x.text === text)) { toastHeld.push({ text: String(text), o, arr }); if (toastHeld.length > TOAST_HELD_MAX) toastHeld.shift(); }
+    if (toastHeld.some((x) => x.text === text)) return true;
+    // QA 2026-11-06 night: a card closed and 6-8 goal toasts came out one after another. Goal toasts that are still waiting
+    // fold into one ("3 goals done! +X"); a payment's confirmation (o.front) goes ahead of everything that waits
+    const g = o && o.goal > 0 ? toastHeld.find((x) => x.o && x.o.goal > 0) : null;
+    if (g) { const n = (g.o.n | 0 || 1) + 1, c = g.o.goal + o.goal; g.o = Object.assign({}, g.o, { n, goal: c }); g.text = tx('toast.goalsDone', '{n} goals done! +{c}', { n, c: fmt(c) }); return true; }
+    const x = { text: String(text), o, arr };
+    if (o && o.front) { const k = toastHeld.findIndex((y) => !(y.o && y.o.front)); toastHeld.splice(k < 0 ? toastHeld.length : k, 0, x); } else toastHeld.push(x);
+    if (toastHeld.length > TOAST_HELD_MAX) toastHeld.splice(toastHeld.findIndex((y) => !(y.o && y.o.front)), 1);
     return true;
   }
+  /** a move to another range (a sale, a visit, the trial's free play and its end): toasts still waiting from the range you
+   *  left are dropped (QA 2026-11-06 night: the old range's goal toasts played at the new one) */
+  function toastNewRange() { toastHeld.length = 0; }
   function toastHeldTick(dt) {
     if (!toastHeld.length) return;
     if (mode !== 'game') { toastHeld.length = 0; return; }
@@ -33889,7 +34325,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     { const T2 = W.RANGE_RAT_TOWN; try { if (T2 && T2.hooks && T2.hooks.sign && T2.hooks.sign()) return; } catch (e) { /* ignore */ } } // Town V1: the deeds are signed at Ferris & Daughter (ui/town.js); desk mode keeps the question here
     const next = B.ranges[(state.rangeIdx + 1) % B.ranges.length];
     const line = dstr('ranges.' + rangeId() + '.sellLine', 'Sell up and move on?');
-    const m = openModal(`<h2>${esc(ui('prestigeTitle', 'Sell up?'))}</h2><canvas width="28" height="26" style="width:84px;height:84px;object-fit:contain;image-rendering:pixelated" data-g></canvas><p>${esc(line)}</p><p class="rr-label" style="color:var(--rr-gold)">+${starsForSale()} ★ · ${esc(state.rangeIdx === B.ranges.length - 1 ? tx('sell.grandTour', 'Grand Tour') : rangeName(next.id))}</p><p class="rr-starswhy" data-starswhy>${esc(tx('buy.starsWhy', '{n} stars: +{p}% income on every range, for good.', { n: fmt(starsForSale()), p: Math.round(starsForSale() * (B.prestige.multPerStar || 0) * 1000) / 10 }))}</p><p style="color:var(--rr-text2)">${esc(tx('sell.resets', 'It stays yours, just as you left it. Next stop: a fresh start at the next range.'))}</p><p style="color:var(--rr-text2)">${esc(tx('buy.portfolioNext', 'Every range you own adds +{n}% to all your income.', { n: Math.round((ESC().portfolioPerRange || 0) * 100) }))}</p>${(() => { const ci = carryInfo(); return ci ? `<p data-carry style="color:var(--rr-gold)">${esc(carryLine(ci))}</p>` : ''; })()}<div><button class="rr-btn" data-no>${esc(ui('prestigeCancel', 'Not yet'))}</button><button class="rr-btn gold" data-ok>${esc(ui('prestigeConfirm', 'Buy it'))}</button></div>`);
+    const m = openModal(`<h2>${esc(ui('prestigeTitle', 'Sell up?'))}</h2><canvas width="28" height="26" style="width:84px;height:84px;object-fit:contain;image-rendering:pixelated" data-g></canvas><p>${esc(line)}</p><p class="rr-label" style="color:var(--rr-gold)">+${starsForSale()} ★ · ${esc(state.rangeIdx === B.ranges.length - 1 ? tx('sell.grandTour', 'Grand Tour') : rangeName(next.id))}</p><p class="rr-starswhy" data-starswhy>${esc(tx('buy.starsWhy', '{n} stars: {p} income on every range, for good.', { n: fmt(starsForSale()), p: starBoost(state.stars, state.stars + starsForSale()) }))}</p><p style="color:var(--rr-text2)">${esc(tx('sell.resets', 'It stays yours, just as you left it. Next stop: a fresh start at the next range.'))}</p><p style="color:var(--rr-text2)">${esc(tx('buy.portfolioNext', 'Every range you own adds +{n}% to all your income.', { n: Math.round((ESC().portfolioPerRange || 0) * 100) }))}</p>${(() => { const ci = carryInfo(); return ci ? `<p data-carry style="color:var(--rr-gold)">${esc(carryLine(ci))}</p>` : ''; })()}<div><button class="rr-btn" data-no>${esc(ui('prestigeCancel', 'Not yet'))}</button><button class="rr-btn gold" data-ok>${esc(ui('prestigeConfirm', 'Buy it'))}</button></div>`);
     drawGus(m.querySelector('[data-g]').getContext('2d'), false, 0, 'pleased');
     m.querySelector('[data-no]').addEventListener('click', () => { sfx('ui_tap'); closeModal(); });
     m.querySelector('[data-ok]').addEventListener('click', () => { sfx('ui_tap'); closeModal(); sellRange(true); });
@@ -33901,7 +34337,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     m.querySelector('[data-no]').addEventListener('click', () => { sfx('ui_tap'); closeModal(); if (trialLocked()) trialFreePlay(); });
     { const pb = m.querySelector('[data-promises]'); if (pb) pb.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeModal(); showPromises(); }); }
     m.querySelector('[data-ok]').addEventListener('click', () => {
-      if (isDebug()) { api.unlock(); toast(tx('toast.unlockedDebug', 'Full game unlocked (debug)')); rangeIntro(); }
+      if (isDebug()) { api.unlock(); toast(tx('toast.unlockedDebug', 'Full game unlocked (debug)')); } // api.unlock tells the range's story
       else { sfx('ui_deny'); toast(tx('toast.storeClosed', 'The store isn\'t open yet.')); }
     });
   };
@@ -34375,7 +34811,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   // ---- §4i ending card: after the credits roll on the first Gullhaven sale ----
   function showEndingCard() {
     const s = state.stats, U = B.cosmeticUniverse || new Set(), owned = cosmeticsOwnedCount();
-    const achLeft = B.achievements.filter((a) => !state.ach[a.id]).length;
+    const achLeft = achList().filter((a) => !state.ach[a.id]).length;
     const left = { chests: 0, track: 0, other: 0 };
     for (const k of U) if (!state.cos.owned[k]) { const [sl, id] = k.split(':'); if ((FCFG().track || []).some((t) => t.cosmetic === k)) left.track++; else if ((CH().pool && (CH().pool[sl] || []).some((x) => x.id === id))) left.chests++; else left.other++; }
     const sold = Object.values(s.rangesSold || {}).reduce((a, b) => a + (b | 0), 0);
@@ -34635,6 +35071,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     state.started = true;
     ui_.refresh(true);
     if (first) { trigger('start'); }
+    // the trial's held arrival (QA 2026-11-06 night) when the unlock came outside play (the store on the title, a full-game
+    // build opening a trial save): the toasts and Gus's story of the range now
+    if (isUnlocked() && Array.isArray(state.heldArrival) && state.heldArrival.length && heldArrivalRelease(false) && (state.rangeIdx | 0) > 0) rangeIntro();
     if (pendingLedgerAway) { const pl = pendingLedgerAway; pendingLedgerAway = null; ledgerAway(pl.n, pl.rec); }
     if (pendingAway) { const rec = pendingAway; pendingAway = null; setTimeout(() => { if (!showAwayCard(rec) && !pendingAway && rec.cash > 0) toast(tpl(dstr('toasts.offline', 'Beetles picked while you were out. +{cash}'), { cash: fmt(rec.cash) })); }, 400); }
     if (trialLocked()) { emit('trialEnd', { range: B.ranges[0].id, resumed: true }); if (!api.externalUnlock) setTimeout(() => ui_.unlockScreen && ui_.unlockScreen(), 300); }
@@ -35829,6 +36268,17 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** perf QA (note 9): the resting-ball layer's counters, and a pixel check: the same frame (same clock) rendered with the
        *  layer and without it, compared on the backing store. { balls, rebuilds, redraws, diff, diff8 } (diff = differing pixels, diff8 = by more than 8 in a channel; where
        *  balls pile up, a live ball - tip, special, rolling - now sits on top of the plain ones it overlaps). check 2: both off */
+      /** perf 2026-11-07: the cached stamps + the glow mask draw the same picture as drawing live: one render each way at one
+       *  clock; diff = px that differ at all, diff8 = px off by more than 8 in a channel. on: false leaves them off (A/B) */
+      stampsCheck(on, only) {
+        if (on === false || on === true) { STAMPS.on = on; return { on }; }
+        STAMPS.off = {}; if (only) for (const k of ['air', 'worth', 'hb', 'terr', 'wf', 'house', 'glow']) if (k !== only) STAMPS.off[k] = 1; // only: compare that one alone
+        if (!ctx) return null; const t = renderMs, grab = () => ctx.getImageData(0, 0, canvas.width, canvas.height).data, shake = fxState.shake; fxState.shake = 0;
+        STAMPS.on = true; renderMs = t; render(); const a = grab(); STAMPS.on = false; renderMs = t; render(); const b = grab(); STAMPS.on = true; renderMs = t; render(); fxState.shake = shake;
+        let d = 0, d8 = 0; for (let i = 0; i < a.length; i += 4) { const m = Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])); if (m) d++; if (m > 8) d8++; }
+        STAMPS.off = {}; let mx = 0; for (let i = 0; i < a.length; i++) if ((i & 3) !== 3) mx = Math.max(mx, Math.abs(a[i] - b[i]));
+        return { diff: d, diff8: d8, max: mx, px: a.length / 4, glow: GLM.map.size, air: world.balls.filter((x) => x.st === 'air').length };
+      },
       restLayer(check) {
         const out = { balls: RL.map.size, rebuilds: RL.rebuilds, redraws: RL.redraws, diff: null };
         if (check && ctx) {
@@ -35898,6 +36348,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** hide toasts, trophy cards and bubbles (clean screenshots); events still fire */
       /** popup tests (tests/e2e/test_phone_popups.py): a toast / a Gus peek line, through the real paths */
       toast(text) { toast(String(text), { now: true }); return true; },
+      /** QA 2026-11-06 night: a toast through the held queue (o: { goal, front }), the queue as it stands, Gus's chatter */
+      toastQ(text, o) { toast(String(text), o || null); return true; },
+      toastHeld() { return toastHeld.map((x) => ({ text: x.text, front: !!(x.o && x.o.front), goal: (x.o && x.o.goal) || 0 })); },
+      gusChatter(cat) { lastBubble[cat] = -1e9; return gusBubble(String(cat), 0); },
       gus(line, mood) { ui_.gusBubble && ui_.gusBubble(String(line), mood || 'neutral'); return true; },
       dline(path) { return dline(String(path), null); },
       sheetGuard() { return { restored: SG.restored, last: SG.last }; }, // tests: the shop sheet put back after a jump nobody asked for
@@ -36005,7 +36459,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     payInstalment() { return sellRange(false); },
     /** the carry-over cap (DECISIONS 47): { next, cap, wallet, keep, over, crate, beetles, line, overNow } for signing now
      *  (wallet: after the last part; pass one to ask about another amount), or null (no next range in the main run) */
-    carryInfo(wallet) { if (!state) return null; const ci = carryInfo(wallet); return ci ? Object.assign({ line: carryLine(ci), overNow: carryOverNow() }, ci) : null; },
+    carryInfo(wallet) { if (!state) return null; const ci = carryInfo(wallet); return ci ? Object.assign({ line: carryLine(ci), overNow: carryOverNow(), known: rangeKnown(rIdx(ci.next)) }, ci) : null; },
+    /** the trial's free play: { cap, next } (how much the unlock takes on, and where), else null */
+    freePlayCap() { return freePlayCapInfo(); },
+    /** the one star figure (QA 2026-11-06 night): what going from `from` to `to` stars does to income ("+34%", "×18") */
+    starBoost(from, to) { return starBoost(from, to); },
+    /** has the player seen range i's name (route map rule)? Until then it's ??? and its tease */
+    rangeKnown(i) { return rangeKnown(typeof i === 'string' ? rIdx(i) : i); },
     buyRange() { return buyRange(); },
     visitRange(i) { return visitRange(typeof i === 'string' ? B.ranges.findIndex((r) => r.id === i) : i); },
     dismissDialogs() { frDismissed(); dismissDialogs(); return true; }, // (an outside dismiss, like a tap: a first-time line on screen counts as read)
@@ -36051,7 +36511,17 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     potterAbout(i) { return potterAbout(i); }, resumeTour() { return resumeTour(); }, showEndingCard() { showEndingCard(); },
     priceLabel() { return priceLabel(); },
     get freePlay() { return state && state.freePlay ? state.freePlay : null; },
-    unlock() { const was = trialLocked() || !!state.freePlay; state.unlocked = true; state.unlockedBy = 'unlock'; if (state.freePlay) endFreePlay(); save(); emit('unlocked', {}); if (modal) closeModal(); if (was) fire('onUnlock', {}); if (was && mode === 'game') ui_.refresh(true); return true; },
+    unlock() {
+      const was = trialLocked() || !!state.freePlay, trial = trialLocked() || (!!state.freePlay && !isUnlocked() && !state.creditsSeen);
+      state.unlocked = true; state.unlockedBy = 'unlock';
+      if (state.freePlay) endFreePlay(true); else if (trial) heldArrivalRelease(false);
+      save(); emit('unlocked', {}); if (modal) closeModal(); if (was) fire('onUnlock', {}); if (was && mode === 'game') ui_.refresh(true);
+      // QA 2026-11-06 night: a trial player who unlocks arrives at Oakridge here (straight from the trial-end screen, or after
+      // Not now's free play), and never heard Gus's Oakridge story: the sale skips it for the unlock screen, and the free
+      // play's end found Oakridge already stashed. rangeIntro waits for the town to close when it's showing (introLater)
+      if (trial && mode === 'game' && (state.rangeIdx | 0) > 0) rangeIntro();
+      return true;
+    },
     externalDialog: false, externalUnlock: false, fullGame: FULL_GAME,
     openPanel(name) { layout.openPanel(name); },
     closePanels() { layout.closePanels(); },
@@ -37459,7 +37929,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       const dot = els.side.querySelector('[data-rl=dot]');
       if (dot) { let n = 0; try { n = R.getShop().filter((i) => i.kind !== 'cosmetic' && i.affordable).length; } catch (e) { /* ignore */ } const t = n ? String(n) : ''; if (dot.textContent !== t) dot.textContent = t; }
     }
-    if (cur === 'wide' && slow % 160 === 0) { const idle = dget('gus.idle', []); const l = els.gusdock.querySelector('[data-rl=gusline]'); if (l && idle.length && !(Date.now() - (+l.dataset.said || 0) < 20000)) l.textContent = idle[Math.floor(Math.random() * idle.length)]; }
+    if (cur === 'wide' && slow % 160 === 0) { const idle = dget('gus.idle', []).concat(R.state && (R.state.rangeIdx | 0) === 0 ? dget('gus.idleMuni', []) : []); /* Mudbank's own lines only there (QA 2026-11-06 night) */ const l = els.gusdock.querySelector('[data-rl=gusline]'); if (l && idle.length && !(Date.now() - (+l.dataset.said || 0) < 20000)) l.textContent = idle[Math.floor(Math.random() * idle.length)]; }
   }
   function setMood(m, ms) { mood = m; moodUntil = Date.now() + ms; }
 
@@ -38055,7 +38525,10 @@ html.dk-html .rh-scrim{padding:4px}
     if (!s || !rs.length) return { label: '', explain: '', none: true };
     const i = s.rangeIdx | 0, id = s.range, name = shortName(id), lap = st.tour | 0, last = i === rs.length - 1;
     if (st.freeRoam) return { none: true, roam: true, label: H('goal.freeRoam'), explain: H('goal.explainRoam'), p: 0 }; // after the credits (B.tour off)
-    if (st.freePlay || !isFinite(s.prestigeAt)) return { none: true, label: H('goal.none'), explain: H('goal.explainNone'), p: 0 };
+    if (st.freePlay || !isFinite(s.prestigeAt)) { // the trial's free play: the unlock takes only so many acorns on (QA 2026-11-06 night: unannounced)
+      let fc = null; try { fc = R.freePlayCap ? R.freePlayCap() : null; } catch (e) { fc = null; }
+      return { none: true, label: H('goal.none'), explain: H('goal.explainNone') + (fc ? ' ' + H('carry.free', { cap: fmt(fc.cap), next: shortName(fc.next) }) : ''), p: 0 };
+    }
     // Escalation Plan: visiting a range you own. The main goal becomes "back to the one you're buying" (tap = go back)
     if (s.visiting) { const fr = rs[s.frontier | 0], back = fr ? shortName(fr.id) : ''; return { none: true, visit: true, label: H('goal.visit', { name }), explain: H('goal.explainVisit', { name, n: Math.round((s.visitPayMult || 0) * 100), back, p: Math.round(((s.portfolio || 1) - 1) * 100) }), back, p: 0 }; }
     // buying the range: a price tag paid in parts. The bar is the whole price (paid parts + the wallet towards the next)
@@ -38073,14 +38546,14 @@ html.dk-html .rh-scrim{padding:4px}
     if (t && !ready) explain += ' ' + (t === H('goal.nearly') ? H('goal.explainNearly') : H('goal.explainTime', { t }));
     // the carry-over cap (DECISIONS 47): how much of the wallet the move takes, said before it matters
     let ci = null; try { ci = lap > 0 ? null : R.carryInfo && R.carryInfo(); } catch (e) { ci = null; }
-    if (ci) explain += ' ' + H('carry.explain', { cap: fmt(ci.cap), next: shortName(ci.next), b: ci.crate });
+    if (ci) explain += ' ' + (ci.known === false ? H('carry.explainHidden', { cap: fmt(ci.cap), b: ci.crate }) : H('carry.explain', { cap: fmt(ci.cap), next: shortName(ci.next), b: ci.crate })); // not named before it's revealed (QA 2026-11-06 night)
     const carryNote = !!(ci && ci.overNow);
     const arrive = finale ? H('goal.arriveFinale', { n, sell: sellI, k: parts }) : H('goal.arrive', { n, sell: sellI, next, k: parts });
     // the numbers: the wallet towards the next part ("3.1M / 8.5M"); the Goals card also names the part ("part 2/4: ...")
     const part = k ? H('goal.part', { n: k, m: parts }) : '', saved = fmtAs(Math.min(s.cash || 0, s.partCost || 0), s.partCost || 0);
     const nums = k ? H('goal.nums', { n: saved, m: fmt(s.partCost || 0) }) : H('goal.nums', { n: fmtAs(s.cash || 0, target), m: n });
     const numsCard = k ? H('goal.numsPart', { part, n: saved, m: fmt(s.partCost || 0) }) : nums;
-    return { label, explain, arrive, p, ready, t, nums, numsCard, parts, name, sell: sellL, target, run: s.cash || 0, part, partCost: s.partCost || 0, carryNote };
+    return { label, labelShort: label0 !== sellL ? [parts > 1 ? H('goal.labelPrice', { sell: sellL, price: n }) : sellL, sellL] : null, explain, arrive, p, ready, t, nums, numsCard, parts, name, sell: sellL, target, run: s.cash || 0, part, partCost: s.partCost || 0, carryNote };
   }
 
   // ------------------------------------------------------------------ CSS
@@ -38389,16 +38862,19 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     obj.querySelector('.tm').textContent = o.t ? '· ' + o.t : '';
     obj.setAttribute('aria-label', o.none ? H('goal.kicker') + ': ' + o.label : H('goal.aria', { sell: o.sell, n: fmt(o.run), m: fmt(o.target) }) + (o.t ? ' ' + o.t : ''));
     obj.classList.remove('no-k', 'no-t', 'wrap');
-    fitObjective(o.label);
+    fitObjective(o.label, o.labelShort);
   }
   // measure and drop (UI §15): the time, then the kicker; only then may the strip wrap to a second line. Never clipped.
   // The card already has a line per part, so it only ever drops the time. Height never follows the numbers: once the
   // strip has wrapped for this label at this width it stays wrapped (a goal that hopped between one line and two as
   // the acorns grew re-laid out the whole screen); it only unwraps for a new label, language or width.
-  function fitObjective(label) {
+  function fitObjective(label, short) {
     const over = () => obj.scrollWidth > obj.clientWidth + 1;
     const key = label + '|' + (W.DIALOG && W.DIALOG.locale) + '|' + objW + '|' + obj.classList.contains('card');
     if (over()) obj.classList.add('no-t');
+    // QA 2026-11-06 night (Gullhaven, "Buy Gullhaven: the finale · 3.7aa"): the "Main goal" kicker went first. On the finale
+    // (and a Grand Tour lap) the label's extra words go before it, then its price tag (on the agent's card and in the ⓘ too)
+    if (Array.isArray(short)) for (const sh of short) { if (!over()) break; const t = obj.querySelector('.t'); if (t && sh) t.textContent = sh; }
     if (!obj.classList.contains('card')) {
       if (over()) obj.classList.add('no-k');
       if (over() || objWrapKey === key) { obj.classList.add('no-t', 'no-k', 'wrap'); objWrapKey = key; }
@@ -40195,6 +40671,8 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   function affordableCos() {
     try { return R.getShop().filter((i) => i.kind === 'cosmetic' && i.affordable && !i.owned && !i.maxed).length; } catch (e) { return 0; }
   }
+  /** has the player seen range i's name? (the engine's rule; ??? until then) */
+  function known(i) { try { return R.rangeKnown ? !!R.rangeKnown(i) : true; } catch (e) { return true; } }
   function lastReady(s) { return !!s && !!s.prestigeReady && (s.paid | 0) >= (s.parts | 0) - 1; }
   function plate(k, s) {
     const st = R.state, rs = RANGES();
@@ -40210,7 +40688,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       if (!isOpen('tailor')) return { lock: true, d: T('tailor.lockPlate', 'Opens after you sign') };
       const n = affordableCos(); return { d: n ? (n === 1 ? T('tailor.afford1', '1 thing you can afford') : T('tailor.afford', '{n} things you can afford', { n })) : T('tailor.plate', 'Hats, paint and more') };
     }
-    if (!isOpen('club')) return { lock: true, d: T('club.lockPlate', 'Opens at {name}', { name: shortName((rs[1] || {}).id || 'county') }) };
+    if (!isOpen('club')) return { lock: true, d: known(1) ? T('club.lockPlate', 'Opens at {name}', { name: shortName((rs[1] || {}).id || 'county') }) : T('club.lockPlateNext', 'Opens at the next range, after part 1') }; // not named before it's revealed (QA 2026-11-06 night)
     const c = chestsWaiting(); return { d: c ? (c === 1 ? T('club.chest1', 'Trophies · 1 chest waiting') : T('club.chests', 'Trophies · {n} chests waiting', { n: c })) : T('club.plate', 'Trophies and How it works') };
   }
   const bName = (k) => T(k + '.title', { agent: 'Estate agent', tailor: 'Tailor', club: 'Clubhouse' }[k]);
@@ -40564,12 +41042,20 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     }
     // Gus's own line while nothing else is said (the engine's dock line takes this slot for its lines)
     const gl = ov.querySelector('[data-rl=gusline]'); const said = gl && gl.dataset.said ? +String(gl.dataset.said).split(':')[0] || 0 : 0;
-    if (gl && (force || (Date.now() - Math.max(said, gusAt) > 20000))) {
-      const t = TS(), ln = !isOpen('agent') ? T('gus.locked', "Nothing to sign yet. We'll come back with the last part.")
-        : lastReady(s) ? (t.seen.agent ? T('gus.ready', "Last part's ready. Ferris has the deeds out.") : T('gus.first', "Last part's ready. Deeds get signed at the agent's."))
-          : T('gus.idle', "I'll mind the range. Take your time.");
-      if (gl.dataset.own !== ln || force) { gl.dataset.own = ln; if (!gl.dataset.said || Date.now() - said > 20000) { gl.textContent = ln; delete gl.dataset.said; } }
-      gusAt = Date.now();
+    // QA 2026-11-06 night: after the trial's sale it still said "Last part's ready. Ferris has the deeds out." (the line only
+    // looked again every 20 s, and had nothing for the trial being done). Now a change of situation shows at once, unless
+    // an engine line holds the slot (its 20 s)
+    if (gl) {
+      const t = TS(), trialDone = !s.unlocked && (st.frontier | 0) > 0 && !st.freeRoam && !((st.tour | 0) > 0);
+      const ln = !isOpen('agent') ? T('gus.locked', "Nothing to sign yet. We'll come back with the last part.")
+        : trialDone ? T('gus.trialDone', "{name}'s ours, deeds and all. I'll keep it ticking over.", { name: shortName((rs[0] || {}).id || 'muni') })
+          : lastReady(s) ? (t.seen.agent ? T('gus.ready', "Last part's ready. Ferris has the deeds out.") : T('gus.first', "Last part's ready. Deeds get signed at the agent's."))
+            : T('gus.idle', "I'll mind the range. Take your time.");
+      const stale = !!gl.dataset.said && Date.now() - said > 20000; // an engine line has had its 20 s
+      if (force || gl.dataset.own !== ln || (stale && Date.now() - gusAt > 20000)) {
+        gl.dataset.own = ln; if (!gl.dataset.said || stale) { gl.textContent = ln; delete gl.dataset.said; }
+        gusAt = Date.now();
+      }
     }
   }
 
@@ -40700,6 +41186,8 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     const st = body.querySelector('[data-rt=tow]'); if (st) { const v = fmt(Math.min(R.state.cash || 0, s.partCost || 0)) + ' / ' + fmt(s.partCost || 0); if (st.textContent !== v) st.textContent = v; }
   }
   /** the carry-over cap (DECISIONS 47): "You'll take N acorns with you. The rest becomes ..." for the wallet after signing */
+  /** the one star figure (the engine's starBoost: the toast, the sell card and this sheet agree) */
+  function starFig(from, to) { try { return R.starBoost ? String(R.starBoost(from, to)) : ''; } catch (e) { return ''; } }
   function carryText() { try { const ci = R.carryInfo && R.carryInfo(); return ci ? ci.line : ''; } catch (e) { return ''; } }
   function agentHTML(s) {
     const st = R.state, rs = RANGES(), here = st.rangeIdx | 0, front = st.frontier | 0, fr = rs[front];
@@ -40719,7 +41207,8 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       say(locked ? T('agent.say.locked', "That's the lot for the trial. Lovely doing business.")
         : s.visiting ? T('agent.say.visit', "You're buying {name}. Pop back there to pay.", { name: shortName(fr.id) })
           : last ? T('agent.say.last', 'Last part. Sign here and {name} is yours.', { name: shortName(fr.id) })
-            : T('agent.say.buying', '{name} is coming along nicely.', { name: shortName(fr.id) }));
+            : paid > 0 ? T('agent.say.buying', '{name} is coming along nicely.', { name: shortName(fr.id) })
+              : T('agent.say.start', "{name}'s on the market. Pay a part when you like.", { name: shortName(fr.id) })); // nothing paid yet isn't "coming along" (QA 2026-11-06 night)
       h += `<div class="rt-sec">${esc(T('agent.buying', 'You\'re buying'))}</div><div class="rt-card">
         <div class="rt-row"><img class="rt-thumb" alt="" src="${rangeArtURL(fr.id, 3)}"><div style="min-width:0"><div class="rt-nm">${esc(fullName(fr.id))}</div><div class="rt-pr">${img(spriteURL('icon_acorn', 1))}${esc(T('agent.price', '{cash} in {n} parts', { cash: fmt(s.price || 0), n }))}</div></div></div>`;
       if (locked) h += `<div class="rt-fine" style="margin-top:8px">${esc(dget('text.route.trialLocked', 'Unlock the full game to go on.'))}</div>`;
@@ -40732,7 +41221,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
           h += `<button type="button" class="rt-pay${last ? ' sign' : ''}${ok ? ' ok' : ''}" data-rt-act="pay" aria-disabled="${!ok}"><span class="fill"${ok ? ' style="display:none"' : ''}></span><span>${esc(lbl)} · ${esc(fmt(s.partCost || 0))}</span> <span data-rt="pcnt" style="font-weight:400"></span></button>`;
           if (last) h += `<div class="rt-fine rt-carry" data-rt="carry" aria-live="polite">${esc(carryText())}</div>`; // the carry-over cap (DECISIONS 47), live below
         }
-        if (last && (s.starsForSale | 0) > 0) h += `<div class="rt-d rt-starswhy" data-starswhy>★ ${esc(fill(dget('text.buy.starsWhy', '{n} stars: +{p}% income on every range, for good.'), { n: fmt(s.starsForSale), p: Math.round(s.starsForSale * (s.perStarPct || 0) * 10) / 10 }))}</div>`; // Ben, 2026-11-06: say what the stars are
+        if (last && (s.starsForSale | 0) > 0) h += `<div class="rt-d rt-starswhy" data-starswhy>★ ${esc(fill(dget('text.buy.starsWhy', '{n} stars: {p} income on every range, for good.'), { n: fmt(s.starsForSale), p: starFig(st.stars || 0, (st.stars || 0) + (s.starsForSale | 0)) }))}</div>`; // Ben, 2026-11-06: say what the stars are
         h += `<div class="rt-fine">${esc(T('agent.fine', 'The last part signs the deeds: it\'s yours for good.'))}${front < rs.length - 1 ? ' ' + esc(T('agent.fine2', 'You earn stars, and the next range goes on the market.')) : ''}</div>`; // the finale has no next range (QA 2026-11-06 night)
       }
       h += '</div>';
@@ -40765,7 +41254,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       if (b.getAttribute('aria-disabled') === 'true') { try { W.SFX && W.SFX.play && W.SFX.play('ui_deny'); } catch (er) { /* ignore */ } return; }
       const s = stats(), last = s && (s.paid | 0) >= (s.parts | 0) - 1, id = s && s.range, before = R.state.stars || 0;
       let ok = false; try { ok = R.sellRange(); } catch (er) { ok = false; }
-      if (ok && last) { const after = R.state.stars || 0; signedView = { id, stars: Math.max(0, after - before), p: '' }; try { if (R.getStats) { const sb = R.getStats().starBoost; signedView.p = sb ? String(sb) : ''; } } catch (er) { /* ignore */ } }
+      if (ok && last) { const after = R.state.stars || 0; signedView = { id, stars: Math.max(0, after - before), p: starFig(before, after) }; } // the same figure as the card above and the toast (QA 2026-11-06 night)
       renderAgent(true);
       return;
     }

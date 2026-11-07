@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-07-119900a3-5a52c52a">
+<meta name="rr-pwa" content="2026-11-07-22701819-13b048b1">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-07-119900a3">
+<meta name="range-rat-build" content="2026-11-07-22701819">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-119900a3", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-22701819", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-119900a3", "builtAt": "2026-11-07T01:51:58Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-22701819", "builtAt": "2026-11-07T03:35:47Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -23862,7 +23862,12 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // the per-range fields here and in every snapshot (#1, #2, #4, #5): levels clamped (robots -5 hung syncRobots for good),
     // cage within its level, goals well formed, numbers finite. A snapshot's own runCash "100" concatenated on a visit
     const rwCap = Math.max(1e6, o.allTimeCash);
-    sanitizeRun(o, true, rwCap, v0 < 8);
+    // legacy cage charges (v5-v7 hold 2 with no Cage owned, kept on load since cbb3d509): legacyCage marks a pre-v8 save
+    // that held them, so every later load keeps the same bound (they went on the 2nd load, once the save was v8). It stays
+    // once set (a load's result never depends on how many loads came before); the bound is still the Cage's max level
+    const legacy = v0 < 8 || !!s.legacyCage;
+    sanitizeRun(o, true, rwCap, legacy);
+    if (s.legacyCage || (v0 < 8 && o.cage > (isObj(o.levels) ? o.levels.cage | 0 : 0))) o.legacyCage = 1; else delete o.legacyCage;
     for (const k in o.sites) { const e = o.sites[k]; if (e.snap != null && !isObj(e.snap)) e.snap = null; if (isObj(e.snap)) sanitizeRun(e.snap, false, rwCap); }
     o.rangeIdx = clamp(o.rangeIdx | 0, 0, B.ranges.length - 1);
     o.frontier = clamp(isNum(s.frontier) ? s.frontier | 0 : o.rangeIdx, 0, B.ranges.length - 1);
@@ -25777,8 +25782,26 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const q = F.q[i], e = R2.byId[q.id];
       if (!e) { F.q.splice(i, 1); continue; } // an entry that no longer exists (a newer build renamed it)
       if (frCur && frCur.q === q) continue;
-      if (e.done && frTry(e.done, c, q.v || {})) { F.q.splice(i, 1); F.said[q.id] = Math.round(state.stats.playSeconds || 0); frLogPush({ id: q.id, ev: 'done' }); }
+      if (e.done && frTry(e.done, c, q.v || {})) { F.q.splice(i, 1); F.said[q.id] = Math.round(state.stats.playSeconds || 0); frLogPush({ id: q.id, ev: 'done' }); continue; }
+      const why = frStale(e, c);
+      if (why) { // can't be shown any more: out of the queue, NOT said (the next time it happens, its trigger queues it again)
+        F.q.splice(i, 1); delete frCtx[q.id]; frLogPush({ id: q.id, ev: 'expired', why });
+        if (e.on === 'shopRow' && e.kind) { const G = guideState(); if (G && isObj(G.seen)) delete G.seen[e.kind]; } // its row turning up again (a revisit) re-queues it
+      }
     }
+  }
+  // Lines that can never be shown (a 10 h bot save had 39 waiting, 14 of them for good; leftovers audit 2026-11-07):
+  //   - a range's own lines (e.range, or a shop row staged in one range's shop) once that range is behind you: not where
+  //     you are, and not the range you're buying (visiting an old range keeps the frontier's lines for your return)
+  //   - a story beat that has been and gone on this run (beats fire once per run of a range: live() can't come true again)
+  // They leave the queue unsaid, so nothing is marked as explained: each trigger (the hedge / pond / puddle / bunker hooks,
+  // engine events, polls, a shop row turning up, a new run's beat) queues the line again if the thing happens again
+  const frStagedRange = (kind) => { const M = B.rangeMechanics || {}; for (const r in M) if (M[r] && isObj(M[r].upgrades) && M[r].upgrades[kind]) return r; return null; };
+  function frStale(e, c) {
+    const r = e.range || (e.on === 'shopRow' && e.kind ? frStagedRange(e.kind) : null);
+    if (r && r !== c.range) { const fr = B.ranges[state.frontier | 0]; if (!fr || fr.id !== r) return 'left ' + r; }
+    if (e.id.startsWith('beat:') && (!r || r === c.range)) { const v = isObj(state.beats) ? state.beats[e.id.slice(5)] : null; if (isObj(v) && v.until != null && (+state.visitT || 0) >= v.until) return 'beat over'; }
+    return '';
   }
   /** a quiet moment: nothing over the field and Gus free */
   function frQuiet(gusFree, prio) {
@@ -26588,7 +26611,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function bunkerDropFx(b, z, how) {
     b.dropAt = gameT; b.gathered = false; b.gustIn = false;
     if (sfxHas('bunker_drop')) sfx('bunker_drop', { volume: how === 'plug' ? 0.6 : 0.5, pitch: (rand(-1, 2) | 0) }); else sfx('ball_land', { pitch: -4, volume: 0.5 });
-    if (mode === 'game' && !b.demo && state.tutorialFired && !state.tutorialFired._bunkerHint) { state.tutorialFired._bunkerHint = true; if (!firstNow('bunker', { ball: b })) toast(tx('toast.bunkerHint', 'A ball is buried in a pot bunker. Stand in the sand to rake it out!')); }
+    if (mode === 'game' && !b.demo && state.tutorialFired && !state.tutorialFired._bunkerHint) { state.tutorialFired._bunkerHint = true; if (!firstNow('bunker', { ball: b })) toast(tx('toast.bunkerHint', 'A ball is buried in a pot bunker. Stand in the sand to rake it out!')); } else if (mode === 'game' && !b.demo && !frSaid('bunker') && frQueued('bunker')) firstNow('bunker', { ball: b }); // waiting (its ball was raked out first, or a reload lost it): this one is the one Gus points at
   }
   /** the links golfers: `share` of shots plug into a pot; slopeShare (x the pull) pull up on a pot's slope with just enough pace
    *  left to curve and trickle in. Every other shot flies where it was aimed (and can still run into a pot by itself). */
@@ -29364,15 +29387,24 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const F = chFxOpen(sc, rm);
     const cv = sc.querySelector('.chest'), cg = cv.getContext('2d'); cg.imageSmoothingEnabled = false;
     const nm = hasSprite('chest_' + tier) ? 'chest_' + tier : null;
-    // the lid rim row per frame (the light leaks out just below it); falls back to row 4 of the 18x16 art
+    // the canvas is the sprite's own frame: logical w x h (18 x 16 today) at its art density (res), so a res-2 PixelLab chest
+    // (36 x 32 art px) draws 1:1 instead of being squashed into 18 x 16. Everything below draws in logical px (setTransform
+    // res); the stage CSS shows the 18 x 16 art at 10x, and other sizes get the same 10x inline
+    const ce = nm ? getSprite(nm) : null, CR = (ce && ce.res) || 1, CW = ce ? ce.w : 18, CH = ce ? ce.h : 16;
+    if (cv.width !== Math.round(CW * CR) || cv.height !== Math.round(CH * CR)) { cv.width = Math.round(CW * CR); cv.height = Math.round(CH * CR); }
+    if (CW !== 18 || CH !== 16) { cv.style.width = CW * 10 + 'px'; cv.style.height = CH * 10 + 'px'; }
+    cg.setTransform(CR, 0, 0, CR, 0, 0); cg.imageSmoothingEnabled = false;
+    // the lid rim row per frame (the light leaks out on the logical row below the first art row that's mostly outline);
+    // falls back to row 5 of the 18x16 art
     const raw = nm && W.SPRITES && W.SPRITES.sprites && W.SPRITES.sprites[nm] && W.SPRITES.sprites[nm].frames;
-    const RIM = [0, 1, 2].map((f) => { const rows = raw && raw[f]; if (Array.isArray(rows)) for (let y = 0; y < rows.length; y++) if ((String(rows[y]).match(/1/g) || []).length >= 10) return y + 1; return 5; });
+    const RIM = [0, 1, 2].map((f) => { const fr0 = raw && raw[f], rows = Array.isArray(fr0) ? fr0 : fr0 && fr0.rows; if (Array.isArray(rows)) for (let y = 0; y < rows.length; y++) if ((String(rows[y]).match(/1/g) || []).length >= Math.round(10 * CW * CR / 18)) return Math.ceil((y + 1) / CR); return 5; });
+    const LX = Math.round(CW / 9), LX2 = Math.round(CW / 3); // the leak's two strips: 2..16 and 6..12 of the 18 px art
     const drawChestF = (fr, leak) => {
-      cg.clearRect(0, 0, 18, 16);
-      if (nm) { const e = getSprite(nm); cg.drawImage(e.frames[Math.min(fr, e.frames.length - 1)], 0, 0, 18, 16); } else { cg.fillStyle = { wood: '#7d5636', silver: '#9298a0', gold: '#f2c641' }[tier]; cg.fillRect(1, fr === 3 ? 6 : 3, 16, fr === 3 ? 10 : 13); }
-      if (leak > 0 && fr < 3) { const y = RIM[fr] || 5; cg.globalAlpha = Math.min(1, leak); cg.fillStyle = glowCol; cg.fillRect(2, y, 14, 1); cg.globalAlpha = Math.min(1, leak * leak); cg.fillStyle = '#fffaee'; cg.fillRect(6, y, 6, 1); cg.globalAlpha = 1; }
+      cg.clearRect(0, 0, CW, CH);
+      if (nm) { const e = getSprite(nm); cg.drawImage(e.frames[Math.min(fr, e.frames.length - 1)], 0, 0, CW, CH); } else { cg.fillStyle = { wood: '#7d5636', silver: '#9298a0', gold: '#f2c641' }[tier]; cg.fillRect(1, fr === 3 ? 6 : 3, 16, fr === 3 ? 10 : 13); }
+      if (leak > 0 && fr < 3) { const y = RIM[fr] || 5; cg.globalAlpha = Math.min(1, leak); cg.fillStyle = glowCol; cg.fillRect(LX, y, CW - 2 * LX, 1); cg.globalAlpha = Math.min(1, leak * leak); cg.fillStyle = '#fffaee'; cg.fillRect(LX2, y, CW - 2 * LX2, 1); cg.globalAlpha = 1; }
     };
-    drawChestF(0, rm ? 0 : 0.35);
+    drawChestF(0, rm ? 0 : 0.35); S.draw = drawChestF; // (RANGE_RAT._test.chestDraw)
     // a tap anywhere (or Enter / A on the focused button) advances or skips the current beat
     const adv = () => { const f = S.skip; if (f) { S.skip = null; f(); } };
     const tapWait = () => new Promise((r) => { S.skip = r; });
@@ -36262,6 +36294,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         cur: frCur ? { id: frCur.e.id, b: frCur.b, text: frCur.text, vis: Math.round(frCur.vis), need: frCur.need, seen: frCur.seen, ptr: frCur.ptr, point: frCur.e.point || null, shop: frCur.e.shop || null } : null,
         log: frLog.slice(), covered: gusCov, mark: frMark ? { x: Math.round(frMark.x), y: Math.round(frMark.y), k: frMark.k } : null } : null; },
       firstNow(id, x) { return firstNow(String(id), x || null); },
+      /** the open chest scene's chest canvas after drawChestF(frame, leak): its backing size and a hash of its pixels */
+      chestDraw(fr, leak, px) { const S = chestScene; if (!S || !S.draw) return null; S.draw(fr | 0, +leak || 0); const c = S.sc.querySelector('canvas.chest'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let h = 2166136261 >>> 0; for (let i = 0; i < d.length; i++) h = Math.imul(h ^ d[i], 16777619) >>> 0; return { w: c.width, h: c.height, hash: h, cssW: c.offsetWidth, cssH: c.offsetHeight, px: px ? Array.from(d) : undefined }; },
+      /** why each waiting first-time line isn't going now (frNext's filters, in order; '' = it could go at a quiet moment) */
+      firstsWhy() { const F = frState(); if (!F || !FR_()) return null; const c = frC(), town = !!(W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.showing);
+        const r0 = layout.root, block = [paused.user && 'paused', paused.menu && 'menu', paused.modal && 'modal', paused.dialog && 'dialog', paused.away && 'away', sheet && 'sheet', modal && 'modal2', chestScene && 'chest', document.hidden && 'hidden', bannerBusy && 'banner', achShowQ.length && 'trophyQ', dlg && 'dlg', dialogQ.length && 'dialogQ', focusQuiet() && 'focus', uiBusyNow() && 'uiBusy', ui_.gusBusy && ui_.gusBusy() && 'gusBusy', r0 && r0.querySelector('.rr-sheet.on, .rr-modal, .rl-scrim, .rh-scrim') && 'overlay'].filter(Boolean);
+        return { quiet: frQuiet(true, 3), block, range: c.range, q: F.q.map((q) => { const e = FR_().byId[q.id]; let why = '';
+          if (!e) why = 'gone'; else if (frOff() && !e.core) why = 'off'; else if (e.range && e.range !== c.range) why = 'range:' + e.range; else if (town && !frTownOk(e)) why = 'town';
+          else if (e.live && !frTry(e.live, c, frCtx[q.id])) why = 'dormant'; else if (e.on === 'shopRow' && (!frShopSideOpen() || !frShopHere(e))) why = frShopHere(e) ? 'shop-closed' : 'row-not-here';
+          return { id: q.id, why, prio: e ? frPrio(e) : 0 }; }) }; },
       guide() { return { q: guideQ.map((q) => ({ key: q.key, item: q.item || null, until: q.until })), calm: guideCalm, busy: mode === 'game' ? guideBusy() : 'mode' }; },
       sanitizeLook() { const s = sanitize(JSON.parse(JSON.stringify(state))); return ratLookOf(s.profile && s.profile.look); },
       hedges() { return traps.zones.filter((z) => z.kind === 'hedge').map((z) => ({ side: z.side, x0: z.x0, x1: z.x1, y0: z.y0, y1: z.y1, held: z.hN | 0, cached: !!z.hedgeCv, edge: EDGE, hogs: (world.hogs || []).filter((o) => traps.zones[o.zi] === z).map((o) => ({ y: Math.round(o.y), t: Math.round(o.t * 100) / 100, ball: o.ball || null })) })); },

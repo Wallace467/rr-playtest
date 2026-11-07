@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-07-fedd28cc-c9db7ca6">
+<meta name="rr-pwa" content="2026-11-07-119900a3-5a52c52a">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-07-fedd28cc">
+<meta name="range-rat-build" content="2026-11-07-119900a3">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-fedd28cc", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-119900a3", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-fedd28cc", "builtAt": "2026-11-07T01:16:55Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-119900a3", "builtAt": "2026-11-07T01:51:58Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -23766,7 +23766,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (has('dayT')) { const dn = B.dayNight, cyc = (+dn.dayLengthSec || 0) + (+dn.nightLengthSec || 0); o.dayT = isNum(o.dayT) && o.dayT >= 0 ? (cyc > 0 && o.dayT >= cyc ? o.dayT % cyc : o.dayT) : 0; }
     if (has('goals')) o.goals = Array.isArray(o.goals) ? o.goals.slice(0, 12).map((g) => cleanGoal(g, rwCap)) : [];
     if (has('goalsDone')) o.goalsDone = intIn(o.goalsDone, 0, 1e9, 0); // a negative count picked an undefined goal template
-    if (has('beats') && !isObj(o.beats)) o.beats = {};
+    // a beat that isn't an object (save audit 2026-11-07: { drainDay: null } threw in beatEffects on every step, so the range
+    // never ran and the shop never opened) counts as fired and over: it doesn't come again, and it has no effect
+    if (has('beats')) { if (!isObj(o.beats)) o.beats = {}; else for (const k of Object.keys(o.beats)) if (!isObj(o.beats[k])) o.beats[k] = { at: 0, until: 0 }; }
     if (o.visitT !== undefined) o.visitT = numIn(o.visitT, 0, BIG, 0);
     // swarm {} broke getShop() (no owned); an owned array already works
     if (o.swarm !== undefined && (!isObj(o.swarm) || typeof o.swarm.type !== 'string' || !(isObj(o.swarm.owned) || Array.isArray(o.swarm.owned)))) o.swarm = SWARM0();
@@ -23787,6 +23789,18 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // items aren't counted. A save that already has Dressed to Thrill keeps it (state.ach is never re-checked downwards)
     if (!isObj(s.stats) || s.stats.cosmeticsBought == null) { let n = 0; for (const sl in B.cosmetics) for (const c of B.cosmetics[sl] || []) if (c.cost > 0 && !c.unlock && o.cos.owned[sl + ':' + c.id]) n++; o.stats.cosmeticsBought = n; }
     o.chests = Object.assign({ inv: [], dry: 0, opened: 0, seq: 0 }, isObj(s.chests) ? s.chests : {}); if (!Array.isArray(o.chests.inv)) o.chests.inv = [];
+    o.chests.inv = o.chests.inv.filter((c) => isObj(c) && isNum(c.id)); // save audit 2026-11-07: a null chest broke the Trophies panel
+    // the Work timer (§4g) from a damaged save: a block's times NaN made minutesTotal NaN; a jar of 1e308 paid on a phone made
+    // the goal targets Infinity. Phase one of the three, numbers finite and >= 0 (a running block still ends as before)
+    if (s.focus != null) {
+      if (!isObj(s.focus)) o.focus = null; // focusState() makes a fresh one
+      else { const F = o.focus = Object.assign({}, s.focus); if (F.phase !== 'focus' && F.phase !== 'break') F.phase = 'idle';
+        for (const k of ['startedAt', 'endsAt', 'minutesTotal']) F[k] = numIn(F[k], 0, BIG, 0);
+        F.jar = numIn(F.jar, 0, Math.max(1e6, numIn(s.allTimeCash, 0, BIG, 0)), 0); // a jar is ~4% of a block's income: never more than all ever earned
+        if (F.pausedAt != null) F.pausedAt = numIn(F.pausedAt, 0, BIG, null);
+        for (const k of ['blockId', 'setN', 'blocksDone', 'lastJarBlockId']) F[k] = intIn(F[k], 0, 1e9, 0);
+        if (F.cfg != null && !isObj(F.cfg)) F.cfg = {}; }
+    }
     for (const k of ['dry', 'opened', 'seq']) o.chests[k] = intIn(o.chests[k], 0, 1e9, 0);
     o.settings = Object.assign(defaultSettings(), s.settings || {});
     o.milestonesHit = Object.assign({ ballsCollected: 0, cashEarned: 0 }, isObj(s.milestonesHit) ? s.milestonesHit : {});
@@ -23917,11 +23931,36 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     saveFailToastAt = now;
     try { toast(tx('toast.saveFailed', "This browser isn't keeping your save. Export a save code.")); } catch (e) { /* no UI yet */ }
   }
+  // ---- two tabs on one slot (save audit 2026-11-07): a tab left open in the background kept autosaving its old state over
+  //      the progress made in the tab in front (every 10 s, and again when it closed): parts paid, ranges bought, gone. When
+  //      the slot no longer holds what this tab last read or wrote, another tab has saved it since. The tab in front (shown
+  //      and focused: the one being played) still saves over it; any other tab stops saving and, once it's in front again,
+  //      takes that save (the slot reloaded, as an import does) and carries on from there. One tab alone always finds its
+  //      own last write there (save, load, import and restore all record it), so nothing changes for it ----
+  let otherTab = false, unloading = false;
+  function otherTabWrote(n) { const raw = store.get(slotKey(n)); return !!raw && lastWritten[n] != null && raw !== lastWritten[n]; }
+  const inFront = () => { try { return !document.hidden && (typeof document.hasFocus !== 'function' || document.hasFocus()); } catch (e) { return true; } };
+  function adoptOtherTab() {
+    if (!otherTab || unloading || !inFront() || (mode !== 'game' && mode !== 'title') || sideMode || slotNewer(slot)) return false;
+    const raw = store.get(slotKey(slot)); // gone or unreadable: nothing to take; this tab's state is the save again (as before)
+    if (!raw || slotSummary(slot).corrupt) { otherTab = false; lastWritten[slot] = raw; return false; }
+    otherTab = false; awayLeft = null; // the other tab played that time: no away pay or card for it here
+    saveDisabled = true; try { switchToSlot(slot); } finally { saveDisabled = false; }
+    emit('saveAdopt', { slot });
+    if (mode === 'game') startGame(); else renderProfiles();
+    return true;
+  }
+  /** back in front (shown, focused): another tab saved this slot meanwhile -> carry on from its save. True = adopted */
+  function frontCheck() { if (!otherTab && !otherTabWrote(slot)) return false; otherTab = true; return adoptOtherTab(); }
   function save() {
     if (!state) return false;
     try { saveDeviceSettings(); } catch (e) { /* ignore */ }
     if (saveDisabled || !state.started) return false;
     if (slotNewer(slot)) { emit('saveBlocked', { slot, reason: 'newer' }); return false; }
+    if (otherTab || (!inFront() && otherTabWrote(slot))) { // (taken after whatever called save() has finished with the state it holds)
+      otherTab = true; setTimeout(adoptOtherTab, 0);
+      emit('saveBlocked', { slot, reason: 'otherTab' }); return false;
+    }
     let ok = false;
     try { store.set(LAST_SLOT_KEY, String(slot)); const str = serialize(); ok = store.set(slotKey(slot), str); if (ok !== false) lastWritten[slot] = str; } catch (e) { ok = false; }
     if (ok === false) saveFailed('storage'); else saveFails = 0;
@@ -36586,14 +36625,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     // tab out / minimise: a snapshot; back: offline pay for the time nothing simulated (awayShow), then "While you were away"
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { try { sleepCheck(true); } catch (e) { /* ignore */ } save(); awayHide(); } // woke straight into hidden: pay that sleep first
-      else awayShow();
+      else if (!frontCheck()) awayShow(); // another tab saved this slot meanwhile: carry on from its save (no away pay here)
       sleepReset(); // the hidden stretch is the away path's; the clock comparison starts again from here
       kick();
     });
-    W.addEventListener('pagehide', () => save());
+    W.addEventListener('pagehide', () => { unloading = true; save(); });
+    W.addEventListener('pageshow', () => { unloading = false; }); // back from the back/forward cache
     gfxBindLifecycle(); // §I4: iOS resume / lost contexts rebuild the canvas caches
     const quietEv = () => emit('focus', { quiet: !!(document.hidden || !focused), hidden: !!document.hidden, focused });
-    W.addEventListener('focus', () => { focused = true; kick(); quietEv(); });
+    W.addEventListener('focus', () => { focused = true; frontCheck(); kick(); quietEv(); }); // (another window saved this slot: take it)
     W.addEventListener('blur', () => { focused = false; kick(); quietEv(); });
     document.addEventListener('visibilitychange', quietEv);
     if (DESK.on) try { focused = document.hasFocus(); } catch (e) { /* keep true */ } // the desk window opens without taking focus

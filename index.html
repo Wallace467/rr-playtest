@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-07-7fa54f26-c473c267">
+<meta name="rr-pwa" content="2026-11-07-7849d635-6bc3947c">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-07-7fa54f26">
+<meta name="range-rat-build" content="2026-11-07-7849d635">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-7fa54f26", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-7849d635", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-7fa54f26", "builtAt": "2026-11-07T08:13:53Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-7849d635", "builtAt": "2026-11-07T12:36:46Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -8665,6 +8665,8 @@ window.DIALOG = {
         frogdivers: "Frogs fetch {n} more pond balls a minute",
         lanternBay: "Another lit bay: one more golfer playing",
         lit: "{b}% of balls land in the light, not {a}%",
+        litAll: "Every ball already lands in the light",
+        litFull: "Every ball lands in the light, not {a}%",
         rake: "One rake sweep: {b}s instead of {a}s",
         marram: "Pots pull rolling balls in less: {b}%, not {a}%",
         sandmoles: "Moles dig out {b} balls a minute, not {a}",
@@ -11684,6 +11686,8 @@ window.DIALOG = {
           frogdivers: "Frösche holen {n} Teichbälle/min mehr",
           lanternBay: "Noch ein beleuchteter Abschlag: ein Golfer mehr",
           lit: "{b}% der Bälle landen im Licht statt {a}%",
+          litAll: "Jeder Ball landet schon im Licht",
+          litFull: "Alle Bälle landen im Licht statt {a}%",
           rake: "Ein Harkenzug: {b}s statt {a}s",
           marram: "Bunker ziehen weniger Bälle an: {b}% statt {a}%",
           sandmoles: "Maulwürfe: {b} Bälle/min statt {a}",
@@ -14620,6 +14624,8 @@ window.DIALOG = {
           frogdivers: "Las ranas traen {n} bolas/min más del estanque",
           lanternBay: "Otro puesto con luz: un golfista más",
           lit: "El {b}% de las bolas cae en la luz, no el {a}%",
+          litAll: "Todas las bolas ya caen en la luz",
+          litFull: "Todas las bolas caen en la luz, no el {a}%",
           rake: "Una pasada de rastrillo: {b}s en vez de {a}s",
           marram: "Los búnkeres atraen menos bolas: {b}%, no {a}%",
           sandmoles: "Los topos sacan {b} bolas/min, no {a}",
@@ -17457,6 +17463,8 @@ window.DIALOG = {
           frogdivers: "Os sapos trazem {n} bolas/min a mais do lago",
           lanternBay: "Mais uma baia iluminada: mais um golfista",
           lit: "{b}% das bolas caem na luz, não {a}%",
+          litAll: "Todas as bolas já caem na luz",
+          litFull: "Todas as bolas caem na luz, não {a}%",
           rake: "Uma passada de rastelo: {b}s em vez de {a}s",
           marram: "Os bunkers puxam menos bola: {b}%, não {a}%",
           sandmoles: "As toupeiras tiram {b} bolas/min, não {a}",
@@ -20386,6 +20394,8 @@ window.DIALOG = {
           frogdivers: "青蛙每分钟多送回{n}个池塘球",
           lanternBay: "多一个亮灯打位：多一位球手",
           lit: "{b}%的球落在光里，原来{a}%",
+          litAll: "所有球都已落在光里",
+          litFull: "所有球都落在光里，原来{a}%",
           rake: "耙一下：{b}秒，原来{a}秒",
           marram: "沙坑吸球更少：{b}%，原来{a}%",
           sandmoles: "鼹鼠每分钟挖出{b}个球，原来{a}个",
@@ -22138,6 +22148,25 @@ window.DIALOG = {
   /** n in the unit of ref, for "x / y" pairs (round 4 QA note 9: "172 / 175K" read like 172 of 175 thousand): fmtAs(172, 175e3)
    *  = "0.1K", fmtAs(8700, 175e3) = "8.7K". Rounds down like fmt; n of a bigger unit than ref (or ref under 1000) is plain fmt.
    *  Every suffix fmt uses, aa ab ... too (review r4 #9: past T it gave "100T / 2.3aa") */
+  /** fmt with d more decimals (a before/after pair that fmt prints the same: "1.1K instead of 1.1K" -> "1.11K instead of 1.10K") */
+  function fmtFine(n, d) {
+    if (!isNum(n)) return '0';
+    const neg = n < 0, a = Math.abs(n), dec = (v, k) => { const s = (Math.round(v * Math.pow(10, k)) / Math.pow(10, k)).toFixed(k); return NUM.dec === '.' ? s : s.replace('.', NUM.dec); };
+    let s;
+    if (a < 1000) s = dec(a, (a < 10 ? 2 : a < 100 ? 1 : 0) + d);
+    else { let k = Math.floor(Math.log10(a) / 3 + 1e-9), v = a / Math.pow(1000, k); if (v < 1) { k--; v *= 1000; } s = dec(v, (v < 100 ? 1 : 0) + d) + sufOf(k); }
+    return (neg ? '-' : '') + s;
+  }
+  /** a before/after pair that reads as a change (Ben 2026-11-07, Long Wicks: "100% of balls land in the light, not 100%"):
+   *  [fm(a), fm(b)], or, when those print the same but the values differ, fine(v, 1..3), one more digit each time */
+  function pairText(a, b, fm, fine) {
+    const sa = fm(a), sb = fm(b); if (sa !== sb || a === b || !fine) return [sa, sb];
+    for (let d = 1; d <= 3; d++) { const x = fine(a, d), y = fine(b, d); if (x !== y) return [x, y]; }
+    return [sa, sb];
+  }
+  /** a share as a percent for the shop: whole numbers, one decimal near 100% (never "100" for less than all of it) */
+  function pctNear(v) { const p = v * 100; if (v >= 1) return '100'; if (p < 95) return String(Math.round(p)); const s = (Math.min(99.9, Math.floor(p * 10) / 10)).toFixed(1).replace(/\.0$/, ''); return NUM.dec === '.' ? s : s.replace('.', NUM.dec); }
+  function pctFine(v, d) { const k = Math.pow(10, d), s = (Math.min(100 - 1 / k, Math.floor(v * 100 * k) / k)).toFixed(d); return NUM.dec === '.' ? s : s.replace('.', NUM.dec); }
   function fmtAs(n, ref) {
     if (!isNum(n) || !isNum(ref) || Math.abs(ref) < 1000 || Math.abs(n) >= Math.abs(ref)) return fmt(n);
     let k = Math.floor(Math.log10(Math.abs(ref)) / 3 + 1e-9); if (Math.abs(ref) / Math.pow(1000, k) < 1) k--;
@@ -23865,7 +23894,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const u = up(id); n = Math.max(1, n | 0);
     const L = lvl(id), maxL = u.maxLevel || 1, to = Math.min(maxL, L + n);
     const at = (f) => { const keep = lvl(id); setLvl(id, to); try { return f(); } finally { setLvl(id, keep); } };
-    const C = tx('units.colon', ': '), arrow = (label, f, fm) => { const a = fm(f()); if (L >= maxL) return `${label}${C}${a}`; return `${label}${C}${a} → ${fm(at(f))}`; };
+    const C = tx('units.colon', ': '), arrow = (label, f, fm, fine) => { const va = f(); if (L >= maxL) return `${label}${C}${fm(va)}`; const [a, b] = pairText(va, at(f), fm, fine); return `${label}${C}${a} → ${b}`; };
     const r1 = (v) => (v < 100 ? String(v < 10 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).replace('.', NUM.dec) : fmt(v)); // enough precision that now != next
     const E = (k, fb, vars) => tx('shop.effect.' + k, fb, vars);
     switch (id) {
@@ -23873,7 +23902,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       case 'capacity': return arrow(E('capacity', 'Hopper holds'), () => playerCap(), (v) => E('balls', '{n} balls', { n: v }));
       case 'cage': { const c = lvl('cage'); return c ? (c > 1 ? E('cageMany', 'Shrugs off {n} hits per trip', { n: c }) : E('cageOne', 'Shrugs off 1 hit per trip')) : E('cageNone', 'Shrugs off a hit from a stray ball'); }
       case 'bays': return bayCount() >= maxBaysNow() ? E('baysAll', 'All {n} bays open', { n: bayCount() }) : E('baysNext', 'Next: {n} → {m} bays', { n: bayCount(), m: Math.min(maxBaysNow(), bayCount() + n) });
-      case 'price': return arrow(E('price', 'Each ball earns'), () => basePrice(), (v) => E('acorns', '{n} acorns', { n: r1(v) }));
+      case 'price': return arrow(E('price', 'Each ball earns'), () => basePrice(), (v) => E('acorns', '{n} acorns', { n: r1(v) }), (v, d) => E('acorns', '{n} acorns', { n: fmtFine(v, d) }));
       case 'ballstock': return arrow(E('ballstock', 'Balls in play'), () => circulation(), (v) => fmt(v));
       case 'washer': return arrow(E('washer', 'Wash bonus per ball'), () => washerPer(), (v) => '+' + r1(v));
       case 'robots': return arrow(E('robots', 'Beetles'), () => robotCount(), (v) => String(v));
@@ -23892,20 +23921,21 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         const pay = E('tierPayShort', 'pay ×{n}', { n: r1(T.pay || 1) }) + ((T.balls || 1) > 1 ? ', ' + E('tierBallsShort', '×{n} balls', { n: r1(T.balls) }) : ''), d = '+' + r1(m * Math.max(0, per(k) - per(from)));
         const b = (k === 2 ? lvl('tb2') : lvl('tb2') + lvl('tb1')) + 1;
         return m > 1 ? E('tierNextMany', 'Next: {n} bays → {tier} ({pay}) · {d}/s', { n: m, tier: tn, pay, d }) : E('tierNext', 'Next: bay {b} → {tier} ({pay}) · {d}/s', { b, tier: tn, pay, d }); }
-      case 'tearoom': return arrow(E('price', 'Each ball earns'), () => basePrice(), (v) => E('acorns', '{n} acorns', { n: r1(v) }));
+      case 'tearoom': return arrow(E('price', 'Each ball earns'), () => basePrice(), (v) => E('acorns', '{n} acorns', { n: r1(v) }), (v, d) => E('acorns', '{n} acorns', { n: fmtFine(v, d) }));
       case 'deck': { const nb = (DECK_() || {}).bays || 6; return lvl('deck') ? E('deckOn', 'Three decks: {n} bays', { n: bayCount() }) : E('deckAdd', 'Adds {n} bays now: {a} → {b} of {m}', { n: nb, a: bayCount(), b: bayCount() + nb, m: maxBaysNow() + nb }); }
       case 'ledger': return lvl('ledger') ? ledgerSummary() : E('ledger', 'Buys for you by your rules, away too');
       case 'shifts': return arrow(E('shifts', 'Away cap'), () => awayCapHours(), (v) => E('hours', '{n} h', { n: v }));
       case 'noticeboard': return arrow(E('noticeboard', 'Requests'), () => (REQ_() ? REQ_().everySec / (1 + eff('noticeboard')) : 0), (v) => E('everyS', 'every {n}s', { n: Math.round(v) }));
       case 'pins': return arrow(E('pins', 'Pins on the field'), () => pinCount(), (v) => E('pinsOf', '{n} of {m}', { n: v, m: (world.allGreens || []).length || 3 }));
-      case 'tips': return arrow(E('tips', 'Tip balls'), () => tipChance(), (v) => E('oneIn', '1 per {n} pickups', { n: Math.max(1, Math.round(1 / Math.max(1e-6, v))) }));
+      case 'tips': return arrow(E('tips', 'Tip balls'), () => tipChance(), (v) => E('oneIn', '1 per {n} pickups', { n: Math.max(1, Math.round(1 / Math.max(1e-6, v))) }), (v, d) => E('oneIn', '1 per {n} pickups', { n: fmtFine(1 / Math.max(1e-6, v), d - 1) }));
       case 'lanternpost': case 'lanternwick': { // lit bays (more golfers) + the share of balls landing in the light (they glow, beetles find them, they pay +50%)
-        const lb = arrow(E('litBalls', 'Balls in the light'), () => litShareNow(), (v) => Math.round(v * 100) + '%');
+        const la = litShareNow(true), lbl = E('litBalls', 'Balls in the light'), lb = la >= 1 || L >= maxL ? `${lbl}${C}${pctNear(la)}%` : (() => { const [x, y] = pairText(la, at(() => litShareNow(true)), pctNear, pctFine); return `${lbl}${C}${x}% → ${y}%`; })();
         if (id !== 'lanternpost' || !litBays()) return lb;
-        return E('lanternBays', 'Lit bays: {n} → {m} of {k}', { n: bayCount(), m: Math.min(maxBaysNow(), bayCount() + n), k: maxBaysNow() }) + ' · ' + lb;
+        const nb = Math.min(maxBaysNow(), bayCount() + n);
+        return (nb > bayCount() && L < maxL ? E('lanternBays', 'Lit bays: {n} → {m} of {k}', { n: bayCount(), m: nb, k: maxBaysNow() }) : E('baysAll', 'All {n} bays open', { n: bayCount() })) + ' · ' + lb;
       }
       // Gullhaven: what each bunker upgrade changes, in the player's own terms (GDD §6)
-      case 'rake': return arrow(E('rake', 'One rake sweep'), () => sweepSec(), (v) => tx('units.s', '{n}s', { n: r1(Math.round(v * 100) / 100) }));
+      case 'rake': return arrow(E('rake', 'One rake sweep'), () => sweepSec(), (v) => tx('units.s', '{n}s', { n: r1(Math.round(v * 100) / 100) }), (v, d) => tx('units.s', '{n}s', { n: fmtFine(v, d) }));
       case 'marram': return arrow(E('marram', 'Bunker slope pull'), () => slopePull(), (v) => Math.round(v * 100) + '%');
       case 'sandmoles': return arrow(E('sandmoles', 'Moles dig out'), () => eff('sandmoles'), (v) => E('perSec', '{n} balls/s', { n: r1(Math.round(v * 100) / 100) }));
       default: { // per-range mechanic upgrades: DIALOG.ui.effect template ('{n}%' = effectPerLevel x 100)
@@ -23929,7 +23959,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const r1 = (v) => (v < 100 ? String(v < 10 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).replace('.', NUM.dec) : fmt(v));
     const W = (k, fb, vars) => tx('shop.why.' + k, fb, vars);
     const pc = (a, b) => Math.max(1, Math.round((b / Math.max(1e-9, a) - 1) * 100)); // "{p}% faster"
-    const ab = (k, fb, f, fm) => W(k, fb, { a: fm(f()), b: fm(at(f)) });
+    const ab = (k, fb, f, fm, fine) => { const [a, b] = pairText(f(), at(f), fm, fine === undefined ? (v, d) => fmtFine(v, d) : fine); return W(k, fb, { a, b }); };
     const e = u.effectPerLevel || 0, step = (v) => r1(Math.round(v * 1000) / 1000);
     switch (id) {
       case 'speed': return W('speed', 'Run {p}% faster: quicker trips', { p: pc(playerSpeed(), at(playerSpeed)) });
@@ -23944,7 +23974,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       case 'robotspeed': return W('robotspeed', 'Beetles scuttle {p}% faster', { p: pc(robotStats().v, at(() => robotStats().v)) });
       case 'robotcap': return ab('robotcap', 'Beetles carry {b} balls instead of {a}', () => robotStats().cap, String);
       case 'robotmagnet': return W('robotmagnet', 'Beetles spot balls {p}% further off', { p: pc(robotStats().r, at(() => robotStats().r)) });
-      case 'tips': return ab('tips', 'A tip ball every {b} pickups, not {a}', tipChance, (v) => String(Math.max(1, Math.round(1 / Math.max(1e-6, v)))));
+      case 'tips': return ab('tips', 'A tip ball every {b} pickups, not {a}', tipChance, (v) => String(Math.max(1, Math.round(1 / Math.max(1e-6, v)))), (v, d) => fmtFine(1 / Math.max(1e-6, v), d - 1));
       case 'pins': return W('pins', 'Another pin: golfers aim at it, balls bunch up');
       case 'windbreak': return W('windbreak', '{p}% fewer balls blown into the hedge', { p: step(e * m * 100) });
       case 'hedgetrim': return W('hedgetrim', 'Dig balls out of the hedge {p}% faster', { p: pc(1 + eff(id), at(() => 1 + eff(id))) });
@@ -23953,11 +23983,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       case 'frogdivers': return W('frogdivers', 'Frogs fetch {n} more pond balls a minute', { n: step(e * m * 60) });
       case 'lanternpost': case 'lanternwick':
         if (id === 'lanternpost' && litBays()) return W('lanternBay', 'Another lit bay: one more golfer playing');
-        return ab('lit', '{b}% of balls land in the light, not {a}%', litShareNow, (v) => String(Math.round(v * 100)));
+      { const la = litShareNow(true), lb = at(() => litShareNow(true)); // the lanterns' own light (a firefly bloom lights everything for a while)
+        if (la >= 1) return W('litAll', 'Every ball already lands in the light');
+        if (lb >= 1) return W('litFull', 'Every ball lands in the light, not {a}%', { a: pctNear(la) });
+        const [a, b] = pairText(la, lb, pctNear, pctFine); return W('lit', '{b}% of balls land in the light, not {a}%', { a, b }); }
       case 'rake': return ab('rake', 'One rake sweep: {b}s instead of {a}s', sweepSec, (v) => r1(Math.round(v * 100) / 100));
-      case 'marram': return ab('marram', 'Pots pull rolling balls in less: {b}%, not {a}%', slopePull, (v) => String(Math.round(v * 100)));
+      case 'marram': return ab('marram', 'Pots pull rolling balls in less: {b}%, not {a}%', slopePull, (v) => String(Math.round(v * 100)), (v, d) => fmtFine(v * 100, d - 1));
       case 'sandmoles': return ab('sandmoles', 'Moles dig out {b} balls a minute, not {a}', () => eff('sandmoles') * 60, (v) => r1(Math.round(v * 10) / 10));
-      case 'noticeboard': return ab('noticeboard', 'A request every {b}s instead of {a}s', () => (REQ_() ? REQ_().everySec / (1 + eff('noticeboard')) : 0), (v) => String(Math.round(v)));
+      case 'noticeboard': return ab('noticeboard', 'A request every {b}s instead of {a}s', () => (REQ_() ? REQ_().everySec / (1 + eff('noticeboard')) : 0), (v) => String(Math.round(v)), (v, d) => fmtFine(v, d - 1));
       case 'shifts': return ab('shifts', 'Earn while away for {b} h instead of {a} h', awayCapHours, String);
       default: return upEffectText(id, n);
     }
@@ -27321,12 +27354,30 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     return { n, r, pw, pr: r * (J && pw ? J.poweredRadiusMult || 1 : 1) };
   }
   /** expected share of balls that come to rest in the light: golfers aim a share at the lanterns, the rest land anywhere */
-  function litShareNow() {
-    if (!isDark() || beatVal('litShare', 0) >= 1) return 1;
+  /** noBeat: the lanterns' own share, without a beat that lights every ball for a while (the shop's Long Wicks line: the
+   *  upgrade outlasts the firefly bloom) */
+  function litShareNow(noBeat) {
+    if (!isDark() || (!noBeat && beatVal('litShare', 0) >= 1)) return 1;
     const d = darkCfg(), L = lanternPlan(), A = (B.rateModel && B.rateModel.fieldArea) || 180 * 248, lr = swarmDef().lightRadius || 0;
-    const area = Math.min(1, ((L.n - L.pw) * L.r * L.r + L.pw * L.pr * L.pr + robotCount() * lr * lr) * Math.PI / A);
+    const bugs = Math.min(1, robotCount() * lr * lr * Math.PI / A); // lamp beetles wander: their light falls anywhere
+    const area = 1 - (1 - poolCover(L)) * (1 - bugs);
     const aim = Math.min(d.aimMax || 0, (d.aimPerPool || 0) * L.n);
     return aim + (1 - aim) * area;
+  }
+  /** the share of the field inside at least one lantern pool, measured on a grid over the pools where they really stand
+   *  (DARK_SPOTS). Ben 2026-11-07, Long Wicks "100% ..., not 100%": the pools' areas were summed and capped at 1, so with the
+   *  jar lanterns lit the sum passed the field's area long before the light really covered it (the pools overlap and
+   *  spill off the edges), and every Long Wicks level read 100% -> 100%. Cached per plan */
+  const POOLCOV = new Map();
+  function poolCover(L) {
+    const key = L.n + ':' + L.r + ':' + L.pw + ':' + L.pr + ':' + G.fieldD0 + ':' + G.fieldD1; let v = POOLCOV.get(key); if (v != null) return v;
+    const P = DARK_SPOTS.slice(0, L.n).map(([a, f], i) => { const q = G.toXY(a, fieldD(f)), r = i < L.pw ? L.pr : L.r; return [q.x, q.y, r * r]; });
+    const NX = 60, NY = 80; let hit = 0;
+    for (let i = 0; i < NX; i++) for (let j = 0; j < NY; j++) {
+      const q = G.toXY(G.a0 + (i + 0.5) / NX * (G.a1 - G.a0), G.fieldD0 + (j + 0.5) / NY * (G.fieldD1 - G.fieldD0));
+      for (const p of P) { const dx = q.x - p[0], dy = q.y - p[1]; if (dx * dx + dy * dy < p[2]) { hit++; break; } }
+    }
+    v = hit / (NX * NY); if (POOLCOV.size > 200) POOLCOV.clear(); POOLCOV.set(key, v); return v;
   }
   /** a ball picked up in the light pays litBonusFrac x a swing on top, with an amber "+x" (rat and beetles alike) */
   /** +frac of a swing for a lit pickup: the range's lantern bonus + the firefly swarm's perk (lit balls +10%; it was sim-only before) */
@@ -29098,7 +29149,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const bindCard = () => {
       m.querySelectorAll('[data-buy]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); const [, ...rest] = b.dataset.buy.split(':'); if (buyAsst(rest.join(':'), b)) refresh(true); }));
       m.querySelectorAll('[data-rest]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); setAsstRest('pip', b.dataset.rest === '1'); refresh(true); try { m.querySelector(`[data-rest="${b.dataset.rest}"]`).focus({ preventScroll: true }); } catch (er) { /* ignore */ } }));
-      const x = m.querySelector('[data-x]'); if (x) x.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeModal(); });
+      const x = m.querySelector('[data-x]'); if (x && !x._rrBound) { x._rrBound = true; x.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeModal(); }); } // the ✕ outlives the card's re-renders: bound once
     };
     const refresh = (force) => {
       if (!modal || modal.m !== m) { asstCard = null; return; }
@@ -31154,7 +31205,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     }
     for (const b of world.balls) if (b.type === 'glow' && b._rl && RL.map.has(b) && !b.demo && !M.has(b)) { const x = b.x, y = b.y - b.z; M.set(b, [x, y]); cut(x, y); (dirty || (dirty = [])).push([x - R8 - 1, y - R8 - 1, 2 * R8 + 2, 2 * R8 + 2]); }
     q.globalCompositeOperation = 'source-over';
-    c._dirty = dirty; return c;
+    c._dirty = dirty; return c; // the light layer copies these squares this frame (a lite frame with any is never skipped)
   }
   function blob(g, kind, x, y, rx, ry, a) {
     if (!(a > 0.004)) return;
@@ -31435,6 +31486,13 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         }
         if (game && !isOpen()) blob(m, 'white', 105, 48, 10, 8, 0.7);
         m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = 'source-over';
+        // the lamplight alone (what the mask is where its darkness is cut right out): the rat's light gives it back (below)
+        if (world.pools && world.pools.length) {
+          const wc = backingCanvas('warmC'), w2 = wc.getContext('2d'); w2.setTransform(1, 0, 0, 1, 0, 0); w2.globalCompositeOperation = 'source-over'; w2.clearRect(0, 0, wc.width, wc.height);
+          for (const pl of world.pools) blob(w2, 'pool', pl.x, pl.y, pl.r * 1.08, pl.r * 1.08, 0.36);
+          w2.globalCompositeOperation = 'source-atop'; for (const pl of world.pools) blob(w2, pl.pw ? 'gold' : 'amber', pl.x, pl.y, pl.r * 1.1, pl.r * 1.1, 1);
+          w2.globalCompositeOperation = 'source-over'; mc._warm = wc;
+        } else mc._warm = null;
       }
       // per frame: copy the static mask, cut the moving lights (rat, glow balls, lamp beetles, flickering lamps), blit once
       // perf (2026-11-07): the resting glow balls' light is cut once into a cached copy of the mask (src), kept in step ball by
@@ -31446,7 +31504,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       // perf: copy the whole mask only when it changed; otherwise restore just last frame's cut rectangles from it
       // (1:1 integer-rect copies, so the layer is pixel-identical to a full copy at a quarter of the fill area)
       // Graphics level >= 2 (lite): the moving lights are re-cut every other frame (30 Hz); the layer is reused in between
-      const liteSkip = GFX.lite && lc._mk === src._key && !!lc._rects && (AMB.liteFlip = !AMB.liteFlip);
+      // Ben 2026-11-07 ("the lights got a lot more intense"): a frame where the cached glow mask changed is never skipped. A
+      // skipped frame's changed squares were never copied into the layer, so a gone ball's hole stayed cut and the field
+      // washed out to yellow over a few minutes (and the rat, whose square is re-copied every frame, sat in a darker disc)
+      const liteSkip = GFX.lite && !(src !== mc && src._dirty) && lc._mk === src._key && !!lc._rects && (AMB.liteFlip = !AMB.liteFlip);
       if (!liteSkip) {
       if (src !== mc && src._dirty && lc._rects) { for (const r of src._dirty) lc._rects.push(r[0], r[1], r[2], r[3]); } // squares the cached mask changed this frame
       if (src !== mc) src._dirty = null;
@@ -31462,8 +31523,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       l2.globalCompositeOperation = 'destination-out';
       lampHoles(l2, false);
       { const lr = game ? swarmDef().lightRadius : 0; if (lr) for (const r of world.robots) blob(l2, 'white', r.x, r.y - 3, lr * 1.3, lr * 1.3, 0.9); }
-      if (p && game) { blob(l2, 'white', p.x, p.y - 4, th.night ? 20 : 15, th.night ? 20 : 15, th.night ? 0.85 : 0.6); torchCut(l2, p); }
       for (const b of world.balls) if (b.type === 'glow' && !(src !== mc && GLM.map.has(b))) blob(l2, 'white', b.x, b.y - b.z, 8, 8, 0.85); // resting ones: in src
+      // the rat's light last: its lamplight give-back (a 'lighter' add) must come after every cut, so the cached glow mask
+      // and the live draw (STAMPS off) give the same picture (cuts commute with each other, not with the add)
+      if (p && game) ratLight(l2, mc._warm, (q) => { blob(q, 'white', p.x, p.y - 4, th.night ? 20 : 15, th.night ? 20 : 15, th.night ? 0.85 : 0.6); torchCut(q, p); }, { x: p.x, y: p.y - 5, r: 11 });
       l2._rects = null;
       l2.setTransform(1, 0, 0, 1, 0, 0); l2.globalCompositeOperation = 'source-over';
       } // !liteSkip
@@ -31587,6 +31650,20 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function torchGeo(p) {
     const s = 1 + 0.03 * Math.min(jarState().total | 0, 10), bob = p.moving && !reducedMotion() ? Math.sin(renderMs / 110) : 0;
     return { s, c: Math.cos(TORCH.a), sn: Math.sin(TORCH.a), bob, hx: Math.round(p.x + (p.flip ? -4 : 3)), hy: Math.round(p.y - 8 + bob) };
+  }
+  /** the rat's own light (and his torch): cut into the night layer l2, and where it falls inside a lantern pool, the pool's
+   *  lamplight comes back: the layer becomes M x (1 - c) + W x c (M the mask, W the lamplight alone, c the cut), so his light
+   *  only ever brightens. Ben 2026-11-07 ("a dark area around my guy"): a plain cut took the warm lamplight baked into the
+   *  mask out with the darkness, so in a lit pool he (and his torch cone) sat in a cooler, darker patch */
+  function ratLight(l2, warm, draw, body) {
+    draw(l2); if (!warm) return;
+    const t = backingCanvas('ratLightC'), q = t.getContext('2d'); q.setTransform(1, 0, 0, 1, 0, 0);
+    q._rects = []; q.globalCompositeOperation = 'source-over'; draw(q); const bb = rectsBBox(q._rects, 1); q._rects = null;
+    if (!bb) return;
+    q.globalCompositeOperation = 'source-in'; q.drawImage(warm, bb[0], bb[1], bb[2], bb[3], bb[0], bb[1], bb[2], bb[3]); // W x c
+    if (body) { q.globalCompositeOperation = 'destination-out'; blob(q, 'white', body.x, body.y, body.r, body.r, 0.9); } // he himself stays in his own clear light (readable, not washed amber)
+    const op = l2.globalCompositeOperation; l2.globalCompositeOperation = 'lighter'; l2.drawImage(t, bb[0], bb[1], bb[2], bb[3], bb[0], bb[1], bb[2], bb[3]); l2.globalCompositeOperation = op;
+    q.globalCompositeOperation = 'source-over'; q.clearRect(bb[0], bb[1], bb[2], bb[3]);
   }
   function torchCut(l2, p) {
     if (TORCH.k < 0.02) return; const T = torchGeo(p), k = TORCH.k;
@@ -32987,7 +33064,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-ledgerset .rr-btn[aria-pressed=true],.rr-ledgerset .rr-btn[aria-checked=true]{border-color:var(--rr-gold);color:var(--rr-gold)!important;background:#5a3e14}
 .rr-ledgerres{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:calc(14px*var(--rr-fs))}
 .rr-asstcard{text-align:left}
-.rr-assthead{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.rr-assthead{display:flex;align-items:center;gap:10px;margin-bottom:4px}.rr-assthead>div{flex:1 1 auto;min-width:0}
 .rr-asstpic{width:56px;height:56px;object-fit:contain;image-rendering:pixelated;background:#3a2a20;border-radius:10px;flex:0 0 auto}
 .rr-asstcard h2{margin:0;text-align:left}.rr-asstcard h2 small{font-size:calc(14px*var(--rr-fs));color:var(--rr-text2);font-family:var(--rr-font-body,inherit)}
 .rr-asstcard .rr-asstwho{margin:2px 0 0;font-size:calc(14px*var(--rr-fs));color:var(--rr-text2);font-style:italic}
@@ -34998,6 +35075,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     m.querySelectorAll('button[data-x]').forEach((b) => {
       if (b.classList.contains('rr-modalx') || b.textContent.trim() !== lbl) return;
       const row = b.parentNode;
+      // one ✕ per modal. Ben 2026-11-07: a card that re-renders its body (Pip's, after every buy) brought a fresh Close
+      // button each time and each became another ✕, until seven squeezed his name to "Pi". The ✕ already there stays
+      // (its click handler, focus and place); the new Close goes
+      if (m.querySelector(':scope > .rr-modalx')) { b.remove(); if (row && row !== m && !row.children.length) row.remove(); return; }
       b.className = 'rr-iconbtn rr-modalx'; b.textContent = '✕'; b.setAttribute('aria-label', lbl); b.removeAttribute('data-i18n'); b.setAttribute('data-i18n-aria', 'ui.close');
       m.insertBefore(b, m.firstChild); m.classList.add('rr-has-x');
       if (row && row !== m) { if (!row.children.length) row.remove(); else if (row.children.length === 1 && row.style.display === 'grid') row.style.gridTemplateColumns = '1fr'; }

@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-08-bcb95a33-bb26a7dd">
+<meta name="rr-pwa" content="2026-11-09-73402fab-d46f4c34">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-08-bcb95a33">
+<meta name="range-rat-build" content="2026-11-09-73402fab">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-bcb95a33", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-09-73402fab", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-bcb95a33", "builtAt": "2026-11-08T22:13:47Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-09-73402fab", "builtAt": "2026-11-08T23:15:59Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -24564,6 +24564,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // balls a golfer has taken from stock but not yet hit live nowhere else: count them back in the saved copy only
     if (mode === 'game' && world.ready) for (const g of world.golfers) if (g && g.reserved) o.stock = (o.stock | 0) + 1;
     if (mode === 'game' && world.ready && world.pip) o.stock = (o.stock | 0) + (world.pip.hop.range | 0) + (world.pip.hop.glow | 0); // Pip's armful (he starts empty after a load)
+    if (mode === 'game' && world.ready) o.stock = (o.stock | 0) + duckBalls(); // the ducklings' balls (late QA 2026-11-09)
     return o;
   }
   function serialize() { return JSON.stringify(snapshot()); }
@@ -29805,7 +29806,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function asstWhen(r) {
     const o = (r && r.opens) || {};
     if (o.tier) return tx('asst.when.tier', 'Arrives with the first members\' bay');
-    if (o.range) { const nm = rangeName(o.range); return o.at ? tx('asst.when.rangeAt', 'Arrives at {name}, {n}% in', { name: nm, n: Math.round(o.at * 100) }) : tx('asst.when.range', 'Arrives at {name}', { name: nm }); }
+    // late QA 2026-11-09: a range nobody has seen yet isn't named (the shop at Oakridge said "Arrives at Gullhaven Links"
+    // while Coming up still shows ???): "Arrives later" until it's revealed
+    if (o.range) { const ix = rIdx(o.range); if (ix >= 0 && !rangeKnown(ix)) return tx('asst.when.later', 'Arrives later'); const nm = rangeName(o.range); return o.at ?tx('asst.when.rangeAt', 'Arrives at {name}, {n}% in', { name: nm, n: Math.round(o.at * 100) }) : tx('asst.when.range', 'Arrives at {name}', { name: nm }); }
     return tx('asst.when.later', 'Arrives later');
   }
   /** the shop's Assistants section: Pip's row (Hire, or his level and Card), then the silhouettes of the ones to come */
@@ -33095,7 +33098,12 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (!state) return;
     for (const g of world.golfers) if (g && g.reserved) { g.reserved = false; state.stock++; }
     const P = world.pip; if (P && P.hopN > 0) { state.stock += (P.hop.range | 0) + (P.hop.glow | 0); for (const t in P.hop) P.hop[t] = 0; P.hopN = 0; } // Pip's armful goes back in the house when the world is replaced
+    // late QA 2026-11-09: the ducklings' balls too. Leaving Lily Lagoon mid-parade (a visit) stashed the range without them, and
+    // initMechanic's paradeEnd then flew them into the next range's ball house (Oakridge 44 balls of 42)
+    const D = world.ducks; if (D && Array.isArray(D.kids)) for (const k of D.kids) if (k.ball) { if (!SPECIAL_IDS.includes(k.ball.type)) state.stock++; k.ball = null; }
   }
+  /** the balls the ducklings carry now (a save counts them in the house, as Pip's armful: the parade starts empty after a load) */
+  function duckBalls() { const D = world.ducks; let n = 0; if (D && Array.isArray(D.kids)) for (const k of D.kids) if (k.ball && !SPECIAL_IDS.includes(k.ball.type)) n++; return n; }
   function resetGolferLife() { AMB.leavers = []; AMB.arrivals = []; AMB.deck.quiet = true; AMB.deck.on = false; }
 
   // ===================================================================== §I3 LIVING RANGE (owner: "I really want the environment to feel like it's live and lived in")
@@ -42951,7 +42959,9 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   function sprCanvas(name, frame, swap) {
     const key = name + ':' + (frame || 0) + ':' + (swap || ''); if (sprC[key] !== undefined) return sprC[key];
     const S = W.SPRITES, sp = S && S.sprites && S.sprites[name]; if (!sp) return (sprC[key] = null);
-    const r = sp.res > 1 ? sp.res | 0 : 1, pl = sp.pal || S.palette, fr = sp.frames[(frame || 0) % sp.frames.length], sw = swap && S.swaps && S.swaps[swap];
+    // swap: one key or several joined by '+' (the rat's look, then its outfit), merged in order as the engine's getSprite does
+    let sw = null; if (swap && S.swaps) for (const k of String(swap).split('+')) { const m = S.swaps[k]; if (isObj(m)) { sw = sw || {}; for (const f in m) sw[f] = m[f]; } }
+    const r = sp.res > 1 ? sp.res | 0 : 1, pl = sp.pal || S.palette, fr = sp.frames[(frame || 0) % sp.frames.length];
     const rows = Array.isArray(fr) ? fr : (fr && fr.rows) || [];
     const c = D.createElement('canvas'); c.width = sp.w * r; c.height = sp.h * r; const g = pixG(c);
     for (let y = 0; y < sp.h * r; y++) { const row = rows[y] || ''; for (let x = 0; x < sp.w * r; x++) { const ch = row[x]; if (!ch || ch === '.') continue; let i = pl.length > 32 ? ALPHA64.indexOf(ch) : -1; if (i < 0) i = ALPHA.indexOf(ch); if (sw && sw[i] != null) i = sw[i]; const col = pl[i]; if (!col) continue; g.fillStyle = col; g.fillRect(x, y, 1, 1); } }
@@ -42965,8 +42975,14 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     frames.forEach((f, i) => { const fc = sprCanvas(name, f, swap); if (!fc) return; if (flip) { g.save(); g.translate((i + 1) * sp.w * s, 0); g.scale(-1, 1); g.drawImage(fc, 0, 0, sp.w * s, sp.h * s); g.restore(); } else g.drawImage(fc, i * sp.w * s, 0, sp.w * s, sp.h * s); });
     try { return (urls[key] = c.toDataURL()); } catch (e) { return (urls[key] = ''); }
   }
-  /** the rat's outfit (the Tailor's work shows on the street) */
-  function ratSwap() { try { const o = R.state.cos && R.state.cos.equipped && R.state.cos.equipped.outfit, k = o && 'outfit_' + o; return k && W.SPRITES.swaps && W.SPRITES.swaps[k] ? k : ''; } catch (e) { return ''; } }
+  /** the rat's look and outfit (the Tailor's work shows on the street). Late QA 2026-11-09: the look (Conker / Cream / Soot,
+   *  Style > Look in the Tailor) was left out, so every rat walked the street as the Dusty one; the engine's playerSwapKey order */
+  function ratSwap() {
+    try {
+      const sw = (W.SPRITES && W.SPRITES.swaps) || {}, st = R.state, lk = 'rat_' + ((st.profile && st.profile.look) || 'dusty'), o = st.cos && st.cos.equipped && st.cos.equipped.outfit, ok = o && 'outfit_' + o;
+      return [sw[lk] ? lk : '', ok && sw[ok] ? ok : ''].filter(Boolean).join('+');
+    } catch (e) { return ''; }
+  }
   /** the backdrop, one small canvas in art px shown at p: sky, the range far off, rooftops, pavement, kerb, cobbles, lamps */
   let bgCv = null;
   /** the backdrops drawn (by what they're drawn from: the street's rows and slots, the range, the grade), so a re-lay that
@@ -44013,7 +44029,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     D.addEventListener('visibilitychange', () => { if (D.hidden) lifeStop(); else lifeKick(); }); // town life: no frames in a hidden tab
     try { new MutationObserver(() => ensureHudBtn()).observe(E.hud, { childList: true }); } catch (e) { /* ignore */ }
     ensureHudBtn();
-    for (const ev of ['instalment', 'prestige', 'rangeBought', 'visit', 'chest', 'chestOpen', 'buy', 'equip', 'locale', 'unlocked', 'trialFreePlay']) R.on(ev, () => { dirty = true; if (showing) setTimeout(() => { renderScene(false); renderChrome(false); }, 0); }); // the street's signature decides: nothing visible changed, nothing is touched
+    for (const ev of ['instalment', 'prestige', 'rangeBought', 'visit', 'chest', 'chestOpen', 'buy', 'equip', 'ratLook', 'locale', 'unlocked', 'trialFreePlay']) R.on(ev, () => { dirty = true; if (showing) setTimeout(() => { renderScene(false); renderChrome(false); }, 0); }); // the street's signature decides: nothing visible changed, nothing is touched
     R.on('screen', () => { if (R.mode !== 'game' && showing) close(true); });
     W.addEventListener('resize', () => { if (!showing) return; if (layClass() !== lastLay) relayout(); else { place(); setTimeout(() => { sceneSig = ''; renderScene(true); }, 60); } });
     // no timer while the town is closed (Low CPU): what opens a building is an engine event (a part paid, a range bought or

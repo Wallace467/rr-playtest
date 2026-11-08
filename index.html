@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-07-7849d635-6bc3947c">
+<meta name="rr-pwa" content="2026-11-08-5efa85bf-9968770f">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-07-7849d635">
+<meta name="range-rat-build" content="2026-11-08-5efa85bf">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-07-7849d635", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-5efa85bf", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-07-7849d635", "builtAt": "2026-11-07T12:36:46Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-5efa85bf", "builtAt": "2026-11-08T16:49:52Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -37196,6 +37196,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       unlockAch(id) { if (mode !== 'game') return null; const a = B.achievements.find((x) => x.id === id && !state.ach[x.id]) || (id ? null : B.achievements.find((x) => !state.ach[x.id])); if (!a) return null; unlockAchievement(a); save(); return a.id; }
     },
     getStats, getShop,
+    /** ui/town.js (town life, 2026-11-07): the current range's day clock, cheap enough to read 12 times a second. t: state.dayT
+     *  in game s; D / f / C: day length, dusk fade, whole cycle (dnTimes); lights 0..1 (lightsLevel: how far the evening lamps
+     *  have come on); fixed: always night (Firefly Bays, a night lap); wind: the range's wind across the screen (world.wind.x,
+     *  0 off Oakridge); cycle: which day it is (a new night, a new owl) */
+    dayClock() {
+      if (!state) return null; const t = dnTimes();
+      return { t: state.dayT, D: t.D, f: t.f, C: t.C, N: t.N, fixed: alwaysNight(), night: isNight(), lights: lightsLevel(), wind: (world.wind && +world.wind.x) || 0, cycle: Math.floor((+state.stats.playSeconds || 0) / t.C) };
+    },
     /** ui/layout.js letterbox: a coarse key for how the scene's colours look right now (screen, range, sky, night grade,
      *  lamps, golden-hour wash). It changes only while the light is changing (dusk, dawn, a range or screen switch), so
      *  the layout re-samples the field's edge colours then and never in steady day or night (round 4: the side bands
@@ -40987,7 +40995,9 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
  * Perf: the street is redrawn only when something on it changes (layout size, open / New / ready, day / night, the
  * language); while it shows, the acorns tick at 4 Hz (text only when it changes). The ambient layer ([data-rt=amb]): now and
  * then one passer-by walks along the road (a transform + a 2-frame strip, gone when it's across; none with Less motion), and
- * the rat walks to the shop you go into. Nothing runs per frame otherwise. Desk mode: no town (a toast).
+ * the rat walks to the shop you go into. Town life (2026-11-07: lights, stars, smoke, birds, a cat... see "town life" below)
+ * draws on its own two canvases at 12 fps while the street shows (no DOM changes; nothing at all with Less motion, in a
+ * hidden tab or under a building's sheet). Desk mode: no town (a toast).
  * API: window.RANGE_RAT_TOWN = { open(at), close(), toggle(), openAgent(), showing, panel, isOpen(k), iconURL(s), hooks,
  *   signs(), state(), residents() (the assistants who'll have houses: DECISIONS 48, later phase), name(), passBy() }.
  */
@@ -41039,16 +41049,22 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   // (bold black outline, medium shading, the warm muted palette of art/sprites.js). Final art is requested from PixelLab in
   // art/requests/15-town.json; these stand in until it lands (same sizes, same sign boards).
   const K0 = '#2a1c16', NIGHT = '#1f2947';
+  // the evening skies (master palette: lilac, pink, fox / sea, lilac, pink), top band to horizon
+  const SKY_DUSK = ['#4a2f63', '#b76a6f', '#f7a052'], SKY_DAWN = ['#2f5486', '#b98fcf', '#f9d2c2'];
   /** mix two #rrggbb colours (t: 0 = a, 1 = b) */
   function mix(a, b, t) {
     const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
     const ch = (sh) => Math.round(((pa >> sh) & 255) * (1 - t) + ((pb >> sh) & 255) * t);
     return '#' + ((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1);
   }
-  /** a painter on an art-pixel grid at scale s. Night tints every colour towards the night sky, except lights (lit) */
+  /** the street's light grade: 'day', 'dusk' / 'dawn' (the evening lights come on: a lilac wash) or 'night' (true = 'night') */
+  const GRADE = { night: [NIGHT, 0.42], dusk: ['#4a2f63', 0.2], dawn: ['#4a2f63', 0.2] };
+  const tints = {};
+  /** a colour under a grade (cached): outlines and lights keep their colour */
+  function graded(c, mode) { const G = GRADE[mode === true ? 'night' : mode]; if (!G || c === K0) return c; const k = mode + c; return tints[k] || (tints[k] = mix(c, G[0], G[1])); }
+  /** a painter on an art-pixel grid at scale s. The grade tints every colour (night: towards the night sky), except lights (lit) */
   function painter(g, s, night) {
-    const tint = {};
-    const nc = (c) => (!night || c === K0 ? c : (tint[c] || (tint[c] = mix(c, NIGHT, 0.42))));
+    const nc = (c) => graded(c, night);
     const r = (x, y, w, h, c) => { if (w <= 0 || h <= 0) return; g.fillStyle = nc(c); g.fillRect(x * s, y * s, w * s, h * s); };
     const lit = (x, y, w, h, c) => { if (w <= 0 || h <= 0) return; g.fillStyle = c; g.fillRect(x * s, y * s, w * s, h * s); };
     const ol = (x, y, w, h, c) => { r(x, y, w, h, K0); r(x + 1, y + 1, w - 2, h - 2, c); };
@@ -41062,14 +41078,19 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     tailor: { w: 38, h: 60, sign: { x: 3, y: 37, w: 32, h: 6 }, ink: '#efdfb6', door: 30 },
     club: { w: 44, h: 62, sign: { x: 3, y: 40, w: 38, h: 6 }, ink: '#2f4a26', door: 35 }
   };
-  /** a shop front: kind 'agent' | 'tailor' | 'club'; open (else shutters down); night (lights on in an open shop) */
-  function facadeURL(kind, s, open, night) {
-    const key = 'f:' + kind + ':' + (open ? 1 : 0) + (night ? 'n' : 'd') + '@' + s; if (urls[key] != null) return urls[key];
-    const F = FAC[kind], c = D.createElement('canvas'); c.width = F.w * s; c.height = F.h * s; const g = c.getContext('2d');
-    const { r, lit, ol, map } = painter(g, s, night);
-    /** a pane: day = the sky in it and a glint; night = warm light (open) or dark */
+  /** a shop front: kind 'agent' | 'tailor' | 'club'; open (else shutters down); mode: the grade ('day' | 'dusk' | 'dawn' |
+   *  'night'). The windows are dark at night (town life lights them one by one, copying the panes from the lit = 1 picture, or
+   *  lit = 2 for a candle's low flicker). bare: without the parts town life animates (the Tailor's moth sign, the flower heads) */
+  const facC = {};
+  function facadeCanvas(kind, s, open, mode, litW, bare) {
+    if (mode === true) mode = 'night'; else if (!mode) mode = 'day';
+    const key = 'f:' + kind + ':' + (open ? 1 : 0) + mode + (litW | 0) + (bare ? 'b' : '') + '@' + s; if (facC[key]) return facC[key];
+    const night = mode === 'night', F = FAC[kind], c = D.createElement('canvas'); c.width = F.w * s; c.height = F.h * s; const g = c.getContext('2d');
+    const { r, lit, ol, map } = painter(g, s, mode);
+    /** a pane: day = the sky in it and a glint; lit = warm light (2: a candle's low glow); night = dark */
     const glass = (x, y, w, h, back) => {
-      if (night && open) { lit(x, y, w, h, '#f2c641'); lit(x + 1, y, w - 2, h - 1, '#fff2a6'); lit(x, y + h - 1, w, 1, '#e8892c'); return; }
+      if (litW === 1) { lit(x, y, w, h, '#f2c641'); lit(x + 1, y, w - 2, h - 1, '#fff2a6'); lit(x, y + h - 1, w, 1, '#e8892c'); return; }
+      if (litW === 2) { lit(x, y, w, h, '#e8892c'); lit(x + 1, y, w - 2, h - 1, '#f2c641'); lit(x, y + h - 1, w, 1, '#b98a2c'); return; }
       if (night) { lit(x, y, w, h, '#27365f'); lit(x, y, w, 1, '#1f2947'); return; }
       if (!open) { r(x, y, w, h, '#565c64'); r(x, y, w, 1, '#383b43'); return; }
       if (back) { r(x, y, w, h, back); r(x, y, w, 1, mix(back, K0, 0.35)); for (let i = 0; i < Math.min(3, h); i++) r(x + w - 2 - i, y + i, 1, 1, mix(back, '#fffaee', 0.45)); return; } // a shop window: the inside, one glint
@@ -41090,7 +41111,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       }
     };
     /** a window box of flowers along y, x0..x0+w */
-    const flowers = (x0, y, w) => { ol(x0, y, w, 3, '#7d5636'); r(x0 + 1, y + 1, w - 2, 1, '#a0703f'); for (let i = 0; i < w - 2; i++) r(x0 + 1 + i, y - 1, 1, 1, i % 3 === 1 ? (i % 2 ? '#f2c641' : '#c9473b') : '#6b8b3c'); for (let i = 1; i < w - 2; i += 3) r(x0 + 1 + i, y - 2, 1, 1, '#6b8b3c'); };
+    const flowers = (x0, y, w) => { ol(x0, y, w, 3, '#7d5636'); r(x0 + 1, y + 1, w - 2, 1, '#a0703f'); if (bare) return; for (let i = 0; i < w - 2; i++) { r(x0 + 1 + i, y - 1, 1, 1, i % 2 ? '#3d5a2e' : '#6b8b3c'); if (i % 3 === 2) r(x0 + 1 + i, y - 2, 1, 1, '#6b8b3c'); if (i % 3 === 1) r(x0 + 1 + i, y - 2, 1, 1, FLOWER_HEADS[(i / 3 | 0) % 3]); } }; // the rest frame of town life's nodding flowers
     /** an awning: stripes a / b on rows y..y+2, scallops on y+3 */
     const awning = (x0, w, y, a, b) => {
       r(x0, y - 1, w, 1, K0); r(x0, y, 1, 3, K0); r(x0 + w - 1, y, 1, 3, K0);
@@ -41138,15 +41159,15 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       // chimney, the slate mansard, a round window
       ol(5, 2, 6, 10, '#9a4a2a'); r(4, 1, 8, 2, K0); r(5, 1, 6, 1, '#6f6059'); r(6, 5, 2, 1, '#5c1d25'); r(8, 8, 2, 1, '#5c1d25');
       roof(0, 38, 6, 19, 8, '#3b5488', '#27365f', '#5b80b6');
-      const gc = night && open ? '#fff2a6' : night ? '#27365f' : open ? '#8eb0d8' : '#565c64';
+      const gc = litW === 1 ? '#fff2a6' : litW === 2 ? '#f2c641' : night ? '#27365f' : open ? '#8eb0d8' : '#565c64';
       map(16, 9, ['..kkk..', '.kccck.', 'kcgggck', 'kcgcgck', 'kcgggck', '.kccck.', '..kkk..'], { k: K0, c: '#efdfb6', g: gc });
-      if (night && open) { lit(18, 11, 3, 1, '#fff2a6'); lit(18, 13, 3, 1, '#fff2a6'); }
+      if (litW) { const lc = litW === 1 ? '#fff2a6' : '#f2c641'; lit(18, 11, 3, 1, lc); lit(18, 12, 1, 1, lc); lit(20, 12, 1, 1, lc); lit(18, 13, 3, 1, litW === 1 ? '#f2c641' : '#e8892c'); } // lights aren't graded; a warm foot as the square panes
       // eaves, the pink plaster storey, the moth on its bracket, the upper window with curtains
       r(0, 19, 38, 1, K0); r(0, 20, 38, 1, K0); r(1, 20, 36, 1, '#7d5636');
       r(1, 21, 36, 14, K0); r(2, 21, 34, 14, '#e8a193'); r(2, 21, 34, 1, '#b76a6f');
       for (const [x, y] of [[16, 26], [18, 31], [4, 33], [34, 23]]) r(x, y, 1, 1, '#f9d2c2');
       r(1, 23, 14, 1, K0); r(14, 22, 1, 2, K0); r(3, 24, 1, 1, '#565c64'); r(12, 24, 1, 1, '#565c64');
-      map(1, 24, ['...k.....k...', '....k...k....', 'kkk...b...kkk', 'kwwk.bbb.kwwk', 'kwowkbbbkwowk', 'kwwwwbbbwwwwk', '.kwwkbbbkwwk.', '..kk..b..kk..'],
+      if (!bare) map(1, 24, ['...k.....k...', '....k...k....', 'kkk...b...kkk', 'kwwk.bbb.kwwk', 'kwowkbbbkwowk', 'kwwwwbbbwwwwk', '.kwwkbbbkwwk.', '..kk..b..kk..'],
         { k: K0, w: '#d6c3a0', o: '#e8892c', b: '#7d5636' });
       ol(20, 23, 13, 10, '#efdfb6'); glass(21, 24, 11, 8); r(26, 24, 1, 8, '#efdfb6');
       if (open) { r(21, 24, 2, 8, '#c9473b'); r(30, 24, 2, 8, '#c9473b'); r(22, 24, 1, 8, '#e8a193'); r(30, 24, 1, 8, '#86292b'); }
@@ -41198,7 +41219,12 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       if (open) { glass(32, 53, 6, 3); r(31, 57, 4, 3, '#263d2b'); r(36, 57, 3, 3, '#263d2b'); r(35, 52, 1, 8, K0); r(34, 56, 1, 1, '#f2c641'); r(36, 56, 1, 1, '#f2c641'); } else shut(30, 52, 10, 8);
       r(0, 61, 44, 1, K0); r(28, 60, 14, 2, K0); r(29, 60, 12, 1, '#cdd5dc');
     }
-    try { return (urls[key] = c.toDataURL()); } catch (e) { return (urls[key] = ''); }
+    return (facC[key] = c);
+  }
+  /** the shop front the street shows: windows dark, the live parts left to town life when it's open */
+  function facadeURL(kind, s, open, mode) {
+    const key = 'f:' + kind + ':' + (open ? 1 : 0) + mode + '@' + s; if (urls[key] != null) return urls[key];
+    try { return (urls[key] = facadeCanvas(kind, s, open, mode, 0, open).toDataURL()); } catch (e) { return (urls[key] = ''); }
   }
   /** a range's scenery thumbnail (the Journal's road uses the same idea: ui/layout.js rangeArtURL) */
   function rangeArtURL(id, s) {
@@ -41308,7 +41334,10 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
 #rr-town .rt-rat,#rr-town .rt-walker{position:absolute;left:0;pointer-events:none;background-repeat:no-repeat;image-rendering:pixelated}
 #rr-town .rt-rat{left:auto}
 #rr-town .rt-night .rt-rat,#rr-town .rt-night .rt-gusp,#rr-town .rt-night .rt-walker{filter:brightness(.72) saturate(.8)}
-#rr-town .rt-amb{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#rr-town .rt-amb{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+#rr-town .rt-life{position:absolute;left:0;top:0;z-index:1;pointer-events:none} /* town life: over the shop fronts, under their names, tags, Gus and the rat */
+#rr-town .rt-sign,#rr-town .rt-tag,#rr-town .rt-new,#rr-town .rt-arrow,#rr-town .rt-gusp,#rr-town .rt-rat,#rr-town .rt-post{z-index:2}
+#rr-town .rt-dusk .rt-rat,#rr-town .rt-dusk .rt-gusp,#rr-town .rt-dusk .rt-walker{filter:brightness(.88) saturate(.9)}
 #rr-town .rt-bld{position:absolute;display:block;padding:0;margin:0;border:0;background:none;color:inherit;cursor:pointer;font:inherit;outline:none;-webkit-tap-highlight-color:transparent}
 #rr-town .rt-fac{position:absolute;top:0;display:block}
 #rr-town .rt-fac img{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
@@ -41565,29 +41594,30 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   function ratSwap() { try { const o = R.state.cos && R.state.cos.equipped && R.state.cos.equipped.outfit, k = o && 'outfit_' + o; return k && W.SPRITES.swaps && W.SPRITES.swaps[k] ? k : ''; } catch (e) { return ''; } }
   /** the backdrop, one small canvas in art px shown at p: sky, the range far off, rooftops, pavement, kerb, cobbles, lamps */
   let bgCv = null;
-  function drawStreet(el, S, rid, night, lights) {
-    const { p, lw, lh, Yb, kerbY, roadY, roadH, vergeY } = S;
+  function drawStreet(el, S, rid, mode) {
+    const { p, lw, lh, Yb, kerbY, roadY, roadH, vergeY } = S, night = mode === 'night', eve = mode === 'dusk' || mode === 'dawn';
     const cv = bgCv || (bgCv = D.createElement('canvas'));
     if (cv.width !== lw || cv.height !== lh) { cv.width = lw; cv.height = lh; }
     el.style.width = lw * p + 'px'; el.style.height = lh * p + 'px'; el.style.backgroundSize = lw * p + 'px ' + lh * p + 'px';
     const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, lw, lh);
-    const { r, lit, ol } = painter(g, 1, night);
+    const { r, lit, ol } = painter(g, 1, mode);
     const th = (W.SPRITES && W.SPRITES.themes && W.SPRITES.themes[rid]) || {};
     let seed = 0; for (const ch of 'puddleford' + rid) seed = (seed * 31 + ch.charCodeAt(0)) % 2147483647; seed = seed || 7;
     const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-    // 1) sky: three bands with a dithered seam; stars by night, a cloud or two by day
+    // 1) sky: three bands with a dithered seam; a cloud or two by day (the stars and the moon are town life's: they come out)
     const backTop = Yb - TALL - Math.max(2, Math.min(9, Math.round((Yb - TALL) * 0.3))), hz = backTop + 4;
-    const skyC = th.sky || '#b9c2a4', bands = night ? ['#1f2947', '#27365f', '#3b5488'] : [mix(skyC, '#6a9fcb', 0.28), skyC, mix(skyC, '#fffaee', 0.35)];
+    const skyC = th.sky || '#b9c2a4', bands = night ? ['#1f2947', '#27365f', '#3b5488'] : mode === 'dusk' ? SKY_DUSK : mode === 'dawn' ? SKY_DAWN : [mix(skyC, '#6a9fcb', 0.28), skyC, mix(skyC, '#fffaee', 0.35)];
     const b1 = Math.round(hz * 0.4), b2 = Math.round(hz * 0.75);
     lit(0, 0, lw, b1, bands[0]); lit(0, b1, lw, b2 - b1, bands[1]); lit(0, b2, lw, Yb - b2, bands[2]);
     for (const [y, c] of [[b1, bands[0]], [b2, bands[1]]]) for (let x = (y & 1); x < lw; x += 2) lit(x, y, 1, 1, c);
-    if (night) { for (let i = 0; i < lw * hz / 90; i++) { const x = rnd() * lw | 0, y = rnd() * (hz - 4) | 0; lit(x, y, 1, 1, rnd() < 0.3 ? '#fff2a6' : '#cdd5dc'); } if (hz > 14) { const mx = Math.round(lw * 0.8), my = Math.max(3, Math.round(hz * 0.25)); lit(mx, my, 4, 4, '#fff2a6'); lit(mx - 1, my + 1, 1, 2, '#fff2a6'); lit(mx + 4, my + 1, 1, 2, '#fff2a6'); lit(mx + 2, my, 2, 2, '#e8c47f'); } }
-    else if (hz > 16) for (let i = 0, n = Math.max(2, Math.round(lw / 70)); i < n; i++) { // clouds, spread across
+    S.sky = { hz, b1, b2, bands };
+    if (!night && hz > 16) for (let i = 0, n = Math.max(2, Math.round(lw / 70)); i < n; i++) { // clouds, spread across
       const cw = 14 + (rnd() * 14 | 0), x = Math.round((i + 0.15 + rnd() * 0.5) * lw / n - cw / 2), y = 3 + Math.round(rnd() * Math.max(1, hz * 0.6 - 8));
-      lit(x + 4, y, cw - 12, 1, '#fffaee'); lit(x + 2, y + 1, cw - 5, 1, '#fffaee'); lit(x + cw - 9, y + 1, 5, 1, '#fffaee'); lit(x, y + 2, cw, 1, '#fffaee'); lit(x + 1, y + 3, cw - 2, 1, '#efdfb6'); lit(x + 3, y + 4, cw - 7, 1, mix('#efdfb6', bands[1], 0.4));
+      const cA = eve ? (mode === 'dusk' ? '#f7a052' : '#f9d2c2') : '#fffaee', cB = eve ? (mode === 'dusk' ? '#e8a193' : '#e2c8ef') : '#efdfb6', cC = eve ? (mode === 'dusk' ? '#b76a6f' : '#b98fcf') : mix('#efdfb6', bands[1], 0.4); // sunset clouds catch the light underneath
+      lit(x + 4, y, cw - 12, 1, cA); lit(x + 2, y + 1, cw - 5, 1, cA); lit(x + cw - 9, y + 1, 5, 1, cA); lit(x, y + 2, cw, 1, cA); lit(x + 1, y + 3, cw - 2, 1, cB); lit(x + 3, y + 4, cw - 7, 1, cC);
     }
     // 2) far off: the range you're on (its skyline sprite, hazy), or hills and trees
-    const haze = night ? '#27365f' : bands[2], sky = rid === 'muni' ? 'skyline_city' : rid === 'links' ? 'skyline_links' : null, sc = sky && sprCanvas(sky, 0);
+    const haze = night ? '#27365f' : eve ? bands[1] : bands[2], sky = rid === 'muni' ? 'skyline_city' : rid === 'links' ? 'skyline_links' : null, sc = sky && sprCanvas(sky, 0);
     if (sc) {
       const t = D.createElement('canvas'); t.width = lw; t.height = sc.height; const tg = t.getContext('2d');
       for (let x = -((sc.width - lw % sc.width) >> 1); x < lw; x += sc.width) tg.drawImage(sc, x, 0);
@@ -41599,6 +41629,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       for (let x = 0; x < lw; x++) { const hh = Math.round(6 + 3 * Math.sin(x / 11 + 1) + 2 * Math.sin(x / 5.3)); lit(x, hz - hh + 4, 1, hh + 4, hill); }
       for (let x = 4; x < lw; x += 9 + (rnd() * 9 | 0)) { const rr = 2 + (rnd() * 3 | 0); for (let j = -rr; j <= rr; j++) lit(x - Math.round(Math.sqrt(rr * rr - j * j)), hz - 6 + j, 2 * Math.round(Math.sqrt(rr * rr - j * j)) + 1, 1, tree); lit(x, hz - 6 + rr, 1, 3, tree); }
     }
+    S.backWins = []; S.lampPts = [];
     // 3) the rooftops behind the shops (walls down to the pavement: what shows between the shops), a spire, trees
     const walls = ['#9a7466', '#b8864f', '#a0703f', '#80848e', '#b76a6f', '#d6c3a0'], roofs = ['#5c1d25', '#573c4c', '#3d2226', '#383b43', '#6f6059', '#3b5488', '#86292b'];
     const hz2 = night ? 0.5 : 0.42, OL = mix(K0, haze, 0.3);
@@ -41610,7 +41641,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
         r(sx, st0 + 10, 9, Yb - st0 - 10, OL); r(sx + 1, st0 + 11, 7, Yb - st0 - 11, sc2); r(sx + 1, st0 + 11, 1, Yb - st0 - 11, mix(sc2, '#fffaee', 0.25));
         for (let j = 0; j < 11; j++) { const hw = Math.round(j * 4.5 / 10); r(sx + 4 - hw, st0 + j, 2 * hw + 1, 1, OL); if (hw > 0 && j < 10) r(sx + 5 - hw, st0 + j, 2 * hw - 1, 1, sl); }
         r(sx + 4, st0 - 3, 1, 3, OL); r(sx + 3, st0 - 2, 3, 1, OL);
-        r(sx + 3, st0 + 13, 3, 4, OL); if (night) lit(sx + 4, st0 + 14, 1, 2, '#e8c47f'); else r(sx + 4, st0 + 14, 1, 2, mix('#565c64', haze, hz2));
+        r(sx + 3, st0 + 13, 3, 4, OL); r(sx + 4, st0 + 14, 1, 2, mix('#565c64', haze, hz2)); S.backWins.push({ x: sx + 4, y: st0 + 14, w: 1, h: 2, c: '#e8c47f', church: 1 }); // town life lights it
         x += 12; continue;
       }
       const gable = rnd() < 0.7, rh = gable ? Math.min(7, bw >> 2) : 3;
@@ -41619,7 +41650,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       else { r(x - 1, top, bw + 2, rh + 1, OL); r(x, top + 1, bw, rh - 1, rc); }
       if (rnd() < 0.55) { const cx = x + 2 + (rnd() * (bw - 6) | 0); r(cx, top - 2 + (gable ? 2 : 0), 3, 4, OL); r(cx + 1, top - 1 + (gable ? 2 : 0), 1, 3, mix('#9a4a2a', haze, hz2)); }
       for (let wy = top + rh + 3; wy < Math.min(Yb - 4, top + rh + 16); wy += 7) for (let wx = x + 3 + (bw % 4); wx < x + bw - 4; wx += 6) {
-        const on = night && rnd() < 0.35; if (on) lit(wx, wy, 2, 3, rnd() < 0.5 ? '#f2c641' : '#e8c47f'); else r(wx, wy, 2, 3, mix('#383b43', haze, hz2));
+        const will = rnd() < 0.35, warm = rnd() < 0.5; r(wx, wy, 2, 3, mix('#383b43', haze, hz2)); if (will) S.backWins.push({ x: wx, y: wy, w: 2, h: 3, c: warm ? '#f2c641' : '#e8c47f' }); // a third of the back windows light up, one by one (town life)
       }
       x += bw + (rnd() < 0.25 ? 2 + (rnd() * 4 | 0) : 0);
       if (rnd() < 0.3 && x < lw) { const tr = 4 + (rnd() * 2 | 0), tc = mix('#3b6b3c', haze, hz2), td = mix('#263d2b', haze, hz2); for (let j = -tr; j <= tr; j++) { const hw = Math.round(Math.sqrt(tr * tr - j * j)); r(x - hw, backTop + 6 + j, 2 * hw + 1, 1, j > tr / 3 ? td : tc); } r(x, backTop + 6 + tr, 1, Yb - backTop - 6 - tr, mix('#4b3226', haze, hz2)); }
@@ -41634,12 +41665,9 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     const ws = '#b8a68a', wsD = '#a6968b', wsL = '#d6c3a0';
     r(0, Yb - 9, lw, 1, K0); r(0, Yb - 8, lw, 1, wsL); r(0, Yb - 7, lw, 1, mix(wsD, K0, 0.2)); r(0, Yb - 6, lw, 6, ws);
     for (let y = Yb - 6, row = 0; y < Yb; y += 3, row++) { r(0, y + 2, lw, 1, wsD); for (let xx = (row % 2) * 3; xx < lw; xx += 6) r(xx, y, 1, 2, wsD); }
-    // bunting strung from shop to shop (behind them: it shows in the gaps), sagging a little
-    { const shops = S.its.filter((it) => BLD.includes(it.k)), cols = ['#c9473b', '#f2c641', '#3d5a2e', '#efdfb6', '#5b80b6'];
-      for (let i = 0; i < shops.length - 1; i++) {
-        const a = shops[i], b = shops[i + 1], x0 = a.x + a.w - 3, x1 = b.x + 3, y0 = Yb - 46, sag = Math.min(6, Math.max(2, (x1 - x0) / 10));
-        for (let xx = x0; xx <= x1; xx++) { const u = (xx - x0) / Math.max(1, x1 - x0), yy = Math.round(y0 + sag * 4 * u * (1 - u)); r(xx, yy, 1, 1, '#4b3226'); if ((xx - x0) % 4 === 2 && xx < x1 - 1) { const c = cols[((xx - x0) / 4 | 0) % cols.length]; r(xx - 1, yy + 1, 3, 1, c); r(xx, yy + 2, 1, 1, c); } }
-      } }
+    // bunting strung from shop to shop, sagging a little: town life draws it (it sways), tied to the eaves either side
+    { const shops = S.its.filter((it) => BLD.includes(it.k)); S.bunt = [];
+      for (let i = 0; i < shops.length - 1; i++) { const a = shops[i], b = shops[i + 1], x0 = a.x + a.w - 2, x1 = b.x + 1; S.bunt.push({ x0, x1, y0: Yb - 46, sag: Math.min(6, Math.max(2, (x1 - x0) / 10)) }); } }
     // 4) the pavement: big slabs, a contact shadow along the shop fronts
     const slab = '#c9b99c', joint = '#b4a386', kerbTop = '#efdfb6';
     r(0, Yb, lw, kerbY - Yb, slab);
@@ -41647,8 +41675,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     for (let y = Yb, row = 0; y < kerbY; y += 6, row++) for (let xx = (row % 2) * 6; xx < lw; xx += 12) r(xx, y, 1, Math.min(5, kerbY - y), joint);
     for (let i = 0; i < lw * (kerbY - Yb) / 40; i++) r(rnd() * lw | 0, Yb + (rnd() * (kerbY - Yb) | 0), 1, 1, rnd() < 0.5 ? '#d6c3a0' : '#b8a68a');
     r(0, Yb, lw, 1, mix(slab, K0, 0.35)); r(0, Yb + 1, lw, 1, mix(slab, K0, 0.15));
-    // light from the shop windows by night
-    if (night) for (const L of lights) { g.globalAlpha = 0.28; for (let j = 0; j < 7; j++) lit(L.x - j, Yb + j, L.w + 2 * j, 1, '#e8c47f'); g.globalAlpha = 1; }
+    // (light from the shop windows: town life, as each one comes on)
     // 5) the kerb and the cobbled road
     r(0, kerbY, lw, 1, kerbTop); r(0, kerbY + 1, lw, 1, '#a6968b'); r(0, kerbY + 2, lw, 1, '#4b3226');
     r(0, roadY, lw, roadH, '#4f4038');
@@ -41674,7 +41701,8 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       for (let xx = 1; xx < lw; xx += 4) { r(xx, vergeY + 4, 2, 6, K0); r(xx, vergeY + 5, 1, 5, '#efdfb6'); r(xx + 1, vergeY + 5, 1, 5, '#d6c3a0'); }
       r(0, vergeY + 6, lw, 1, K0); r(0, vergeY + 8, lw, 1, K0); for (let xx = 1; xx < lw; xx += 4) { r(xx, vergeY + 6, 2, 1, '#efdfb6'); r(xx, vergeY + 8, 2, 1, '#d6c3a0'); }
       let oak = sprCanvas('tree_oak', 0);
-      if (oak && night) { const o2 = D.createElement('canvas'); o2.width = oak.width; o2.height = oak.height; const og = o2.getContext('2d'); og.drawImage(oak, 0, 0); og.globalCompositeOperation = 'source-atop'; og.globalAlpha = 0.42; og.fillStyle = NIGHT; og.fillRect(0, 0, o2.width, o2.height); oak = o2; }
+      const GR = GRADE[mode];
+      if (oak && GR) { const o2 = D.createElement('canvas'); o2.width = oak.width; o2.height = oak.height; const og = o2.getContext('2d'); og.drawImage(oak, 0, 0); og.globalCompositeOperation = 'source-atop'; og.globalAlpha = GR[1]; og.fillStyle = GR[0]; og.fillRect(0, 0, o2.width, o2.height); oak = o2; }
       const oy = oak ? Math.min(hy + 2, vergeY + 12 + Math.round((lh - vergeY - 12) * 0.6)) - oak.height : 0;
       if (oak && lh - vergeY > 26) for (const tx of [0.04, 0.66]) g.drawImage(oak, Math.round(lw * tx), oy);
       const vh = hy - vergeY;
@@ -41683,7 +41711,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
         for (let j = -ry - 1; j <= ry + 1; j++) { const hw = Math.round((rx + 1) * Math.sqrt(Math.max(0, 1 - (j / (ry + 1)) ** 2))); r(cx - hw, cy + j, 2 * hw + 1, 1, '#3b5488'); }
         for (let j = -ry; j <= ry; j++) { const hw = Math.round(rx * Math.sqrt(Math.max(0, 1 - (j / ry) ** 2))); r(cx - hw, cy + j, 2 * hw + 1, 1, j < -ry / 2 ? '#3a8c8a' : '#4cb5ae'); }
         for (const [dx, dy, ww] of [[-rx / 2, -1, 5], [rx / 4, 2, 4], [-rx / 5, ry / 2, 3]]) r(Math.round(cx + dx), Math.round(cy + dy), ww, 1, '#9fd0e2');
-        const put = (name, x, y) => { const c2 = sprCanvas(name, 0); if (!c2) return; if (night) { const o2 = D.createElement('canvas'); o2.width = c2.width; o2.height = c2.height; const og = o2.getContext('2d'); og.drawImage(c2, 0, 0); og.globalCompositeOperation = 'source-atop'; og.globalAlpha = 0.42; og.fillStyle = NIGHT; og.fillRect(0, 0, o2.width, o2.height); g.drawImage(o2, x, y); } else g.drawImage(c2, x, y); };
+        const put = (name, x, y) => { const c2 = sprCanvas(name, 0); if (!c2) return; if (GR) { const o2 = D.createElement('canvas'); o2.width = c2.width; o2.height = c2.height; const og = o2.getContext('2d'); og.drawImage(c2, 0, 0); og.globalCompositeOperation = 'source-atop'; og.globalAlpha = GR[1]; og.fillStyle = GR[0]; og.fillRect(0, 0, o2.width, o2.height); g.drawImage(o2, x, y); } else g.drawImage(c2, x, y); };
         put('lily_pad', cx + Math.round(rx * 0.35), cy - 2); put('life_ducks', cx - Math.round(rx * 0.5), cy - 4);
         put('beds_tulips', Math.round(lw * 0.78), hy - 12); put('beds_daisies', Math.round(lw * 0.2), hy - 10);
       }
@@ -41693,14 +41721,14 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     // props: lamps in the wider gaps (at the kerb), a bench / postbox / tubs where there's room
     const lamp = (lx, base) => {
       r(lx - 1, base - 2, 3, 2, K0); r(lx, base - 24, 1, 22, '#383b43'); r(lx - 1, base - 13, 3, 1, '#383b43');
-      r(lx - 2, base - 29, 5, 5, K0); if (night) { lit(lx - 1, base - 28, 3, 3, '#fff2a6'); } else r(lx - 1, base - 28, 3, 3, '#cdd5dc');
+      r(lx - 2, base - 29, 5, 5, K0); r(lx - 1, base - 28, 3, 3, '#cdd5dc'); // the glass: town life lights it (and its pool) at dusk
       r(lx - 2, base - 30, 5, 1, K0); r(lx - 1, base - 31, 3, 1, K0); r(lx, base - 32, 1, 1, K0);
-      if (night) { g.globalAlpha = 0.16; for (const rr of [10, 6]) for (let j = -rr; j <= rr; j++) { const hw = Math.round(Math.sqrt(rr * rr - j * j)); lit(lx - hw, base - 27 + j, 2 * hw + 1, 1, '#fff2a6'); } for (let j = 0; j < 3; j++) lit(lx - 6 + j, base - 1 + j, 13 - 2 * j, 1, '#fff2a6'); g.globalAlpha = 1; }
+      S.lampPts.push({ x: lx, base });
     };
     const bench = (bx, base) => { r(bx, base - 9, 16, 2, K0); r(bx + 1, base - 9, 14, 1, '#a0703f'); r(bx, base - 6, 16, 2, K0); r(bx + 1, base - 6, 14, 1, '#a0703f'); r(bx, base - 4, 16, 1, K0); r(bx + 1, base - 7, 1, 7, K0); r(bx + 14, base - 7, 1, 7, K0); r(bx + 1, base - 5, 14, 1, '#7d5636'); };
-    const postbox = (bx, base) => { ol(bx, base - 12, 7, 12, '#c9473b'); r(bx + 1, base - 13, 5, 1, K0); r(bx + 1, base - 11, 5, 2, '#86292b'); r(bx + 2, base - 8, 3, 1, K0); r(bx + 1, base - 11, 1, 9, '#e85e4a'); r(bx - 1, base - 1, 9, 1, K0); };
+    const postbox = (bx, base) => { if (base === Yb + 1) S.postboxX = bx; ol(bx, base - 12, 7, 12, '#c9473b'); r(bx + 1, base - 13, 5, 1, K0); r(bx + 1, base - 11, 5, 2, '#86292b'); r(bx + 2, base - 8, 3, 1, K0); r(bx + 1, base - 11, 1, 9, '#e85e4a'); r(bx - 1, base - 1, 9, 1, K0); };
     const tub = (bx, base) => { ol(bx, base - 4, 8, 4, '#7d5636'); r(bx + 1, base - 3, 6, 1, '#a0703f'); for (let i = 0; i < 6; i++) r(bx + 1 + i, base - 5 - (i % 2), 1, 1 + (i % 2), i % 3 === 1 ? '#c9473b' : i % 3 === 2 ? '#f2c641' : '#6b8b3c'); };
-    const its = S.its; let placedBox = false, placedBench = false;
+    const its = S.its; let placedBox = false, placedBench = false; S.postboxX = null;
     for (let i = 0; i < its.length - 1; i++) { // against the back wall (above the tags' row): a bench, the postbox, flower tubs
       const a = its[i], b = its[i + 1]; if (a.k === 'agent') continue;
       const gx = a.x + a.w, gw = b.x - gx;
@@ -41725,15 +41753,14 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   function renderScene(force) {
     if (!ov || !showing) return;
     const sc = ov.querySelector('[data-rt=scene]'); const w = sc.clientWidth, h = sc.clientHeight; if (!w || !h) return;
-    const s = stats(), t = TS(), st = R.state, rs = RANGES(), night = !!(s && s.night);
+    const s = stats(), t = TS(), st = R.state, rs = RANGES(), clk = clockNow(), mode = clk.mode, night = mode === 'night';
     const plates = BLD.map((k) => { const p = plate(k, s); return k + (p.lock ? 'L' : 'O') + p.d + (t.fresh[k] ? 'N' : ''); }).join('|');
     const hl = isOpen('agent') && !t.seen.agent && !st.freeRoam, rid = (rs[st.rangeIdx | 0] || {}).id || 'muni';
-    const sig = [w, h, layClass(), plates, hl ? 1 : 0, rid, night ? 1 : 0, ratSwap(), (W.DIALOG && W.DIALOG.locale) || '', rm() ? 1 : 0, root.classList.contains('rr-large') ? 1 : 0].join('#');
+    const sig = [w, h, layClass(), plates, hl ? 1 : 0, rid, mode, ratSwap(), (W.DIALOG && W.DIALOG.locale) || '', rm() ? 1 : 0, root.classList.contains('rr-large') ? 1 : 0].join('#');
     if (!force && sig === sceneSig) return; sceneSig = sig; hookFonts();
     const street = sc.querySelector('[data-rt=street]'), road = sc.querySelector('[data-rt=road]'), bl = sc.querySelector('[data-rt=blds]');
     const lock = spriteURL('badge_locked', 1), isNew = dget('help.ui.isNew', 'New'), row = w / Math.max(1, h) > 1.15;
     const focusK = D.activeElement && D.activeElement.closest && D.activeElement.closest('#rr-town [data-bld]') ? D.activeElement.closest('[data-bld]').dataset.bld : null;
-    const lights = [];
     // 1) the shops and their tags (measured before anything is placed)
     bl.innerHTML = BLD.map((k) => {
       const pl = plate(k, s), open = !pl.lock;
@@ -41757,26 +41784,26 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     let S = null; for (let p = 4; p >= 2; p--) { S = streetAt(p, w, h, postW, tagH, row); if (S.fits) break; }
     if (!S.fits && S.p !== 2) S = streetAt(2, w, h, postW, tagH, row);
     streetRows(S, !row); S.portrait = !row; const p = S.p; sceneP = p; sceneS = S;
-    road.style.width = S.lw * p + 'px'; street.classList.toggle('rt-scroll', S.scroll); road.classList.toggle('rt-night', night);
+    road.style.width = S.lw * p + 'px'; street.classList.toggle('rt-scroll', S.scroll); road.classList.toggle('rt-night', night); road.classList.toggle('rt-dusk', mode === 'dusk' || mode === 'dawn');
     // 3) place the shops (their signs fitted to the boards), Gus at the agent's door, the rat where you last went
     for (const k of BLD) {
       const it = S.by[k], F = FAC[k], b = bl.querySelector(`[data-bld="${k}"]`), open = !b.classList.contains('dim'), tg = tags[k];
       b.style.left = it.L * p + 'px'; b.style.top = (S.Yb - F.h) * p + 'px'; b.style.width = (it.R - it.L) * p + 'px'; b.style.height = (F.h + 3) * p + tg.offsetHeight + 'px';
       const fac = b.querySelector('.rt-fac'), im = fac.querySelector('img');
       fac.style.left = (it.x - it.L) * p + 'px'; fac.style.width = F.w * p + 'px'; fac.style.height = F.h * p + 'px';
-      im.src = facadeURL(k, p, open, night); im.width = F.w * p; im.height = F.h * p;
+      im.src = facadeURL(k, p, open, mode); im.width = F.w * p; im.height = F.h * p;
       const sg = fac.querySelector('.rt-sign'); sg.style.cssText = `left:${F.sign.x * p}px;top:${F.sign.y * p}px;width:${F.sign.w * p}px;height:${F.sign.h * p}px;color:${F.ink};font-size:${Math.round(F.sign.h * p * 0.84)}px`;
       fitSign(sg);
       const nw = fac.querySelector('.rt-new'); if (nw) { nw.style.top = 10 * p + 'px'; nw.style.right = '-2px'; }
       const tw = tg.offsetWidth, cx = (it.x + F.w / 2 - it.L) * p;
       tg.style.left = Math.round(clamp(cx - tw / 2, 0, (it.R - it.L) * p - tw)) + 'px'; tg.style.top = (F.h + 3) * p + 'px';
-      if (open && night) lights.push({ x: it.x + 3, w: F.w - 6 });
     }
     if (post) { const it = S.by.post; post.style.left = (it.x + 1) * p + 'px'; post.style.top = Math.max(0, S.Yb * p - post.offsetHeight) + 'px'; }
-    drawStreet(road.querySelector('.rt-bg'), S, rid, night, lights);
+    drawStreet(road.querySelector('.rt-bg'), S, rid, mode);
     const gus = road.querySelector('[data-rt=gus]'), gx = S.by.gus.x;
     gus.src = spriteURL('gus', p); gus.style.cssText = `left:${gx * p}px;top:${(S.Yb + 2 - GUS_H) * p}px;width:${GUS_W * p}px;height:${GUS_H * p}px`;
     placeRat(false);
+    try { lifeSetup(S, rid, mode, clk); } catch (e) { /* the street stands without its life */ }
     if (focusK) { const f = bl.querySelector(`[data-bld="${focusK}"]`); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
   }
   /** the rat on the pavement under the shop you last went into (walks there: transform only, then nothing runs) */
@@ -41817,6 +41844,438 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     const a2 = el.animate([{ backgroundPosition: '0 0' }, { backgroundPosition: `-${ww * 2}px 0` }], { duration: 520, iterations: Infinity, easing: 'steps(2)' });
     a1.onfinish = () => { a2.cancel(); el.remove(); ambSchedule(); };
   }
+  // ------------------------------------------------------------------ town life (Ben, 2026-11-07: "In the town I think there needs to
+  // be movement / animations. Stars. Lights. Windows flicker. Blinds close etc etc. Make it feel more alive.")
+  // Synced to the range's own day clock (RANGE_RAT.dayClock: the town is visited from a range):
+  //   dusk   the windows light one by one (each its own moment, a flick as it catches), their glow spills on the pavement, the
+  //          lamps come on with their pools, the shop boards light up; a candle flickers in one or two attic windows
+  //   night  stars come out and twinkle (seeded), the moon; now and then a shooting star or a bat, some nights an owl on the
+  //          Clubhouse gable; later on blinds come down (the Tailor draws its curtains) and a few lights go out
+  //   day    smoke from the chimneys (drifting with the range's wind), the bunting sways, birds hop on the roofs and fly off,
+  //          a cat on the wall (blinks, flicks its tail), the Tailor's moth sign swings, the window-box flowers nod, a shop's
+  //          door swings open as you go in (and the passers-by: the ambient layer above)
+  // Drawn in art px on two canvases over the street, in a shadow root (the field's canvas stays the first <canvas> in the
+  // page), under the shop names, tags, Gus and the rat: LIGHTS is redrawn only when a light changes, LIVE (the small moving
+  // sprites, all pre-drawn stamps) at 12 fps. Pixel rules (art/HIFI_STYLE.md): colours from the master palette (RAMPS in
+  // art/codeart/codeart.js) under the street's own grade (the shops' night tint; lights are never graded), light from the
+  // top-left, #2a1c16 outlines, glows and pools as ordered dither (no alpha, no smoothing). Less motion: nothing moves (the
+  // lights still follow the clock, without the flick; no flicker, twinkle, smoke or birds). Work: only while the street shows
+  // and the page is visible (no timer otherwise), not under a building's sheet; ~20-60 canvas calls a tick (perf budget 300).
+  const LIFE_FPS = 12;
+  const P_ = { // the master palette's tones this layer uses (art/codeart/codeart.js RAMPS)
+    k: K0, umber: '#3d2226', wood: ['#2a1c16', '#4b3226', '#7d5636', '#a0703f', '#b8864f', '#dcb06c'], cream: ['#d6c3a0', '#efdfb6', '#fffaee'],
+    red: ['#86292b', '#c9473b', '#e85e4a'], gold: ['#8a6418', '#b98a2c', '#f2c641', '#fff2a6'], leaf: ['#263d2b', '#3d5a2e', '#6b8b3c', '#a9bd5a'],
+    sea: ['#1f2947', '#2f5486', '#6a9fcb', '#9fd0e2'], pink: ['#b76a6f', '#e8a193', '#f9d2c2'], stone: ['#383b43', '#80848e', '#b8bec2'],
+    sand: ['#a0703f', '#dcb06c', '#e8c47f', '#efdfb6'], fox: ['#9a4a2a', '#dd7a36', '#f7a052'], light: ['#e8892c', '#fff2a6']
+  };
+  /** the windows each shop lights (art px in the facade): up = upstairs (homes: blinds, lights out late), shop = the shop
+   *  window and the door's glass (lit all night), fire = a candle / fire flicker candidate, cover = blind | curtain */
+  const WINS = {
+    agent: [{ id: 'dormer', x: 20, y: 13, w: 6, h: 6, up: 1, fire: 1 }, { id: 'upper', x: 28, y: 26, w: 13, h: 9, up: 1, cover: 'blind' }, { id: 'shop', x: 5, y: 52, w: 23, h: 7, shop: 1 }, { id: 'door', x: 32, y: 52, w: 8, h: 3, shop: 1 }],
+    tailor: [{ id: 'round', x: 17, y: 10, w: 5, h: 5, up: 1, fire: 1 }, { id: 'upper', x: 21, y: 24, w: 11, h: 8, up: 1, cover: 'curtain' }, { id: 'shop', x: 4, y: 50, w: 18, h: 7, shop: 1 }, { id: 'door', x: 27, y: 50, w: 6, h: 3, shop: 1 }],
+    club: [{ id: 'upL', x: 6, y: 27, w: 8, h: 7, up: 1, cover: 'blind' }, { id: 'upR', x: 30, y: 27, w: 8, h: 7, up: 1, cover: 'blind' }, { id: 'shop', x: 4, y: 53, w: 22, h: 7, shop: 1 }, { id: 'door', x: 32, y: 53, w: 6, h: 3, shop: 1 }]
+  };
+  const BOARD = { agent: [1, 41, 44, 9], tailor: [1, 36, 36, 8], club: [1, 39, 42, 8] }; // the fascia the name sits on (lit by its lamps)
+  const SLAMPS = { agent: [[5, 39], [38, 39]], tailor: [[4, 34], [15, 34]], club: [[17, 36], [24, 36]] }; // the board's lamps (top-left)
+  const BOXES = { agent: [[26, 36, 17]], tailor: [[19, 33, 15]], club: [[4, 35, 12], [28, 35, 12]] }; // window boxes (flowers())
+  const DOORS = { agent: [31, 51, 10, 11], tailor: [26, 49, 8, 10], club: [30, 52, 10, 9] }; // the door inside its frame
+  const CHIMNEY = { agent: [35, 0], tailor: [8, 0] }; // the chimney's mouth (smoke)
+  const RIDGE = { agent: [12, 27, 7], tailor: [14, 27, 6] }; // roof ridges the birds walk (x0, x1, y)
+  const MOTHSIGN = ['...k.....k...', '....k...k....', 'kkk...b...kkk', 'kwwk.bbb.kwwk', 'kwowkbbbkwowk', 'kwwwwbbbwwwwk', '.kwwkbbbkwwk.', '..kk..b..kk..'];
+  const CAT = [ // a ginger cat sat on the wall, looking out (f fur, l lit fur, d shade, e eyes, n nose, c chest + muzzle, t its tail curled round the front)
+    'k.....k..', 'klk.kfk..', 'kllffdk..', 'kfefefk..', 'kffnffkk.', '.kcccdffk', 'klfccffdk', 'kffccffdk', 'kttttfddk', 'kkkkkkkkk'];
+  const BIRD = ['...kkk.', '..klbey', 'kkbbrrk', '.kbbrrk', '..kkkk.', '...k.k.'];
+  const BIRD_UP = ['kk.kk', '.kbk.', '..k..'], BIRD_DN = ['.....', 'kkbkk', '..k..'];
+  const OWL = ['k...k', 'kuuuk', 'kEuEk', 'kuwuk', 'kvuvk', '.kkk.'];
+  const BAT = [['kk...kk', '.kkkkk.', '...k...'], ['.......', 'kkkkkkk', 'k..k..k']];
+  const FLOWER_HEADS = ['#c9473b', '#f2c641', '#e8a193'];
+  const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const dith = (x, y, t) => t > (BAYER4[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
+  function seeded(str) { let a = 0; for (const ch of str) a = (a * 31 + ch.charCodeAt(0)) | 0; a = a || 7; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  /** a small cached canvas, drawn once (px(x, y, c), rect, rows(x, y, map, cols)) */
+  const stC = {};
+  function stamp(key, w, h, draw) {
+    if (stC[key]) return stC[key];
+    const c = D.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h); const g = c.getContext('2d');
+    const px = (x, y, col) => { if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); } };
+    const rect = (x, y, ww, hh, col) => { if (col && ww > 0 && hh > 0) { g.fillStyle = col; g.fillRect(x, y, ww, hh); } };
+    const rows = (x, y, map, cols) => { for (let j = 0; j < map.length; j++) for (let i = 0; i < map[j].length; i++) px(x + i, y + j, cols[map[j][i]]); };
+    draw({ g, px, rect, rows });
+    return (stC[key] = c);
+  }
+  const LF = { // the life state (one street at a time)
+    host: null, cL: null, gL: null, cV: null, gV: null, S: null, rid: '', mode: 'day', clk: null, items: [], stars: [], starN: 0,
+    raf: 0, last: 0, ticks: 0, lightDraws: 0, liveDraws: 0, sigL: '', puffs: [], puffT: {}, birds: [], cat: null, door: null, sign: null,
+    bunt: 0, buntT: 0, nod: 0, nodT: 0, fx: { shoot: null, shootT: 0, bat: null, batT: 0 }, owl: null, fire: [], seedN: 0, stillDrawn: '', calls: 0
+  };
+  /** the range's clock as the town sees it: mode (day / dusk / night / dawn), L (how far the lights have come on, 0..1), nu
+   *  (how far through the night, 0..1: blinds and lights out), wind (-1..1) */
+  function clockNow() {
+    let c = null; try { c = R && R.dayClock ? R.dayClock() : null; } catch (e) { c = null; }
+    if (!c) { const n = !!(stats() || {}).night; return { mode: n ? 'night' : 'day', L: n ? 1 : 0, nu: 0.5, wind: 0, fixed: false, cycle: 0 }; }
+    const { t, D: Dl, f, C } = c; let mode = 'day', nu = 0;
+    if (c.fixed) { mode = 'night'; nu = 0.4; } // always night (Firefly Bays, a night lap): the street settled mid-evening
+    else if (t >= Dl - f - 10 && t < Dl) mode = 'dusk';
+    else if (t >= Dl && t < C - f) { mode = 'night'; nu = clamp((t - Dl) / Math.max(1, C - f - Dl), 0, 1); }
+    else if (t >= C - f) { mode = 'dawn'; nu = 1; }
+    return { mode, L: clamp(+c.lights || 0, 0, 1), nu, wind: clamp(+c.wind || 0, -1.5, 1.5) / 1.5, fixed: !!c.fixed, cycle: c.cycle | 0 };
+  }
+  // ---- stamps ----
+  /** a smoke puff, n art px across, lit from the top-left (graded) */
+  function puffStamp(n, mode, thin) {
+    return stamp('puff' + n + mode + (thin ? 't' : ''), n, n, ({ px }) => {
+      const hl = graded(thin ? P_.cream[1] : P_.cream[2], mode), base = graded(thin ? P_.cream[0] : P_.cream[1], mode), sh = graded(thin ? P_.stone[2] : P_.cream[0], mode);
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        const u = (x + 0.5) / n * 2 - 1, v = (y + 0.5) / n * 2 - 1; if (n > 2 && u * u + v * v > 1.15) continue;
+        const l = -(u + v); px(x, y, n === 1 ? base : l > 0.6 ? hl : l < -0.6 ? sh : base);
+      }
+    });
+  }
+  function catStamp(mode, f) { // f: 0 sit, 1 blink, 2 tail flick, 3 ear twitch
+    return stamp('cat' + mode + f, 9, 10, ({ px }) => {
+      const night = mode === 'night', cols = { k: K0, f: graded(P_.fox[1], mode), l: graded(P_.fox[2], mode), d: graded(P_.fox[0], mode), n: graded(P_.pink[1], mode), c: graded(P_.cream[1], mode), t: graded(P_.fox[0], mode),
+        e: f === 1 ? graded(P_.fox[0], mode) : night ? P_.gold[2] : graded(P_.leaf[1], mode) };
+      for (let j = 0; j < CAT.length; j++) for (let i = 0; i < CAT[j].length; i++) {
+        let ch = CAT[j][i]; if (f === 3 && j === 0 && i === 6) ch = '.'; if (f === 3 && j === 1 && i === 6) ch = 'k'; // an ear twitches
+        if (f === 2 && j === 8 && i === 1) ch = 'f'; if (f === 2 && j === 7 && i === 1) ch = 't'; // the tail's tip flicks up
+        px(i, j, cols[ch]);
+      }
+    });
+  }
+  function birdStamp(mode, kind, flip) {
+    const map = kind === 'up' ? BIRD_UP : kind === 'dn' ? BIRD_DN : BIRD;
+    return stamp('bird' + mode + kind + (flip ? 'f' : ''), map[0].length, map.length, ({ px }) => {
+      const cols = { k: K0, b: graded(P_.wood[2], mode), l: graded(P_.wood[4], mode), r: graded(P_.fox[1], mode), e: K0, y: graded(P_.gold[2], mode) };
+      for (let j = 0; j < map.length; j++) for (let i = 0; i < map[j].length; i++) px(flip ? map[j].length - 1 - i : i, j, cols[map[j][i]]);
+    });
+  }
+  function owlStamp(blink) {
+    return stamp('owl' + (blink ? 'b' : ''), 5, 6, ({ rows }) => rows(0, 0, OWL, { k: K0, u: P_.umber, v: graded(P_.wood[1], 'night'), w: graded(P_.gold[1], 'night'), E: blink ? P_.umber : P_.gold[2] }));
+  }
+  function batStamp(f) { return stamp('bat' + f, 7, 3, ({ rows }) => rows(0, 0, BAT[f], { k: K0 })); }
+  function mothStamp(mode, sw) { // the Tailor's hanging sign, swung sw px (-1..1): the chains bend, the board swings
+    return stamp('moth' + mode + sw, 15, 8, ({ px }) => {
+      const cols = { k: K0, w: graded('#d6c3a0', mode), o: graded('#e8892c', mode), b: graded('#7d5636', mode) };
+      for (let j = 0; j < MOTHSIGN.length; j++) { const dx = j < 1 ? 0 : sw; for (let i = 0; i < MOTHSIGN[j].length; i++) px(1 + i + dx, j, cols[MOTHSIGN[j][i]]); }
+    });
+  }
+  /** a window box's flowers (the two rows over the box, as flowers() in facadeCanvas), nodding: phase ph 0..3 is a wave along
+   *  the box (each head leans a pixel one way, then the other) */
+  function flowersStamp(w, mode, ph) {
+    return stamp('fl' + w + mode + ph, w, 2, ({ px }) => {
+      for (let i = 0; i < w - 2; i++) {
+        const x = 1 + i; px(x, 1, graded(i % 2 ? P_.leaf[1] : P_.leaf[2], mode));
+        if (i % 3 === 2) px(x, 0, graded(P_.leaf[2], mode));
+      }
+      for (let i = 1; i < w - 2; i += 3) { const nod = [0, 1, 0, -1][(ph + (i / 3 | 0)) & 3]; if (nod) px(1 + i, 0, graded(P_.leaf[1], mode)); px(1 + i + nod, 0, graded(FLOWER_HEADS[(i / 3 | 0) % 3], mode)); }
+    });
+  }
+  function buntStamp(b, mode, f) { // a string of bunting, frame f 0..3: the sag breathes, the flags flap
+    const w = b.x1 - b.x0 + 1, h = Math.ceil(b.sag) + 6;
+    return stamp('bu' + b.x0 + ':' + w + ':' + b.sag + mode + f, w, h, ({ px }) => {
+      const cols = [P_.red[1], P_.gold[2], P_.leaf[1], P_.cream[1], P_.sea[2]], sag = b.sag + [0, 0.7, 1.2, 0.7][f];
+      px(0, 0, K0); px(w - 1, 0, K0); // tied to the eaves
+      for (let x = 1; x < w - 1; x++) {
+        const u = x / Math.max(1, w - 1), y = Math.round(sag * 4 * u * (1 - u)); px(x, y, graded(P_.wood[1], mode));
+        if (x % 4 === 2 && x < w - 2) {
+          const c = cols[(x / 4 | 0) % cols.length], flap = ((x / 4 | 0) + f) % 4 === 0 ? 1 : ((x / 4 | 0) + f) % 4 === 2 ? -1 : 0;
+          px(x - 1, y + 1, graded(c, mode)); px(x, y + 1, graded(c, mode));
+          px(x + 1, y + 1, graded(c === P_.cream[1] ? P_.cream[0] : c === P_.gold[2] ? P_.gold[1] : c === P_.red[1] ? P_.red[0] : c === P_.leaf[1] ? P_.leaf[0] : P_.sea[1], mode)); // shade on the right
+          px(x + flap, y + 2, graded(c, mode));
+        }
+      }
+    });
+  }
+  /** a lit lamp's glass, its halo (dither) and its pool on the ground; anchored at the lamp's foot (x, base) */
+  function lampLightStamp() {
+    return stamp('lampL', 25, 40, ({ px }) => {
+      const cx = 12, hy = 7; // the glass's centre (base - 28)
+      for (let y = 0; y < 40; y++) for (let x = 0; x < 25; x++) {
+        const dh = Math.hypot(x - cx, y - hy);
+        if (dh < 4.6 && dh > 2.1 && ((x + y) & 1) === 0) px(x, y, dh < 3.4 ? P_.light[1] : P_.gold[2]); // the glow round the glass
+        const gu = (x - cx) / 9, gv = (y - 36.5) / 3.2, gd = gu * gu + gv * gv; // the pool at the foot
+        if (gd < 1 && (gd < 0.45 ? ((x + y) & 1) === 0 : dith(x, y, 0.25))) px(x, y, gd < 0.45 ? P_.sand[2] : P_.sand[1]);
+      }
+      px(cx - 1, hy - 1, P_.light[1]); px(cx, hy - 1, P_.cream[2]); px(cx + 1, hy - 1, P_.light[1]);
+      px(cx - 1, hy, P_.light[1]); px(cx, hy, P_.cream[2]); px(cx + 1, hy, P_.light[1]);
+      px(cx - 1, hy + 1, P_.gold[2]); px(cx, hy + 1, P_.light[1]); px(cx + 1, hy + 1, P_.gold[2]);
+    });
+  }
+  /** a shop window's glow on the pavement: rows of thinning dither, widening as they go */
+  function spillStamp(w) {
+    return stamp('spill' + w, w + 12, 6, ({ px }) => {
+      for (let j = 0; j < 6; j++) for (let x = 6 - j; x < 6 + w + j; x++) if (dith(x, j, j < 2 ? 0.5 : j < 4 ? 0.25 : 0.125)) px(x, j, P_.sand[2]);
+    });
+  }
+  function signLampStamp(on, mode) { return stamp('slamp' + (on ? 1 : 0) + mode, 3, 2, ({ px }) => { px(0, 0, K0); px(1, 0, K0); px(2, 0, K0); px(1, 1, on ? P_.light[1] : graded(P_.stone[2], mode)); px(0, 1, on ? P_.gold[2] : null); px(2, 1, on ? P_.gold[2] : null); }); }
+  function moonStamp() {
+    return stamp('moon', 7, 7, ({ px }) => {
+      for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
+        const u = (x + 0.5 - 3.5) / 3.5, v = (y + 0.5 - 3.5) / 3.5; if (u * u + v * v > 1.02) continue;
+        const l = -(u + v); px(x, y, l > 0.7 ? P_.cream[2] : l < -0.9 ? P_.sand[2] : P_.gold[3]);
+      }
+      px(4, 2, P_.sand[3]); px(2, 4, P_.sand[3]); px(3, 4, P_.sand[3]); // craters
+    });
+  }
+  /** the star field in 4 tiers (the stars come out tier by tier at dusk), cached per street */
+  function starTier(i) {
+    const sk = LF.S.sky, lw = LF.S.lw;
+    return stamp('stars' + lw + ':' + sk.hz + ':' + LF.rid + ':' + LF.mode + ':' + i, lw, sk.hz, ({ px }) => { for (const s of LF.stars) if (s.tier === i) px(s.x, s.y, s.c); });
+  }
+  function blindRows(g, x, y, w, h, bf, lit, cover, mode) { // a blind (cream, lit from behind) or the Tailor's curtains, bf 0..1 drawn
+    if (bf <= 0) return 0; let n = 0;
+    const fr = (xx, yy, ww, hh, c) => { if (ww > 0 && hh > 0) { g.fillStyle = c; g.fillRect(xx, yy, ww, hh); n++; } };
+    if (cover === 'curtain') {
+      const cw = Math.max(1, Math.round((w / 2) * bf)), a = lit ? P_.red[2] : graded(P_.red[1], mode), b = lit ? P_.red[1] : graded(P_.red[0], mode);
+      fr(x, y, cw, h, a); fr(x + w - cw, y, cw, h, a); fr(x + cw - 1, y, 1, h, b); fr(x + w - cw, y, 1, h, b);
+      return n;
+    }
+    const bh = Math.max(1, Math.round(h * bf)), a = lit ? P_.sand[2] : graded(P_.cream[0], mode), b = lit ? P_.sand[1] : graded(P_.sand[1], mode);
+    fr(x, y, w, bh, a); for (let j = 1; j < bh - 1; j += 2) fr(x, y + j, w, 1, b); fr(x, y + bh - 1, w, 1, lit ? P_.wood[3] : graded(P_.wood[2], mode));
+    return n;
+  }
+  // ---- the street's life, set up per layout (renderScene) ----
+  function lifeSetup(S, rid, mode, clk) {
+    const road = ov && ov.querySelector('[data-rt=road]'); if (!road) return;
+    let host = LF.host;
+    if (!host || !host.isConnected) {
+      host = road.querySelector('.rt-life');
+      if (!host) { host = D.createElement('div'); host.className = 'rt-life'; host.setAttribute('aria-hidden', 'true'); road.appendChild(host); }
+      const sr = host.shadowRoot || host.attachShadow({ mode: 'open' });
+      sr.innerHTML = '<canvas data-life="lights"></canvas><canvas data-life="live"></canvas>';
+      LF.host = host; LF.cL = sr.querySelector('[data-life=lights]'); LF.cV = sr.querySelector('[data-life=live]');
+      LF.gL = LF.cL.getContext('2d'); LF.gV = LF.cV.getContext('2d');
+    }
+    const p = S.p, css = `position:absolute;left:0;top:0;width:${S.lw * p}px;height:${S.lh * p}px;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none`;
+    host.style.cssText = `width:${S.lw * p}px;height:${S.lh * p}px`;
+    for (const c of [LF.cL, LF.cV]) { if (c.width !== S.lw) c.width = S.lw; if (c.height !== S.lh) c.height = S.lh; if (c.style.cssText !== css) c.style.cssText = css; }
+    LF.gL.imageSmoothingEnabled = false; LF.gV.imageSmoothingEnabled = false;
+    const same = LF.S && LF.rid === rid && LF.S.lw === S.lw && LF.S.lh === S.lh && LF.S.p === S.p;
+    const prevItems = same ? LF.items : null;
+    LF.S = S; LF.rid = rid; LF.mode = mode; LF.clk = clk; LF.sigL = ''; LF.stillDrawn = '';
+    const rnd = seeded('life:' + rid + ':' + S.lw);
+    // the lights: each with its moment (thr: the evening light level it comes on at), maybe a blind and a time to go out
+    const items = []; LF.open = {};
+    for (const k of BLD) {
+      const it = S.by[k], open = (LF.open[k] = !!ov.querySelector(`[data-bld="${k}"]:not(.dim)`)); if (!open) continue;
+      const F = FAC[k], fx = it.x, fy = S.Yb - F.h;
+      for (const w of WINS[k]) {
+        const o = { id: k + ':' + w.id, k, w, kind: 'win', x: fx + w.x, y: fy + w.y, fx, fy };
+        if (w.shop) { o.thr = 0.04 + rnd() * 0.22 + (w.id === 'door' ? 0.06 : 0); o.offU = 9; }
+        else { o.thr = 0.25 + rnd() * 0.62; o.offU = rnd() < 0.4 ? 0.5 + rnd() * 0.45 : 9; if (w.cover && rnd() < 0.75) o.blindU = 0.12 + rnd() * 0.45; if (o.blindU != null && o.offU < 9) o.offU = Math.max(o.offU, o.blindU + 0.15); }
+        items.push(o);
+      }
+      items.push({ id: k + ':board', k, kind: 'board', fx, fy, thr: 0.18 + rnd() * 0.2, offU: 9 });
+    }
+    S.backWins.forEach((b, i) => items.push({ id: 'back:' + i, kind: 'back', b, thr: b.church ? 0.45 : 0.08 + rnd() * 0.88, offU: !b.church && rnd() < 0.3 ? 0.3 + rnd() * 0.6 : 9 }));
+    S.lampPts.slice().sort((a, b) => a.x - b.x).forEach((l, i) => items.push({ id: 'lamp:' + l.x + ':' + l.base, kind: 'lamp', l, thr: 0.12 + (i % 5) * 0.07 + rnd() * 0.04, offU: 9 }));
+    for (const o of items) { const pv = prevItems && prevItems.find((q) => q.id === o.id); o.on = pv ? pv.on : null; o.onAt = pv ? pv.onAt : 0; o.bf = pv ? pv.bf || 0 : 0; }
+    LF.items = items;
+    // fire / candle windows: one or two upstairs ones
+    LF.fire = items.filter((o) => o.kind === 'win' && o.w.fire).filter(() => rnd() < 0.8).slice(0, 2).map((o) => ({ o, dim: false, t: 0 }));
+    // the stars: seeded, in four tiers (they come out tier by tier), a few big bright ones
+    const sk = S.sky; LF.stars = [];
+    let skyPx = null; try { if (bgCv && sk) skyPx = bgCv.getContext('2d').getImageData(0, 0, S.lw, Math.max(1, sk.hz)).data; } catch (e) { skyPx = null; }
+    const bandRGB = sk ? sk.bands.map((c) => parseInt(c.slice(1), 16)) : [];
+    const open = (x, y) => { if (!skyPx) return true; const i = (y * S.lw + x) * 4; return skyPx[i + 3] === 255 && bandRGB.includes((skyPx[i] << 16) | (skyPx[i + 1] << 8) | skyPx[i + 2]); }; // only on open sky: never on the skyline or a cloud
+    const srnd = seeded('stars:' + rid + ':' + S.lw + ':' + (sk ? sk.hz : 0)); // its own seed: the sky doesn't change with what's open
+    if (sk && sk.hz > 6) for (let i = 0, n = Math.round(S.lw * sk.hz / 90); i < n; i++) { const x = srnd() * S.lw | 0, y = srnd() * (sk.hz - 4) | 0, r0 = srnd(); if (open(x, y)) LF.stars.push({ x, y, c: r0 < 0.3 ? P_.gold[3] : r0 < 0.8 ? P_.stone[2] : P_.cream[2], tier: i & 3, big: r0 > 0.9 && open(x - 1, y) && open(x + 1, y) && open(x, y - 1) && open(x, y + 1) }); }
+    const prevCat = same ? LF.cat : null;
+    // the cat: on the garden wall in a gap that has no postbox, never in Gus's spot
+    LF.cat = null;
+    const gaps = []; for (let i = 0; i < S.its.length - 1; i++) { const a = S.its[i], b = S.its[i + 1]; if (a.k === 'agent') continue; const gx = a.x + a.w, gw = b.x - gx; if (gw >= 12 && a.k !== 'post') gaps.push({ gx, gw, a: a.k, b: b.k }); }
+    const box = S.postboxX; const g0 = gaps.filter((g) => !(box != null && box >= g.gx - 7 && box <= g.gx + g.gw)).sort((a, b) => b.gw - a.gw)[0];
+    if (g0) LF.cat = { x: g0.gx + ((g0.gw - 9) >> 1), y: S.Yb - 9 - 9, f: 0, t: 1.5 + rnd() * 3, dur: 0 };
+    // the birds' perches: the open shops' ridges
+    const prevBirds = LF.birds || []; LF.birds = []; LF.perches = [];
+    for (const k of ['agent', 'tailor']) if (RIDGE[k] && S.by[k]) { const it = S.by[k], F = FAC[k], rg = RIDGE[k]; LF.perches.push({ x0: it.x + rg[0], x1: it.x + rg[1], y: S.Yb - F.h + rg[2] }); }
+    // the owl's perch: the Clubhouse gable
+    LF.owlAt = S.by.club ? { x: S.by.club.x + 19, y: S.Yb - FAC.club.h } : null;
+    const sign0 = { a: 0, v: 0, t: 2 + rnd() * 3, f: 0 }, fx0 = { shoot: null, shootT: 6 + rnd() * 10, bat: null, batT: 12 + rnd() * 20 };
+    if (!same) { LF.puffs = []; LF.puffT = {}; LF.door = null; LF.sign = sign0; LF.fx = fx0; } // the same street re-laid (a new grade, a sheet opened): the smoke, a swinging door, the sign carry on
+    else { LF.birds = prevBirds; if (LF.cat && prevCat) Object.assign(LF.cat, { f: prevCat.f, t: prevCat.t, dur: prevCat.dur }); }
+    LF.lastClockCheck = 0;
+    // draw every picture this street can need now, with the re-lay (once per grade change), so no step pays for a first draw
+    for (const k of BLD) if (LF.open[k]) {
+      facadeCanvas(k, 1, true, mode, 1, true); facadeCanvas(k, 1, true, mode, 2, true); facadeCanvas(k, 1, true, mode, 0, true); facadeCanvas(k, 1, true, 'day', 0, true);
+      for (const [, , w] of BOXES[k]) for (let f = 0; f < 4; f++) flowersStamp(w, mode, f);
+      spillStamp(WINS[k].find((w) => w.id === 'shop').w); signLampStamp(true, mode); signLampStamp(false, mode);
+    }
+    if (S.sky && S.sky.hz > 6) { for (let i = 0; i < 4; i++) starTier(i); moonStamp(); }
+    lampLightStamp(); for (const b of S.bunt || []) for (let f = 0; f < 4; f++) buntStamp(b, mode, f);
+    for (let f = -1; f <= 1; f++) mothStamp(mode, f); for (let f = 0; f < 4; f++) catStamp(mode, f);
+    for (let n = 1; n <= 3; n++) { puffStamp(n, mode, false); puffStamp(n, mode, true); }
+    for (const kd of ['sit', 'up', 'dn']) { birdStamp(mode, kd, false); birdStamp(mode, kd, true); }
+    owlStamp(0); owlStamp(1); batStamp(0); batStamp(1);
+    lifeTick(true);
+    lifeKick();
+  }
+  function lifeRun() { return !!(showing && LF.S && LF.host && !D.hidden && !rm() && !deskOn() && (!panel || LF.door)); }
+  function lifeKick() {
+    if (LF.raf || !lifeRun()) return;
+    const loop = (ts) => {
+      LF.raf = 0; if (!lifeRun()) return;
+      if (ts - LF.last >= 1000 / LIFE_FPS - 2) { const dt = Math.min(0.25, LF.last ? (ts - LF.last) / 1000 : 1 / LIFE_FPS); LF.last = ts; try { lifeTick(false, dt); } catch (e) { /* ignore: a frame lost */ } }
+      LF.raf = requestAnimationFrame(loop);
+    };
+    LF.last = 0; LF.raf = requestAnimationFrame(loop);
+  }
+  function lifeStop() { if (LF.raf) { cancelAnimationFrame(LF.raf); LF.raf = 0; } }
+  /** one step of life: the lights (from the clock) and, unless Less motion, the moving things; draws what changed */
+  function lifeTick(first, dt, lightsOnly) {
+    const S = LF.S; if (!S || !LF.gL) return;
+    dt = dt || 1 / LIFE_FPS; const now = performance.now(), still = rm();
+    const clk = clockNow(); LF.clk = clk;
+    if (clk.mode !== LF.mode && !first) { LF.mode = clk.mode; setTimeout(() => { if (showing) renderScene(false); }, 0); } // the street's grade changes (dusk, night, dawn, day): a new street
+    if (lightsOnly) LF.slowTicks = (LF.slowTicks | 0) + 1; else LF.ticks++; // ticks: the 12 fps steps; slowTicks: the 1 Hz light checks (Less motion, under a sheet)
+    // ---- lights ----
+    const mode = LF.mode, nightish = mode === 'night' || mode === 'dawn';
+    let sig = mode + '|' + (clk.L * 100 | 0);
+    for (const o of LF.items) {
+      const want = clk.L > o.thr && !(nightish && clk.nu >= o.offU);
+      if (o.on !== want) { if (o.on !== null && want && !still && !first) o.onAt = now; else o.onAt = 0; o.on = want; }
+      const flick = o.on && o.onAt && now - o.onAt < 380 ? (((now - o.onAt) / 64 | 0) % 3 === 1 ? 0 : 1) : 1;
+      o.show = o.on && flick === 1;
+      if (o.w && o.w.cover) { const tgt = o.blindU != null && nightish && clk.nu >= o.blindU ? 1 : 0; o.bf = still || first ? tgt : o.bf + clamp(tgt - o.bf, -dt / 1.4, dt / 1.4); }
+      sig += o.show ? '1' : '0'; if (o.bf) sig += (o.bf * 8 | 0);
+    }
+    const starAmt = mode === 'night' ? 1 : mode === 'dusk' || mode === 'dawn' ? clamp((clk.L - 0.3) / 0.55, 0, 1) : 0;
+    LF.starN = Math.ceil(starAmt * 4 - 0.001); sig += '|s' + LF.starN;
+    if (sig !== LF.sigL) { LF.sigL = sig; drawLights(clk); }
+    // ---- the moving things ----
+    if (still) { const k = mode + '|' + S.lw; if (LF.stillDrawn !== k || first) { LF.stillDrawn = k; drawLive(clk, now, true); } return; }
+    if (lightsOnly) return;
+    if (!first) stepLive(clk, dt, now);
+    drawLive(clk, now, false);
+  }
+  function drawLights(clk) {
+    const S = LF.S, g = LF.gL, mode = LF.mode; let n = 1;
+    g.clearRect(0, 0, S.lw, S.lh); LF.lightDraws++;
+    // the sky: stars by tier, the moon
+    if (S.sky && S.sky.hz > 6) {
+      for (let i = 0; i < LF.starN; i++) { g.drawImage(starTier(i), 0, 0); n++; }
+      if ((mode === 'night' || clk.L > 0.6 && mode !== 'day') && S.sky.hz > 14) { g.drawImage(moonStamp(), Math.round(S.lw * 0.8), Math.max(2, Math.round(S.sky.hz * 0.22))); n++; }
+    }
+    for (const o of LF.items) {
+      if (o.kind === 'back') { if (o.show) { g.fillStyle = o.b.c; g.fillRect(o.b.x, o.b.y, o.b.w, o.b.h); n++; } continue; }
+      if (o.kind === 'lamp') { if (o.show) { g.drawImage(lampLightStamp(), o.l.x - 12, o.l.base - 35); n++; } continue; }
+      if (o.kind === 'board') {
+        const bd = BOARD[o.k], open = true;
+        if (o.show) { g.drawImage(facadeCanvas(o.k, 1, open, 'day', 0, true), bd[0], bd[1], bd[2], bd[3], o.fx + bd[0], o.fy + bd[1], bd[2], bd[3]); n++; }
+        for (const [lx, ly] of SLAMPS[o.k]) { g.drawImage(signLampStamp(o.show, mode), o.fx + lx, o.fy + ly); n++; }
+        continue;
+      }
+      const w = o.w;
+      if (o.show) {
+        g.drawImage(facadeCanvas(o.k, 1, true, mode, 1, true), w.x, w.y, w.w, w.h, o.x, o.y, w.w, w.h); n++;
+        if (w.id === 'shop') { g.drawImage(spillStamp(w.w), o.fx + w.x - 6, S.Yb); n++; }
+      }
+      if (w.cover && o.bf > 0) n += blindRows(g, o.x, o.y, w.w, w.h, o.bf, o.show, w.cover, mode);
+    }
+    LF.lightCalls = n;
+  }
+  // ---- the moving things: smoke, bunting, birds, the cat, the moth sign, flowers, a door, the night's visitors ----
+  function stepLive(clk, dt, now) {
+    const S = LF.S, mode = LF.mode, day = mode === 'day' || mode === 'dusk', wind = clk.wind || 0;
+    // chimney smoke: the open shops' chimneys (1-2), puffs rise and drift with the wind, swell then thin out
+    for (const k of ['agent', 'tailor']) {
+      if (!CHIMNEY[k] || !S.by[k] || !LF.open[k]) continue;
+      LF.puffT[k] = (LF.puffT[k] || Math.random() * 0.5) - dt;
+      if (LF.puffT[k] <= 0) { LF.puffT[k] = 0.55 + Math.random() * 0.5; const it = S.by[k], c = CHIMNEY[k]; LF.puffs.push({ x: it.x + c[0] + 0.5, y: S.Yb - FAC[k].h + c[1], age: 0, life: 3 + Math.random() * 1.4, vx: 0.6 + wind * 3.2 + (Math.random() - 0.5) * 0.6, vy: -(4.5 + Math.random() * 2) }); }
+    }
+    for (const p of LF.puffs) { p.age += dt; p.x += (p.vx + Math.sin(p.age * 2.1 + p.life) * 0.5) * dt; p.y += p.vy * dt; p.vy *= 1 - 0.18 * dt; p.vx += wind * 1.4 * dt; }
+    LF.puffs = LF.puffs.filter((p) => p.age < p.life && p.y > -4);
+    // the bunting sways (faster in a wind), the flowers nod in a breeze now and then
+    LF.buntT -= dt; if (LF.buntT <= 0) { LF.bunt = (LF.bunt + 1) & 3; LF.buntT = 0.38 - Math.abs(wind) * 0.14 + Math.random() * 0.12; }
+    LF.nodT -= dt; if (LF.nodT <= 0) { LF.nod = (LF.nod + 1) & 3; LF.nodT = LF.nod === 0 ? 1.6 + Math.random() * 3 - Math.abs(wind) : 0.22; }
+    // the moth sign: a gust swings it, it settles (frames -1, 0, 1)
+    const sg = LF.sign; sg.t -= dt;
+    if (sg.t <= 0) { sg.v += (Math.random() < 0.5 ? -1 : 1) * (2.2 + Math.abs(wind) * 2); sg.t = 3 + Math.random() * 5 - Math.abs(wind) * 1.5; }
+    sg.v += -sg.a * 26 * dt; sg.v *= 1 - 1.6 * dt; sg.a += sg.v * dt; sg.f = Math.abs(sg.a) < 0.18 ? 0 : sg.a > 0 ? 1 : -1;
+    // the cat: blinks, flicks its tail, twitches an ear
+    const cat = LF.cat;
+    if (cat) { if (cat.dur > 0) { cat.dur -= dt; if (cat.dur <= 0) cat.f = 0; } cat.t -= dt; if (cat.t <= 0) { const r0 = Math.random(); cat.f = r0 < 0.45 ? 1 : r0 < 0.8 ? 2 : 3; cat.dur = cat.f === 1 ? 0.16 : 0.5; cat.t = 2 + Math.random() * 4; } }
+    // birds (day): land on a ridge, hop, turn, fly off; one or two at a time
+    if (day && LF.perches.length) {
+      if (LF.birds.length < 2 && Math.random() < dt / 5) { const pr = LF.perches[Math.random() * LF.perches.length | 0], tx = pr.x0 + Math.random() * (pr.x1 - pr.x0) | 0; LF.birds.push({ x: tx + 30, y: pr.y - 30, tx, ty: pr.y - 6, pr, st: 'in', t: 0, flip: true, f: 0 }); }
+      for (const b of LF.birds) {
+        b.t += dt;
+        if (b.st === 'in') { const dx = b.tx - b.x, dy = b.ty - b.y, d = Math.hypot(dx, dy); if (d < 1.2) { b.x = b.tx; b.y = b.ty; b.st = 'sit'; b.t = 0; b.next = 0.8 + Math.random() * 2; } else { const sp = 26 * dt; b.x += dx / d * sp; b.y += dy / d * sp; b.flip = dx < 0; } }
+        else if (b.st === 'sit') {
+          b.hop = 0;
+          if (b.t > b.next) {
+            b.t = 0; b.next = 0.6 + Math.random() * 2.2; const r0 = Math.random();
+            if (r0 < 0.12) { b.st = 'out'; b.vx = (Math.random() < 0.5 ? -1 : 1) * 24; b.vy = -14; b.flip = b.vx < 0; }
+            else if (r0 < 0.45) { b.flip = !b.flip; }
+            else { const nx = clamp(b.x + (b.flip ? -2 : 2), b.pr.x0, b.pr.x1); if (nx === b.x) b.flip = !b.flip; else { b.x = nx; b.hop = 0.12; } }
+          }
+        } else { b.x += b.vx * dt; b.y += b.vy * dt; b.vy -= 4 * dt; }
+        if (b.hop) b.hop -= dt;
+      }
+      LF.birds = LF.birds.filter((b) => b.st !== 'out' || (b.x > -10 && b.x < S.lw + 10 && b.y > -8));
+    } else if (LF.birds.length) { for (const b of LF.birds) if (b.st !== 'out') { b.st = 'out'; b.vx = 24; b.vy = -14; b.flip = false; } for (const b of LF.birds) { b.x += b.vx * dt; b.y += b.vy * dt; } LF.birds = LF.birds.filter((b) => b.x < S.lw + 10 && b.y > -8); }
+    // the candle windows flicker
+    for (const fw of LF.fire) { fw.t -= dt; if (fw.t <= 0) { fw.dim = Math.random() < (fw.dim ? 0.35 : 0.42); fw.t = fw.dim ? 0.06 + Math.random() * 0.14 : 0.08 + Math.random() * 0.6; } }
+    // night visitors: a shooting star now and then, a bat, the owl some nights
+    const fx = LF.fx, skyOk = S.sky && S.sky.hz > 16;
+    if (mode === 'night' && skyOk) {
+      fx.shootT -= dt; if (!fx.shoot && fx.shootT <= 0) { fx.shoot = { x: 10 + Math.random() * (S.lw - 20), y: 2 + Math.random() * S.sky.hz * 0.2, age: 0 }; fx.shootT = 14 + Math.random() * 26; }
+      fx.batT -= dt; if (!fx.bat && fx.batT <= 0) { const ltr = Math.random() < 0.5; fx.bat = { x: ltr ? -8 : S.lw + 1, y: S.sky.hz * (0.45 + Math.random() * 0.3), vx: (ltr ? 1 : -1) * (30 + Math.random() * 12), age: 0 }; fx.batT = 22 + Math.random() * 30; }
+    }
+    if (fx.shoot) { fx.shoot.age += dt; fx.shoot.x -= 70 * dt; fx.shoot.y += 32 * dt; if (fx.shoot.age > 0.6) fx.shoot = null; }
+    if (fx.bat) { fx.bat.age += dt; fx.bat.x += fx.bat.vx * dt; if (fx.bat.x < -10 || fx.bat.x > S.lw + 10) fx.bat = null; }
+    if (mode === 'night' && LF.owlAt && (clk.fixed || ((clk.cycle * 7 + 3) % 5) < 3)) { if (!LF.owl) LF.owl = { t: 0, blink: 0 }; LF.owl.t += dt; LF.owl.blink = (LF.owl.t % 4.3) > 4.1 ? 1 : 0; } else LF.owl = null;
+    // a door swinging (enter)
+    if (LF.door) { LF.door.t += dt; if (LF.door.t > 1.1) LF.door = null; }
+  }
+  function drawLive(clk, now, still) {
+    const S = LF.S, g = LF.gV, mode = LF.mode, nightish = mode === 'night' || mode === 'dawn'; let n = 1;
+    g.clearRect(0, 0, S.lw, S.lh); LF.liveDraws++;
+    const di = (c, x, y) => { g.drawImage(c, Math.round(x), Math.round(y)); n++; };
+    // twinkling stars (a few at a time), the shooting star, the bat
+    if (!still && LF.starN && LF.stars.length) {
+      const k = (now / 260) | 0;
+      for (let j = 0; j < 5; j++) {
+        const s = LF.stars[(k * 7 + j * 13) % LF.stars.length]; if (s.tier >= LF.starN) continue;
+        if (s.big) { g.fillStyle = P_.cream[2]; g.fillRect(s.x, s.y, 1, 1); g.fillStyle = P_.stone[2]; g.fillRect(s.x - 1, s.y, 1, 1); g.fillRect(s.x + 1, s.y, 1, 1); g.fillRect(s.x, s.y - 1, 1, 1); g.fillRect(s.x, s.y + 1, 1, 1); n += 5; }
+        else { g.fillStyle = P_.sea[1]; g.fillRect(s.x, s.y, 1, 1); n++; }
+      }
+    }
+    const fx = LF.fx;
+    if (fx.shoot) { const s = fx.shoot, x = Math.round(s.x), y = Math.round(s.y), cols = [P_.cream[2], P_.gold[3], P_.stone[2], P_.sea[2]]; for (let i = 0; i < 4; i++) { g.fillStyle = cols[i]; g.fillRect(x + i * 2, y - i, 2, 1); n++; } }
+    if (fx.bat) di(batStamp(((fx.bat.age * 8) | 0) & 1), fx.bat.x, fx.bat.y + Math.sin(fx.bat.age * 9) * 1.5);
+    if (LF.owl && LF.owlAt) di(owlStamp(LF.owl.blink), LF.owlAt.x, LF.owlAt.y);
+    // the candle windows (over their lit pane)
+    if (!still) for (const fw of LF.fire) { const o = fw.o; if (!o.show || !fw.dim) continue; const w = o.w; g.drawImage(facadeCanvas(o.k, 1, true, mode, 2, true), w.x, w.y, w.w, w.h, o.x, o.y, w.w, w.h); n++; if (o.bf > 0) n += blindRows(g, o.x, o.y, w.w, w.h, o.bf, true, w.cover, mode); }
+    // smoke
+    if (!still) for (const p of LF.puffs) { const u = p.age / p.life, sz = u < 0.15 ? 1 : u < 0.4 ? 2 : u < 0.75 ? 3 : u < 0.9 ? 2 : 1; di(puffStamp(sz, mode, u > 0.6), p.x - sz / 2, p.y - sz / 2); }
+    // bunting
+    for (const b of S.bunt || []) di(buntStamp(b, mode, still ? 0 : LF.bunt), b.x0, b.y0);
+    // the open shops' live parts: flowers, the moth sign
+    for (const k of BLD) {
+      if (!S.by[k] || !LF.open[k]) continue;
+      const it = S.by[k], fy = S.Yb - FAC[k].h;
+      for (const [x0, y, w] of BOXES[k]) di(flowersStamp(w, mode, still ? 0 : LF.nod), it.x + x0, fy + y - 3);
+      if (k === 'tailor') di(mothStamp(mode, still ? 0 : LF.sign.f), it.x, fy + 24);
+    }
+    // the cat on the wall
+    if (LF.cat) di(catStamp(mode, still ? 0 : LF.cat.f), LF.cat.x, LF.cat.y);
+    // birds
+    for (const b of LF.birds) { const flying = b.st !== 'sit'; di(birdStamp(mode, flying ? (((now / 90) | 0) & 1 ? 'up' : 'dn') : 'sit', b.flip), b.x - 3, b.y - (b.hop > 0 ? 1 : 0)); }
+    // a door swinging open as you go in (and shut after)
+    if (LF.door && S.by[LF.door.k]) {
+      const k = LF.door.k, t = LF.door.t, it = S.by[k], d = DOORS[k], fy = S.Yb - FAC[k].h, x = it.x + d[0], y = fy + d[1];
+      const stage = t < 0.09 || t > 0.95 ? 1 : 2, lit = nightish || mode === 'dusk';
+      const inner = lit ? P_.light[0] : P_.umber, glow = lit ? P_.gold[2] : P_.wood[1];
+      const open = stage === 2 ? d[2] - 2 : 3;
+      g.fillStyle = inner; g.fillRect(x + d[2] - open, y, open, d[3]); g.fillStyle = glow; g.fillRect(x + d[2] - open, y + d[3] - 2, open, 2); n += 2;
+      if (stage === 2) { g.drawImage(facadeCanvas(k, 1, true, mode, 0, true), d[0], d[1], 2, d[3], x, y, 2, d[3]); n++; } // the door's edge, swung back on its hinge
+    }
+    LF.liveCalls = n;
+  }
+  /** a shop's door swings open as you go in */
+  function lifeDoor(k) { if (!LF.S || rm() || !LF.S.by[k]) return; LF.door = { k, t: 0 }; lifeKick(); }
+
   /** the header, the main goal and Gus's line (cheap: text only when it changes) */
   let gusAt = 0;
   function renderChrome(force) {
@@ -41890,7 +42349,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   function close(silent) {
     if (!showing) return false;
     closePanel(true);
-    showing = false; stopTick(); ambStop();
+    showing = false; stopTick(); ambStop(); lifeStop();
     release();
     ov.hidden = true; ov.removeAttribute('aria-modal'); ov.classList.remove('rt-in'); root.classList.remove('rt-on');
     try { R.syncInert && R.syncInert(); } catch (e) { /* ignore */ }
@@ -41917,6 +42376,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       const b = ov && ov.querySelector(`[data-bld="${k}"]`); if (b && b.animate && !rm()) b.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }], { duration: 220 });
       return;
     }
+    lifeDoor(k); // the door swings open as you go in
     openPanel(k);
   }
   function openPanel(k) {
@@ -42132,7 +42592,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     if (!R || !R.state) return;
     if (R.mode !== 'game') { if (showing) close(true); return; }
     sync();
-    if (showing) { if (layClass() !== lastLay) { relayout(); } renderScene(false); dirty = false; }
+    if (showing) { if (layClass() !== lastLay) { relayout(); } renderScene(false); dirty = false; if (!LF.raf && !D.hidden) { try { lifeTick(false, 1, true); } catch (e) { /* ignore */ } lifeKick(); } }
   }
   /** the layout class changed under the town (a resize across a breakpoint): ui/layout.js rebuilds its columns on the next
    *  frame, so the popup dock goes home first and comes back after */
@@ -42161,6 +42621,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     const prevClose = L.closePanels && L.closePanels.bind(L);
     if (prevClose) L.closePanels = function () { closePanel(true); return prevClose.apply(L, arguments); };
     W.addEventListener('keydown', onKey, true);
+    D.addEventListener('visibilitychange', () => { if (D.hidden) lifeStop(); else lifeKick(); }); // town life: no frames in a hidden tab
     try { new MutationObserver(() => ensureHudBtn()).observe(E.hud, { childList: true }); } catch (e) { /* ignore */ }
     ensureHudBtn();
     for (const ev of ['instalment', 'prestige', 'rangeBought', 'visit', 'chest', 'chestOpen', 'buy', 'equip', 'locale', 'unlocked', 'trialFreePlay']) R.on(ev, () => { dirty = true; if (showing) setTimeout(() => { renderScene(false); renderChrome(false); }, 0); }); // the street's signature decides: nothing visible changed, nothing is touched
@@ -42181,6 +42642,20 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
      *  live here, in roster order (the engine's state.assistants via RANGE_RAT.assistants.list). Nothing is drawn yet */
     residents() { try { const A = R && R.assistants; return A && Array.isArray(A.list) ? A.list.slice() : []; } catch (e) { return []; } },
     hooks: { sign: signHook, chestNote },
+    /** town life (tests, QA): what's lit, drawn and running now. tick(): one step now (dt s) */
+    life: {
+      info() {
+        const it = LF.items || [], wins = it.filter((o) => o.kind === 'win');
+        return { running: !!LF.raf, mode: LF.mode, clock: LF.clk, ticks: LF.ticks, slowTicks: LF.slowTicks | 0, hz: LF.S && LF.S.sky ? LF.S.sky.hz : 0, lightDraws: LF.lightDraws, liveDraws: LF.liveDraws, lightCalls: LF.lightCalls | 0, liveCalls: LF.liveCalls | 0,
+          lit: wins.filter((o) => o.show).map((o) => o.id), wins: wins.length, blinds: wins.filter((o) => o.bf >= 0.99).map((o) => o.id), lamps: it.filter((o) => o.kind === 'lamp' && o.show).length,
+          back: it.filter((o) => o.kind === 'back' && o.show).length, boards: it.filter((o) => o.kind === 'board' && o.show).length, stars: LF.starN ? LF.stars.filter((x) => x.tier < LF.starN).length : 0,
+          puffs: LF.puffs.length, birds: LF.birds.length, cat: !!LF.cat, owl: !!LF.owl, door: LF.door ? LF.door.k : null, fire: LF.fire.map((f) => f.o.id), still: rm(),
+          canvases: LF.host && LF.host.shadowRoot ? [...LF.host.shadowRoot.querySelectorAll('canvas')].map((c) => ({ w: c.width, h: c.height, cw: c.style.width, ch: c.style.height })) : [] };
+      },
+      tick(dt) { try { lifeTick(false, dt || 1 / LIFE_FPS); } catch (e) { return String(e); } return true; },
+      /** the two layers' pixels (data URLs: QA screenshots, tests) */
+      layers() { return LF.cL ? { lights: LF.cL.toDataURL(), live: LF.cV.toDataURL() } : null; }
+    },
     /** a passer-by now (tests; the street sends one by itself every 11-23 s while it shows) */
     passBy() { clearTimeout(ambT); ambT = 0; ambWalk(); return !!(ov && ov.querySelector('.rt-walker')); }
   };

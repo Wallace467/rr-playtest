@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-08-39f893db-d5ddb18b">
+<meta name="rr-pwa" content="2026-11-08-ebcec079-5248ce22">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-08-39f893db">
+<meta name="range-rat-build" content="2026-11-08-ebcec079">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-39f893db", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-ebcec079", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-39f893db", "builtAt": "2026-11-08T18:59:01Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-ebcec079", "builtAt": "2026-11-08T20:27:41Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -42305,7 +42305,9 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
  * then one passer-by walks along the road (a transform + a 2-frame strip, gone when it's across; none with Less motion), and
  * the rat walks to the shop you go into. Town life (2026-11-07: lights, stars, smoke, birds, a cat... see "town life" below)
  * draws on its own two canvases at 12 fps while the street shows (no DOM changes; nothing at all with Less motion, in a
- * hidden tab or under a building's sheet). Desk mode: no town (a toast).
+ * hidden tab or under a building's sheet). Desk mode: no town (a toast). All the town's pixel art (the street, shop fronts,
+ * sprites, life's stamps) is drawn through a pixel buffer, one canvas call a picture (pixG), and a backdrop once drawn is
+ * kept per look (bgMemo): a grade change or a new passer-by costs a few hundred canvas calls at most, not thousands.
  * API: window.RANGE_RAT_TOWN = { open(at), close(), toggle(), openAgent(), showing, panel, isOpen(k), iconURL(s), hooks,
  *   signs(), state(), residents() (the assistants who'll have houses: DECISIONS 48, later phase), name(), passBy() }.
  */
@@ -42328,21 +42330,58 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   // ------------------------------------------------------------------ pixels: sprites + placeholder art (procedural, game palette)
   const ALPHA = '0123456789abcdefghijklmnopqrstuv', ALPHA64 = ALPHA + 'wxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#';
   const urls = {};
+  /** a 2D context for the town's pixel art, drawn in one canvas call: fillRect / clearRect on whole pixels with an opaque
+   *  '#rrggbb' fill write a pixel buffer, and end() puts it on the canvas (putImageData). The street, the shop fronts, the
+   *  sprites and town life's stamps are thousands of 1-px rects each: drawn one canvas call a rect, a new grade's street
+   *  was ~9K calls in one frame and a passer-by's first walk ~450 (perf town_life, 2026-11-08). Anything else (an image,
+   *  another fill) is drawn for real, after the buffer is put, and the buffer is read back before the next rect, so the
+   *  picture is the same pixels in the same order. The canvas starts cleared (a new one, or cleared by its first rect) */
+  const RGB = {}, LE = new Uint8Array(new Uint32Array([1]).buffer)[0] === 1;
+  /** '#rrggbb' as the buffer's 32-bit pixel (RGBA bytes, opaque); null: not a plain opaque colour (drawn for real) */
+  function rgbOf(c) {
+    let v = RGB[c]; if (v !== undefined) return v;
+    v = null; if (LE && typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c)) { const n = parseInt(c.slice(1), 16); v = (0xff000000 | ((n & 255) << 16) | (n & 0xff00) | (n >>> 16)) >>> 0; }
+    return (RGB[c] = v);
+  }
+  function pixG(c, opts) {
+    const w = c.width, h = c.height, g = c.getContext('2d', opts);
+    let img = null, px = null, dirty = false, stale = false;
+    const buf = () => { if (!img || stale) { img = stale ? g.getImageData(0, 0, w, h) : new ImageData(w, h); px = new Uint32Array(img.data.buffer); stale = false; } return px; };
+    const put = () => { if (dirty) { g.putImageData(img, 0, 0); dirty = false; } };
+    const real = () => { put(); stale = true; return g; }; // anything drawn for real: the buffer's pixels first, read back before the next rect
+    const fill = (x, y, ww, hh, v) => {
+      if (ww < 0) { x += ww; ww = -ww; } if (hh < 0) { y += hh; hh = -hh; }
+      const x0 = Math.max(0, x), x1 = Math.min(w, x + ww), y0 = Math.max(0, y), y1 = Math.min(h, y + hh); if (x0 >= x1 || y0 >= y1) return;
+      const p = buf(); for (let yy = y0; yy < y1; yy++) p.fill(v, yy * w + x0, yy * w + x1); dirty = true;
+    };
+    const whole = (x, y, ww, hh) => Number.isInteger(x) && Number.isInteger(y) && Number.isInteger(ww) && Number.isInteger(hh);
+    const o = {
+      canvas: c, fillStyle: '#000000',
+      fillRect(x, y, ww, hh) { const v = rgbOf(o.fillStyle); if (v != null && whole(x, y, ww, hh)) fill(x, y, ww, hh, v); else { const r = real(); r.fillStyle = o.fillStyle; r.fillRect(x, y, ww, hh); } },
+      clearRect(x, y, ww, hh) { if (whole(x, y, ww, hh)) fill(x, y, ww, hh, 0); else real().clearRect(x, y, ww, hh); },
+      drawImage() { const r = real(); r.drawImage.apply(r, arguments); },
+      set imageSmoothingEnabled(v) { g.imageSmoothingEnabled = v; }, get imageSmoothingEnabled() { return g.imageSmoothingEnabled; },
+      getImageData(x, y, ww, hh) { put(); return g.getImageData(x, y, ww, hh); },
+      /** put what's buffered on the canvas (the picture is done) */
+      end() { put(); return c; }
+    };
+    return o;
+  }
   function spriteURL(name, s, frame) {
     const key = 's:' + name + '@' + s + ':' + (frame || 0); if (urls[key] != null) return urls[key];
     const S = W.SPRITES, sp = S && S.sprites && S.sprites[name]; if (!sp) return (urls[key] = '');
     const r = sp.res > 1 ? sp.res | 0 : 1, pal = sp.pal || S.palette, fr = sp.frames[(frame || 0) % sp.frames.length];
-    const c = D.createElement('canvas'); c.width = sp.w * s; c.height = sp.h * s; const g = c.getContext('2d'); const px = s / r;
+    const c = D.createElement('canvas'); c.width = sp.w * s; c.height = sp.h * s; const g = pixG(c); const px = s / r;
     for (let y = 0; y < sp.h * r; y++) { const row = fr[y] || ''; for (let x = 0; x < sp.w * r; x++) { const ch = row[x]; if (!ch || ch === '.') continue; let i = pal.length > 32 ? ALPHA64.indexOf(ch) : -1; if (i < 0) i = ALPHA.indexOf(ch); const col = pal[i]; if (!col) continue; g.fillStyle = col; g.fillRect(Math.floor(x * px), Math.floor(y * px), Math.ceil(px), Math.ceil(px)); } }
-    try { return (urls[key] = c.toDataURL()); } catch (e) { return (urls[key] = ''); }
+    g.end(); try { return (urls[key] = c.toDataURL()); } catch (e) { return (urls[key] = ''); }
   }
   const pal = () => (W.SPRITES && W.SPRITES.palette) || ['#2a1c16', '#4b3226', '#7d5636', '#b8864f', '#efdfb6', '#fffaee'];
   /** a pixel map (rows of chars) with a char -> colour key, at scale s */
   function mapURL(key, rows, cols, s) {
     const k = 'm:' + key + '@' + s; if (urls[k] != null) return urls[k];
-    const w = rows[0].length, h = rows.length, c = D.createElement('canvas'); c.width = w * s; c.height = h * s; const g = c.getContext('2d');
+    const w = rows[0].length, h = rows.length, c = D.createElement('canvas'); c.width = w * s; c.height = h * s; const g = pixG(c);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const col = cols[rows[y][x]]; if (!col) continue; g.fillStyle = col; g.fillRect(x * s, y * s, s, s); }
-    try { return (urls[k] = c.toDataURL()); } catch (e) { return (urls[k] = ''); }
+    g.end(); try { return (urls[k] = c.toDataURL()); } catch (e) { return (urls[k] = ''); }
   }
   // PLACEHOLDER ART (art/PIXELLAB_PROMPTS.md "Town"): the bar / HUD icon, Ferris the ferret, the moth tailor
   const ICON = ['....kk....', '...krrk...', '..krrrrk..', '.krrrrrrk.', 'kkkkkkkkkk', '.kccccccc.', '.kcyckkck.', '.kcyckbck.', '.kccckbck.', '.kkkkkkkk.'];
@@ -42393,7 +42432,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   function facadeCanvas(kind, s, open, mode, litW, bare) {
     if (mode === true) mode = 'night'; else if (!mode) mode = 'day';
     const key = 'f:' + kind + ':' + (open ? 1 : 0) + mode + (litW | 0) + (bare ? 'b' : '') + '@' + s; if (facC[key]) return facC[key];
-    const night = mode === 'night', F = FAC[kind], c = D.createElement('canvas'); c.width = F.w * s; c.height = F.h * s; const g = c.getContext('2d');
+    const night = mode === 'night', F = FAC[kind], c = D.createElement('canvas'); c.width = F.w * s; c.height = F.h * s; const g = pixG(c);
     const { r, lit, ol, map } = painter(g, s, mode);
     /** a pane: day = the sky in it and a glint; lit = warm light (2: a candle's low glow); night = dark */
     const glass = (x, y, w, h, back) => {
@@ -42527,7 +42566,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       if (open) { glass(32, 53, 6, 3); r(31, 57, 4, 3, '#263d2b'); r(36, 57, 3, 3, '#263d2b'); r(35, 52, 1, 8, K0); r(34, 56, 1, 1, '#f2c641'); r(36, 56, 1, 1, '#f2c641'); } else shut(30, 52, 10, 8);
       r(0, 61, 44, 1, K0); r(28, 60, 14, 2, K0); r(29, 60, 12, 1, '#cdd5dc');
     }
-    return (facC[key] = c);
+    g.end(); return (facC[key] = c);
   }
   /** the shop front the street shows: windows dark, the live parts left to town life when it's open */
   function facadeURL(kind, s, open, mode) {
@@ -42537,7 +42576,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   /** a range's scenery thumbnail (the Journal's road uses the same idea: ui/layout.js rangeArtURL) */
   function rangeArtURL(id, s) {
     const key = 'r:' + id + '@' + s; if (urls[key] != null) return urls[key];
-    const t = (W.SPRITES && W.SPRITES.themes && W.SPRITES.themes[id]) || {}, N = 19, c = D.createElement('canvas'); c.width = N * s; c.height = N * s; const g = c.getContext('2d');
+    const t = (W.SPRITES && W.SPRITES.themes && W.SPRITES.themes[id]) || {}, N = 19, c = D.createElement('canvas'); c.width = N * s; c.height = N * s; const g = pixG(c);
     const r = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x * s, y * s, w * s, h * s); };
     const ell = (cx, cy, rx, ry, col) => { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1) r(x, y, 1, 1, col); };
     const hz = 7; r(0, 0, N, hz, t.sky || '#b9c2a4');
@@ -42547,7 +42586,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     else if (id === 'resort') { ell(9.5, 13, 8, 4, t.water || '#4cb5ae'); ell(9.5, 12.6, 6.5, 2.6, '#6fcac2'); }
     else if (id === 'neon') { for (const [x, y] of [[3, 9], [8, 5], [15, 8], [11, 13], [5, 15]]) r(x, y, 1, 1, '#d4ef6a'); }
     else if (id === 'links') { r(0, hz - 2, N, 3, t.water || '#4f7f95'); ell(12, 11.5, 9, 3, '#d9c48d'); }
-    try { return (urls[key] = c.toDataURL()); } catch (e) { return (urls[key] = ''); }
+    g.end(); try { return (urls[key] = c.toDataURL()); } catch (e) { return (urls[key] = ''); }
   }
   const img = (src, cls, w, h) => (src ? `<img alt="" aria-hidden="true" class="${cls || ''}" src="${src}"${w ? ` width="${w}"` : ''}${h ? ` height="${h}"` : ''}>` : '');
   const spr = (name, s, cls) => { const S = W.SPRITES && W.SPRITES.sprites && W.SPRITES.sprites[name]; return S ? img(spriteURL(name, s), cls, S.w * s, S.h * s) : ''; };
@@ -42886,9 +42925,9 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     const S = W.SPRITES, sp = S && S.sprites && S.sprites[name]; if (!sp) return (sprC[key] = null);
     const r = sp.res > 1 ? sp.res | 0 : 1, pl = sp.pal || S.palette, fr = sp.frames[(frame || 0) % sp.frames.length], sw = swap && S.swaps && S.swaps[swap];
     const rows = Array.isArray(fr) ? fr : (fr && fr.rows) || [];
-    const c = D.createElement('canvas'); c.width = sp.w * r; c.height = sp.h * r; const g = c.getContext('2d');
+    const c = D.createElement('canvas'); c.width = sp.w * r; c.height = sp.h * r; const g = pixG(c);
     for (let y = 0; y < sp.h * r; y++) { const row = rows[y] || ''; for (let x = 0; x < sp.w * r; x++) { const ch = row[x]; if (!ch || ch === '.') continue; let i = pl.length > 32 ? ALPHA64.indexOf(ch) : -1; if (i < 0) i = ALPHA.indexOf(ch); if (sw && sw[i] != null) i = sw[i]; const col = pl[i]; if (!col) continue; g.fillStyle = col; g.fillRect(x, y, 1, 1); } }
-    return (sprC[key] = c);
+    g.end(); return (sprC[key] = c);
   }
   /** a strip of a sprite's frames side by side at scale s (the walkers: background-position steps through it) */
   function stripURL(name, frames, s, swap, flip) {
@@ -42902,12 +42941,23 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   function ratSwap() { try { const o = R.state.cos && R.state.cos.equipped && R.state.cos.equipped.outfit, k = o && 'outfit_' + o; return k && W.SPRITES.swaps && W.SPRITES.swaps[k] ? k : ''; } catch (e) { return ''; } }
   /** the backdrop, one small canvas in art px shown at p: sky, the range far off, rooftops, pavement, kerb, cobbles, lamps */
   let bgCv = null;
+  /** the backdrops drawn (by what they're drawn from: the street's rows and slots, the range, the grade), so a re-lay that
+   *  doesn't move the street (a tag's text: an acorn total crossing a price, a chest) or a grade seen before (the next
+   *  evening) puts the same picture back instead of drawing it again: { url, out (what drawStreet adds to S) } */
+  const bgMemo = new Map();
   function drawStreet(el, S, rid, mode) {
-    const { p, lw, lh, Yb, kerbY, roadY, roadH, vergeY } = S, night = mode === 'night', eve = mode === 'dusk' || mode === 'dawn';
+    const key = [rid, mode, S.p, S.lw, S.lh, S.Yb, S.kerbY, S.roadY, S.roadH, S.vergeY, S.portrait ? 1 : 0, S.its.map((it) => it.k + ':' + it.x + ':' + it.w).join(','), S.lamps.join(',')].join('|');
+    let m = bgMemo.get(key);
+    if (!m) { m = drawStreetNew(S, rid, mode); bgMemo.set(key, m); if (bgMemo.size > 8) bgMemo.delete(bgMemo.keys().next().value); } else Object.assign(S, m.out);
+    const { p, lw, lh } = S;
+    el.style.width = lw * p + 'px'; el.style.height = lh * p + 'px'; el.style.backgroundSize = lw * p + 'px ' + lh * p + 'px';
+    if (m.url) el.style.backgroundImage = 'url(' + m.url + ')';
+  }
+  function drawStreetNew(S, rid, mode) {
+    const { lw, lh, Yb, kerbY, roadY, roadH, vergeY } = S, night = mode === 'night', eve = mode === 'dusk' || mode === 'dawn';
     const cv = bgCv || (bgCv = D.createElement('canvas'));
     if (cv.width !== lw || cv.height !== lh) { cv.width = lw; cv.height = lh; }
-    el.style.width = lw * p + 'px'; el.style.height = lh * p + 'px'; el.style.backgroundSize = lw * p + 'px ' + lh * p + 'px';
-    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, lw, lh);
+    const g = pixG(cv, { willReadFrequently: true }); g.imageSmoothingEnabled = false; g.clearRect(0, 0, lw, lh);
     const { r, lit, ol } = painter(g, 1, mode);
     const th = (W.SPRITES && W.SPRITES.themes && W.SPRITES.themes[rid]) || {};
     let seed = 0; for (const ch of 'puddleford' + rid) seed = (seed * 31 + ch.charCodeAt(0)) % 2147483647; seed = seed || 7;
@@ -43050,7 +43100,10 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
       if (!placedBench) bench(Math.round(lw * 0.5) - 8, vy); if (!placedBox) postbox(Math.round(lw * 0.13), vy);
       if (S.portrait) { lamp(Math.round(lw * 0.34), vy); lamp(Math.round(lw * 0.9), vy); } tub(Math.round(lw * 0.5) + 12, vy); if (placedBench) tub(Math.round(lw * 0.5) - 4, vy);
     }
-    try { el.style.backgroundImage = 'url(' + cv.toDataURL() + ')'; } catch (e) { /* ignore */ }
+    g.end(); let url = '', skyPx = null; try { url = cv.toDataURL(); } catch (e) { /* ignore */ }
+    try { skyPx = g.getImageData(0, 0, lw, Math.max(1, S.sky.hz)).data; } catch (e) { skyPx = null; } // where the stars may go (town life)
+    S.skyPx = skyPx;
+    return { url, out: { sky: S.sky, backWins: S.backWins, lampPts: S.lampPts, bunt: S.bunt, postboxX: S.postboxX, verge: S.verge, skyPx } };
   }
   /** a shop's name fits its board: the biggest whole-pixel size that does (again once the pixel font has loaded) */
   function fitSign(sg) { const h = parseFloat(sg.style.height) || 12; let fs = Math.round(h * 0.84); sg.style.fontSize = fs + 'px'; while (fs > 8 && sg.scrollWidth > sg.clientWidth + 1) sg.style.fontSize = --fs + 'px'; }
@@ -43204,11 +43257,11 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   const stC = {};
   function stamp(key, w, h, draw) {
     if (stC[key]) return stC[key];
-    const c = D.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h); const g = c.getContext('2d');
+    const c = D.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h); const g = pixG(c);
     const px = (x, y, col) => { if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); } };
     const rect = (x, y, ww, hh, col) => { if (col && ww > 0 && hh > 0) { g.fillStyle = col; g.fillRect(x, y, ww, hh); } };
     const rows = (x, y, map, cols) => { for (let j = 0; j < map.length; j++) for (let i = 0; i < map[j].length; i++) px(x + i, y + j, cols[map[j][i]]); };
-    draw({ g, px, rect, rows });
+    draw({ g, px, rect, rows }); g.end();
     return (stC[key] = c);
   }
   const LF = { // the life state (one street at a time)
@@ -43383,7 +43436,7 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     LF.fire = items.filter((o) => o.kind === 'win' && o.w.fire).filter(() => rnd() < 0.8).slice(0, 2).map((o) => ({ o, dim: false, t: 0 }));
     // the stars: seeded, in four tiers (they come out tier by tier), a few big bright ones
     const sk = S.sky; LF.stars = [];
-    let skyPx = null; try { if (bgCv && sk) skyPx = bgCv.getContext('2d').getImageData(0, 0, S.lw, Math.max(1, sk.hz)).data; } catch (e) { skyPx = null; }
+    const skyPx = S.skyPx || null;
     const bandRGB = sk ? sk.bands.map((c) => parseInt(c.slice(1), 16)) : [];
     const open = (x, y) => { if (!skyPx) return true; const i = (y * S.lw + x) * 4; return skyPx[i + 3] === 255 && bandRGB.includes((skyPx[i] << 16) | (skyPx[i + 1] << 8) | skyPx[i + 2]); }; // only on open sky: never on the skyline or a cloud
     const srnd = seeded('stars:' + rid + ':' + S.lw + ':' + (sk ? sk.hz : 0)); // its own seed: the sky doesn't change with what's open

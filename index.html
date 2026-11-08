@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-08-ebcec079-5248ce22">
+<meta name="rr-pwa" content="2026-11-08-bcb95a33-bb26a7dd">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-08-ebcec079">
+<meta name="range-rat-build" content="2026-11-08-bcb95a33">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-ebcec079", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-bcb95a33", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-ebcec079", "builtAt": "2026-11-08T20:27:41Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-bcb95a33", "builtAt": "2026-11-08T22:13:47Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -38744,6 +38744,32 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   const sprRes = (sp) => (sp && sp.res > 1 ? sp.res | 0 : 1);
   const palIdx = (S, sp, ch) => { const i = (sp.pal || S.palette).length > 32 ? ALPHA64.indexOf(ch) : -1; return i < 0 ? ALPHA.indexOf(ch) : i; };
   const urlCache = {};
+  /** perf (wide dock / rat corner, 2026-11-09): a sprite's pixels go into an ImageData and onto the canvas with ONE
+   *  putImageData, the way ui/town.js pixG does. Drawn as one fillRect an art pixel, a new rat-portrait frame was ~1.4K
+   *  canvas calls in one frame (each anim frame the first time it shows, again for every hat / outfit / look), Gus's dock
+   *  picture 1.35K and the Journal's portrait ~3.8K. Each art pixel is its own s x s square on a new (clear) canvas, so the
+   *  order doesn't matter: a plain opaque '#rrggbb' is written to the buffer (same bytes fillRect leaves), anything else
+   *  is filled for real after the put, on its own still-clear square. Same pixels. */
+  const RGB32 = {}, LE = new Uint8Array(new Uint32Array([1]).buffer)[0] === 1;
+  function rgb32(c) {
+    let v = RGB32[c]; if (v !== undefined) return v;
+    v = null; if (LE && typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c)) { const n = parseInt(c.slice(1), 16); v = (0xff000000 | ((n & 255) << 16) | (n & 0xff00) | (n >>> 16)) >>> 0; }
+    return (RGB32[c] = v);
+  }
+  function pixBuf(c, s) {
+    const w = c.width, h = c.height;
+    if (!Number.isInteger(s)) { const g = c.getContext('2d'); return { sq(x, y, ss, col) { g.fillStyle = col; g.fillRect(x, y, ss, ss); }, end() { return g; } }; } // fractional squares overlap: drawn for real, in order
+    const img = w && h ? new ImageData(w, h) : null, px = img && new Uint32Array(img.data.buffer); let slow = null;
+    return {
+      /** an s x s square of colour col at (x, y) (whole px) */
+      sq(x, y, s, col) {
+        const v = rgb32(col); if (v == null) { (slow || (slow = [])).push(col, x, y, s); return; }
+        const x1 = Math.min(w, x + s), y1 = Math.min(h, y + s); if (x >= x1) return;
+        for (let yy = y; yy < y1; yy++) px.fill(v, yy * w + x, yy * w + x1);
+      },
+      end() { const g = c.getContext('2d'); if (img) g.putImageData(img, 0, 0); if (slow) for (let i = 0; i < slow.length; i += 4) { g.fillStyle = slow[i]; g.fillRect(slow[i + 1], slow[i + 2], slow[i + 3], slow[i + 3]); } return g; }
+    };
+  }
   function spriteURL(name, scale, frame) {
     const key = name + '@' + scale + ':' + (frame || 0);
     if (urlCache[key] != null) return urlCache[key];
@@ -38753,15 +38779,16 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (r > 1) { const fc = frameCanvas(name, frame || 0), c = document.createElement('canvas'); c.width = sp.w * s; c.height = sp.h * s; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(fc, 0, 0, c.width, c.height); return (urlCache[key] = c.toDataURL()); }
     const fr = sp.frames[(frame || 0) % sp.frames.length];
     const c = document.createElement('canvas'); c.width = sp.w * s; c.height = sp.h * s;
-    const g = c.getContext('2d');
+    const b = pixBuf(c, s);
     for (let y = 0; y < sp.h; y++) {
       const row = fr[y] || '';
       for (let x = 0; x < sp.w; x++) {
         const ch = row[x]; if (!ch || ch === '.') continue;
         const col = (sp.pal || S.palette)[palIdx(S, sp, ch)]; if (!col) continue;
-        g.fillStyle = col; g.fillRect(x * s, y * s, s, s);
+        b.sq(x * s, y * s, s, col);
       }
     }
+    b.end();
     return (urlCache[key] = c.toDataURL());
   }
   const fcache = {};
@@ -38771,8 +38798,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const S = W.SPRITES, sp = S && S.sprites && S.sprites[name]; if (!sp) return null;
     let sw = null; if (swapKey && S.swaps) for (const k of String(swapKey).split('+')) if (S.swaps[k]) sw = Object.assign(sw || {}, S.swaps[k]); // 'rat_soot+outfit_moss': later keys win
     const r = sprRes(sp), pw = sp.w * r, ph = sp.h * r, pal = sp.pal || S.palette; // res-N: canvas is N x the logical size (c.lw/c.lh = logical)
-    const fr = sp.frames[f % sp.frames.length]; const c = document.createElement('canvas'); c.width = pw; c.height = ph; c.lw = sp.w; c.lh = sp.h; const g = c.getContext('2d');
-    for (let y = 0; y < ph; y++) { const row = fr[y] || ''; for (let x = 0; x < pw; x++) { const ch = row[x]; if (!ch || ch === '.') continue; let i = palIdx(S, sp, ch); if (sw && sw[i] != null) i = sw[i]; const col = pal[i]; if (!col) continue; g.fillStyle = col; g.fillRect(x, y, 1, 1); } }
+    const fr = sp.frames[f % sp.frames.length]; const c = document.createElement('canvas'); c.width = pw; c.height = ph; c.lw = sp.w; c.lh = sp.h; const b = pixBuf(c, 1); // one canvas call (pixBuf)
+    for (let y = 0; y < ph; y++) { const row = fr[y] || ''; for (let x = 0; x < pw; x++) { const ch = row[x]; if (!ch || ch === '.') continue; let i = palIdx(S, sp, ch); if (sw && sw[i] != null) i = sw[i]; const col = pal[i]; if (!col) continue; b.sq(x, y, 1, col); } }
+    b.end();
     return (fcache[key] = c);
   }
   /** frame index of a looping sequence at time t (ms), using the sprite's anim.ms */

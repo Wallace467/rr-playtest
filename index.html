@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-08-9b164719-c1aeaea8">
+<meta name="rr-pwa" content="2026-11-08-39f893db-d5ddb18b">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-08-9b164719">
+<meta name="range-rat-build" content="2026-11-08-39f893db">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-9b164719", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-08-39f893db", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-9b164719", "builtAt": "2026-11-08T17:57:55Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-08-39f893db", "builtAt": "2026-11-08T18:59:01Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -27114,6 +27114,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** the hedge band: a bushy hedge (clumps along its face, light tops, dark hollows, a few autumn leaves) with one wattle
    *  hurdle per Hedge Windbreak level along its face. Cached per zone (z.hedgeCv), rebuilt when the level changes */
   function drawHedge(g, z) {
+    if (caHedge(g, z, lvl('windbreak'))) return; // code art (Ben 2026-11-08): the same hedge as Oakridge's edge piece
     const wb = lvl('windbreak'), key = (z.x1 - z.x0) + ':' + (z.y1 - z.y0) + ':' + wb;
     if (z.hedgeKey !== key || !z.hedgeCv) {
       const W = Math.round(z.x1 - z.x0) + 3, H = Math.round(z.y1 - z.y0) + 2, c = makeCanvas(W, H), cg = c.getContext('2d'), L = z.side < 0;
@@ -30107,7 +30108,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         g.save(); g.beginPath(); g.rect(x0, y0, x1 - x0, y1 - y0); g.clip(); g.globalAlpha = gid === 'wildflower' ? 0.9 : 0.55;
         for (let y = y0; y < y1; y += tile.height) for (let x = x0; x < x1; x += tile.width) g.drawImage(tile, x, y);
         g.restore();
-        for (const gr of world.greens || []) drawSprite(g, 'target_green', gr.x, gr.y); // greens sit on top of the mow
+        { const bare = !!pinCosId(); for (const gr of world.greens || []) drawGreen(g, gr, bare); } // greens sit on top of the mow
       }
     }
     const bid = cosEq('beds');
@@ -30119,6 +30120,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     }
     const pid = cosEq('pin');
     if (pid && pid !== defaultCosId('pin') && hasSprite('pin_' + pid)) for (const gr of world.greens || []) {
+      if (caArt()) { drawSprite(g, 'pin_' + pid, gr.x, gr.y); continue; } // code art: the green was drawn bare, the pin stands in its cup
       try { const px = g.getImageData(gr.x - 2, gr.y - 14, 1, 1).data; g.fillStyle = `rgb(${px[0]},${px[1]},${px[2]})`; g.fillRect(gr.x + 1, gr.y - 15, 5, 4); } catch (er) { /* ignore */ }
       drawSprite(g, 'pin_' + pid, gr.x + 1, gr.y - 3);
     }
@@ -30920,7 +30922,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function setupCanvas() {
     canvas.width = G.W * renderScale; canvas.height = G.H * renderScale;
     ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false;
-    bgCanvas = makeCanvas(G.W, G.H); lightCanvas = makeCanvas(G.W, G.H);
+    bgCanvas = makeCanvas(G.W * bgRes(), G.H * bgRes()); lightCanvas = makeCanvas(G.W, G.H);
     bgDirty = true;
   }
   /** a live canvas resize (the auto graphics level stepping to / from renderScale 1, setRenderScale): setting canvas.width
@@ -30969,8 +30971,125 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       for (let s2 = 0; s2 < (big ? 6 : 3); s2++) { g.fillStyle = '#665233'; g.fillRect(Math.round(p.x + (rnd() - 0.5) * (rx * 2 + 8)), Math.round(p.y + (rnd() - 0.5) * (ry * 2 + 5)), 1, 1); }
     }
   }
+  // ---- code art (art/codeart/codeart.js, Ben 2026-11-08: "swap in the code-art flags/greens and grass now") ----
+  // The art is pixel buffers drawn by code at res 2 (2x2 art px per logical px). Adopted: each range's target green + its
+  // own flag, the field's grass (a field-wide mottled ground + seamless tiles) and Oakridge's hedge (its side edge piece and
+  // the gameplay hedge band). The other ranges keep today's edges (drawBoundary). Everything but the hedge band is baked
+  // into the cached background, which is kept at 2x while the code art is on (bgRes) so every art px survives; the hedge
+  // band is one cached blit a frame, as before. No per-frame cost. Gameplay never reads any of it: the pins (world.greens),
+  // trap zones and where balls land are the same with it off. ?codeart=off draws today's field (debugging; 1x background).
+  // Caches: CODEART.buf holds the small pieces' pixel data (tiles, greens, edges: kept for the session); CODEART.cv the canvases made
+  // from it (dropped by §I4 gfxRebuild: an iOS resume can blank them); CODEART.fieldCv the one composed field of the current
+  // range and field height. The field-wide ground is generated into it and not kept (360 x ~500 art px: ~0.7 MB a range),
+  // so a range opened again, a deck that moves the tee line, or a rebuild composes it again (CODEART.ms; ~15-40 ms desktop).
+  const CODEART = { off: QS.get('codeart') === 'off', buf: {}, cv: {}, fieldCv: null, ms: 0, n: 0 };
+  const caArt = () => (CODEART.off ? null : W.RR_CODEART_ART || null); // lazy: codeart.js is bundled after the engine (build.py OPTIONAL)
+  const bgRes = () => (caArt() ? 2 : 1); // the cached background's px per logical px
+  const caHex = (c) => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  const caRGB = {};
+  /** a code-art pixel buffer ({w, h, c: [css hex | null]}) -> a canvas (1 px = 1 art px); meta carried over */
+  function caCanvas(b) {
+    const c = makeCanvas(b.w, b.h), q = c.getContext('2d'), im = q.createImageData(b.w, b.h), d = im.data;
+    for (let i = 0; i < b.c.length; i++) {
+      const s = b.c[i]; if (!s) continue; const p = caRGB[s] || (caRGB[s] = caHex(s));
+      d[i * 4] = p[0]; d[i * 4 + 1] = p[1]; d[i * 4 + 2] = p[2]; d[i * 4 + 3] = 255;
+      if (!c._px) c._px = [i % b.w, (i / b.w) | 0]; // §I4: one known opaque pixel
+    }
+    q.putImageData(im, 0, 0); c.meta = b.meta; return c;
+  }
+  const caData = (k, f) => CODEART.buf[k] || (CODEART.buf[k] = f());
+  const caCv = (k, f) => CODEART.cv[k] || (CODEART.cv[k] = caCanvas(caData(k, f)));
+  /** the mown field of range rid between y0 and y1 (logical), composed once: the ground (stripe tones, the rough down both
+   *  sides, a field-wide mottle that never repeats) + the tiles' clumps / accents / worn patches over it (the variant and
+   *  worn tiles nudged off the grid, seeded: the same field every visit) + the rough tiles flush with the right edge */
+  function caFieldCanvas(A, rid, y0, y1) {
+    const key = rid + ':' + y0 + ':' + y1; if (CODEART.fieldCv && CODEART.fieldCv._key === key) return CODEART.fieldCv;
+    const t0 = nowMs(), T = A.TILE / 2, cols = Math.ceil(G.W / T), hh = Math.ceil(y1 - y0);
+    if (CODEART.fieldCv) { CODEART.fieldCv.width = CODEART.fieldCv.height = 1; CODEART.fieldCv = null; } // one composed field at a time (free the old one now)
+    const f = caCanvas(A.ground(rid, G.W * 2, hh * 2, A.TILE)), q = f.getContext('2d');
+    q.imageSmoothingEnabled = false;
+    const ts = {}; for (const s of ['A', 'B']) { ts[s] = {}; for (const k of ['base', 'v1', 'v2', 'worn', 'edge']) ts[s][k] = caCv('tile:' + rid + ':' + s + ':' + k, () => A.tile(rid, s, k, true)); }
+    for (let j = 0; j * T < hh; j++) {
+      const s = j % 2 ? 'B' : 'A';
+      for (let i = 0; i < cols; i++) {
+        const k = A.fieldPick(rid, i, j, cols), jit = k === 'base' || k === 'edge' ? 0 : 1, h = (i * 73856093 ^ j * 19349663) >>> 0;
+        q.drawImage(ts[s][k], i * T * 2 + jit * ((h % 13) - 6), j * T * 2 + jit * (((h >> 4) % 9) - 4));
+      }
+      q.drawImage(ts[s].edge, (G.W - T) * 2, j * T * 2); // the right-hand rough, flush with the edge
+    }
+    f._key = key; CODEART.fieldCv = f; CODEART.ms = nowMs() - t0; CODEART.n++;
+    return f;
+  }
+  /** buildBackground: the mown field (g: the 2x background, logical transform). false = draw today's field */
+  function caField(g, rid) {
+    const A = caArt(); if (!A) return false;
+    const y0 = Math.round(G.fieldD0), y1 = Math.round(G.fieldD1), f = caFieldCanvas(A, rid, y0, y1);
+    g.drawImage(f, 0, 0, f.width, (y1 - y0) * 2, 0, y0, G.W, y1 - y0);
+    g.fillStyle = (A.TURF[rid] || A.TURF.county)[0]; g.fillRect(0, y0 - 1, G.W, 1); // the tee line's cut edge (the turf's deepest tone)
+    return true;
+  }
+  /** buildBackground: Oakridge's side edge (the code-art hedge, tiled down both sides). false = drawBoundary */
+  function caEdge(g, rid) {
+    const A = caArt(); if (!A || rid !== 'county') return false;
+    const y0 = G.fieldD0 - 1, y1 = G.netD, w = A.EW / 2, h = A.EH / 2, eL = caCv('edge:' + rid + ':L', () => A.edge(rid, -1)), eR = caCv('edge:' + rid + ':R', () => A.edge(rid, 1));
+    g.save(); g.beginPath(); g.rect(0, y0, G.W, y1 - y0); g.clip();
+    for (let y = y0; y < y1; y += h) { g.drawImage(eL, 0, y, w, h); g.drawImage(eR, G.W - w, y + h / 2, w, h); g.drawImage(eR, G.W - w, y - h / 2, w, h); }
+    g.restore();
+    return true;
+  }
+  /** the Pin cosmetic in use (its sprite stands in the cup instead of the range's flag), or null */
+  function pinCosId() { if (!state || !state.cos || mode !== 'game') return null; const pid = cosEq('pin'); return pid && pid !== defaultCosId('pin') && hasSprite('pin_' + pid) ? pid : null; }
+  /** a target green at pin gr (buildBackground + the grass cosmetic's redraw). The code-art green's cup is at (gr.x, gr.y),
+   *  where golfers aim (pinAim); bare: the cup only (a Pin cosmetic) */
+  function drawGreen(g, gr, bare) {
+    const A = caArt(); if (!A) { drawSprite(g, 'target_green', gr.x, gr.y); return; }
+    const rid = rangeId(), c = caCv('green:' + rid + (bare ? ':bare' : ''), () => A.green(rid, { noFlag: !!bare })), m = c.meta;
+    g.drawImage(c, Math.round(gr.x) - m.ox, Math.round(gr.y) - m.oy, c.width / 2, c.height / 2);
+  }
+  /** the night mask (cached): a small light hole over each flag so they read in the dark; Firefly's pin lantern a warm pool */
+  function caFlagHoles(m) {
+    const A = caArt(); if (!A || !world.greens) return;
+    const rid = rangeId(), bare = !!pinCosId(), c = caCv('green:' + rid + (bare ? ':bare' : ''), () => A.green(rid, { noFlag: bare })), mt = c.meta;
+    for (const gr of world.greens) {
+      const X = Math.round(gr.x) - mt.ox, Y = Math.round(gr.y) - mt.oy;
+      blob(m, 'white', X + mt.flag.x, Y + mt.flag.y, 7, 6, 0.5);
+      if (mt.lantern) blob(m, 'white', X + mt.lantern.x, Y + mt.lantern.y + 2, 12, 10, 0.85);
+    }
+  }
+  /** what the night mask's key needs from the code art (the greens' spots, the art on / off, a Pin cosmetic) */
+  const caMaskSig = () => (caArt() ? 'ca' + (pinCosId() || '') + ':' + (world.greens || []).map((q) => (q.x | 0) + ',' + (q.y | 0)).join(';') : '');
+  /** Oakridge's gameplay hedge band (drawHedge): the code-art hedge at the zone's size, one wattle hurdle per Hedge
+   *  Windbreak level (as today's), cached per zone (z.hedgeCv: rebuilt when the size or the level changes) */
+  function caHedge(g, z, wb) {
+    const A = caArt(); if (!A) return false;
+    const Wl = Math.round(z.x1 - z.x0) + 3, Hl = Math.round(z.y1 - z.y0) + 2, L = z.side < 0, key = 'ca:' + Wl + ':' + Hl + ':' + wb;
+    if (z.hedgeKey !== key || !z.hedgeCv) {
+      const c = caCanvas(A.hedge(Wl, Hl, z.side)), q = c.getContext('2d'), hu = caCv('hurdle', () => A.hurdle());
+      const per = Math.ceil(wb / 2) + (wb % 2 && !L ? -1 : 0);
+      for (let k = 0; k < per; k++) { const yy = Math.round((k + 0.5) / Math.max(1, per) * (Hl - 12)) + 2; q.drawImage(hu, (L ? Wl - 4 : 1) * 2 - 1, yy * 2); }
+      z.hedgeCv = c; z.hedgeKey = key;
+    }
+    g.drawImage(z.hedgeCv, Math.round(L ? z.x0 : z.x0 - 2), Math.round(z.y0) - 1, Wl, Hl);
+    return true;
+  }
+  /** a canvas that draws nothing (buildBackground: today's field walked for its seeded draws only) */
+  const NULL_G = { fillStyle: '', globalAlpha: 1, fillRect() {}, beginPath() {}, ellipse() {}, fill() {} };
+  /** today's mown field (?codeart=off): 16 px mow stripes, the tee line's cut edge, speckle, Mudbank's mud, rough patches */
+  function legacyField(g, rid, th, rnd) {
+    const fillAD = (d0, d1, a0, a1, col) => { const p0 = G.toXY(a0, d0), p1 = G.toXY(a1, d1); g.fillStyle = col; g.fillRect(Math.round(Math.min(p0.x, p1.x)), Math.round(Math.min(p0.y, p1.y)), Math.round(Math.abs(p1.x - p0.x)), Math.round(Math.abs(p1.y - p0.y))); };
+    // mown stripes, 16px along the downrange axis
+    for (let d = G.fieldD0, i = 0; d < G.fieldD1; d += 16, i++) fillAD(d, Math.min(G.fieldD1, d + 16), 0, 1, i % 2 ? th.grassB : th.grassA);
+    // tee line edge
+    fillAD(G.fieldD0 - 1, G.fieldD0, 0, 1, shade(th.grassB, -0.25));
+    // grass speckle + rough patches
+    for (let i = 0; i < 260; i++) { const p = G.toXY(rnd(), lerp(G.fieldD0, G.fieldD1, rnd())); g.fillStyle = rnd() < 0.5 ? shade(th.grassA, 0.1) : shade(th.grassB, -0.1); g.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); }
+    if (rid === 'muni') drawMudbankMud(g, rnd); // playtest r3 note 10: Mudbank reads as mud, not grass with the odd puddle
+    const patches = rid === 'muni' ? 0 : rid === 'links' ? 6 : 2;
+    for (let i = 0; i < patches; i++) { const p = G.toXY(rnd(), lerp(G.fieldD0 + 10, G.fieldD1 - 10, rnd())); g.fillStyle = rid === 'muni' ? '#7a6a40' : th.rough; g.globalAlpha = 0.55; g.beginPath(); g.ellipse(p.x, p.y, 4 + rnd() * 9, 2 + rnd() * 4, 0, 0, 6.3); g.fill(); g.globalAlpha = 1; }
+  }
   function buildBackground() {
-    const g = bgCanvas.getContext('2d'); g.imageSmoothingEnabled = false;
+    const br = bgRes(); if (!bgCanvas || bgCanvas.width !== G.W * br || bgCanvas.height !== G.H * br) bgCanvas = makeCanvas(G.W * br, G.H * br); // code art: 2x (every art px), off: 1x
+    const g = bgCanvas.getContext('2d'); g.setTransform(br, 0, 0, br, 0, 0); g.imageSmoothingEnabled = false;
     const rid = rangeId(), th = theme(rid), rnd = mulberry(hashStr('bg' + rid + 'portrait')); // same seed as before: same field
     g.clearRect(0, 0, G.W, G.H);
     // helper: fill a rect in (a0..a1, d0..d1) downrange space
@@ -30990,20 +31109,16 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // tee strip texture
     g.fillStyle = shade(th.rough, -0.12);
     for (let i = 0; i < 70; i++) { const p = G.toXY(rnd(), rand(39, G.fieldD0 - 1)); g.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); }
-    // mown stripes, 16px along the downrange axis
-    for (let d = G.fieldD0, i = 0; d < G.fieldD1; d += 16, i++) fillAD(d, Math.min(G.fieldD1, d + 16), 0, 1, i % 2 ? th.grassB : th.grassA);
-    // tee line edge
-    fillAD(G.fieldD0 - 1, G.fieldD0, 0, 1, shade(th.grassB, -0.25));
-    // grass speckle + rough patches
-    for (let i = 0; i < 260; i++) { const p = G.toXY(rnd(), lerp(G.fieldD0, G.fieldD1, rnd())); g.fillStyle = rnd() < 0.5 ? shade(th.grassA, 0.1) : shade(th.grassB, -0.1); g.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); }
-    if (rid === 'muni') drawMudbankMud(g, rnd); // playtest r3 note 10: Mudbank reads as mud, not grass with the odd puddle
-    const patches = rid === 'muni' ? 0 : rid === 'links' ? 6 : 2;
-    for (let i = 0; i < patches; i++) { const p = G.toXY(rnd(), lerp(G.fieldD0 + 10, G.fieldD1 - 10, rnd())); g.fillStyle = rid === 'muni' ? '#7a6a40' : th.rough; g.globalAlpha = 0.55; g.beginPath(); g.ellipse(p.x, p.y, 4 + rnd() * 9, 2 + rnd() * 4, 0, 0, 6.3); g.fill(); g.globalAlpha = 1; }
-    // sides: a per-range boundary (fence / hedge / dyke) inside a clean outer band (§I2)
-    drawBoundary(g, rid, th);
+    // the mown field: the code art's tiles over a mottled ground, or today's stripes, speckle, mud and patches. With the code
+    // art on, today's field is still walked on a null canvas: its seeded draws keep rnd in step, so what comes after it
+    // (Mudbank's frayed net) lands exactly where it always did
+    const caOn = caField(g, rid);
+    legacyField(caOn ? NULL_G : g, rid, th, rnd);
+    // sides: a per-range boundary (fence / hedge / dyke) inside a clean outer band (§I2); code art: Oakridge's hedge
+    if (!caEdge(g, rid)) drawBoundary(g, rid, th);
     if (hasLights()) drawFloodPoles(g);
-    // target greens
-    for (const gr of world.greens || []) drawSprite(g, 'target_green', gr.x, gr.y);
+    // target greens (code art: each range's own green + flag; the cup only under a Pin cosmetic, drawn in the cosmetics pass)
+    { const bare = !!pinCosId(); for (const gr of world.greens || []) drawGreen(g, gr, bare); }
     // far end: fence + net
     fillAD(G.netD, G.endD, 0, 1, th.fence);
     const net = th.net;
@@ -31013,7 +31128,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     for (let a = 0.02; a < 1; a += 0.16) { const p = G.toXY(a, G.endD - 1); drawSprite(g, 'net_post', p.x, p.y); }
     try { if (mode === 'game') drawRangeCosmeticsBg(g); } catch (e) { /* cosmetics never break the field */ }
     bgDirty = false; bgSerial++; gfxWarm(); if (AMB.skyC) AMB.skyC._ok = false; // the 30 Hz sky redraws now too
-    { const p = G.toXY(0.5, lerp(G.fieldD0, G.fieldD1, 0.5)); gfxProbeSet('bg', bgCanvas, Math.round(p.x), Math.round(p.y)); } // §I4: the mown field is opaque
+    { const p = G.toXY(0.5, lerp(G.fieldD0, G.fieldD1, 0.5)); gfxProbeSet('bg', bgCanvas, Math.round(p.x) * br, Math.round(p.y) * br); } // §I4: the mown field is opaque
   }
 
   /** the dotted drop line under a ball in the air: dots every 3 px up from the ground (row DROP_H-1 = the ball's ground y) */
@@ -31328,9 +31443,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // perf: the cached background is blitted as is (a static canvas: no per-frame snapshot) and the tufts go on top as
     // ONE path fill (102 rects, same colour, opaque, pixel-aligned: identical pixels to the old per-rect fills). An
     // intermediate ground layer rebuilt ~11x/s cost a full-layer copy + snapshot each time (frame-time spikes).
-    const RS = renderScale; // perf (note 9): the background kept at backing res, so this is a 1:1 blit (same pixels)
-    if (RS === 1) g.drawImage(bgCanvas, 0, 0);
-    else { const hi = AMB.bgHi = hiCanvas(AMB.bgHi, G.W * RS, G.H * RS); if (hi._key !== bgSerial) { hi._key = bgSerial; hiCopy(hi, bgCanvas, 0, 0, G.W, G.H); const pb = GFXR.probes.get('bg'); if (pb) gfxProbeSet('bgHi', hi, pb.x * RS, pb.y * RS); } g.drawImage(hi, 0, 0, G.W, G.H); }
+    const RS = renderScale, br = bgCanvas.width / G.W; // perf (note 9): the background kept at backing res, so this is a 1:1 blit (same pixels)
+    if (RS === br) g.drawImage(bgCanvas, 0, 0, G.W, G.H); // 1x at renderScale 1; the code art's 2x background at renderScale 2
+    else { const hi = AMB.bgHi = hiCanvas(AMB.bgHi, G.W * RS, G.H * RS); if (hi._key !== bgSerial) { hi._key = bgSerial; hiCopy(hi, bgCanvas, 0, 0, bgCanvas.width, bgCanvas.height); const pb = GFXR.probes.get('bg'); if (pb) gfxProbeSet('bgHi', hi, pb.x * RS / br, pb.y * RS / br); } g.drawImage(hi, 0, 0, G.W, G.H); }
     g.fillStyle = col; g.beginPath();
     for (const t of feelRT.tufts) { const lean = rm ? 0 : (Math.sin(wave + t.ph + t.x * 0.03) > 0.3 ? 1 : 0); g.rect(t.x, t.y - 2, 1, 2); g.rect(t.x + 1 + lean, t.y - 3, 1, 3 - lean); g.rect(t.x + 2, t.y - 1, 1, 1); }
     g.fill();
@@ -32115,7 +32230,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const flS = fl.map((v, i) => v > 0 && steady('flood' + i)), blS = bl.map((v, i) => v > 0 && steady('bay' + i)), dlS = dl.map((v, i) => v > 0 && steady('deck' + i)), tlS = tl.map((v, i) => v > 0 && steady('terr' + i));
       const hlS = hl === 0 || steady('house');
       const sig = [rid, th.night ? 1 : 0, flS.join(), blS.join(), dlS.join(), tlS.join(), tls.length, hlS ? hl : 'f', lit, posts.join(), dls.length, h ? (h.x | 0) + ',' + (h.y | 0) : '', world.scenery.length,
-        (world.pools || []).map((q) => (q.x | 0) + ':' + (q.r | 0)).join(), game && !isOpen(), G.teeD, RS].join('|');
+        (world.pools || []).map((q) => (q.x | 0) + ':' + (q.r | 0)).join(), game && !isOpen(), G.teeD, RS, caMaskSig()].join('|');
       const lampHoles = (m, st) => {
         floods.forEach((f, i) => { if (fl[i] && flS[i] === st) { blob(m, 'white', lerp(f.x, f.aim * G.W, 0.75), 168, 40, 118, 0.62 * fl[i]); blob(m, 'white', f.x, f.top + 2, 10, 8, 0.9 * fl[i]); } });
         posts.forEach((x, i) => { if (bl[i] && blS[i] === st) { blob(m, 'white', x + 10, G.teeD - 10, 18, 20, bl[i]); blob(m, 'white', x + 10, G.teeD - 2, 22, 10, 0.9 * bl[i]); } });
@@ -32144,6 +32259,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         m.globalCompositeOperation = 'destination-out';
         lampHoles(m, true);
         for (const s of world.scenery) if (s.lantern && lit) blob(m, 'white', s.x, s.y - 10, 24, 24, 0.9);
+        caFlagHoles(m); // code art: the flags read in the dark (Firefly's pin lantern a warm pool)
         for (const pl of world.pools || []) blob(m, 'pool', pl.x, pl.y, pl.r * 1.12, pl.r * 1.12, 1);
         if (world.pools && world.pools.length) { // warm lamplight baked into the cached mask (free per frame): amber pools, jar-powered ones firefly-gold
           m.globalCompositeOperation = 'source-over';
@@ -37503,7 +37619,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     for (const m of [ratScratchCache, stampCache, bugTintCache, grassTileCache, iconCache]) for (const k in m) delete m[k];
     ringCache.clear();
     fullBubbleCv = null; dropCv = null;
-    bgCanvas = makeCanvas(G.W, G.H); lightCanvas = makeCanvas(G.W, G.H); bgDirty = true;
+    bgCanvas = makeCanvas(G.W * bgRes(), G.H * bgRes()); lightCanvas = makeCanvas(G.W, G.H); bgDirty = true;
+    CODEART.cv = {}; CODEART.fieldCv = null; // the code art's canvases (its pixel data is kept)
     AMB.bgHi = AMB.glowHi = AMB.skyC = AMB.gradC = AMB.winC = AMB.maskC = AMB.lightC = AMB.glowC = null; AMB.ls = AMB.lsA = null; AMB.moonC = {}; AMB.sunC = {};
     RL.L = []; restLayerReset(); // the resting-ball layers: remade at the right size and fully redrawn next frame
     LV.art = {}; LV.pc = null;
@@ -37652,6 +37769,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       moveWording() { return moveWording(); },
       /** round 4 QA note 11: ask Gus for a chatter line through the real path (his nag cooldowns apply); true = he said it */
       nag(cat) { return mode === 'game' ? gusBubble(String(cat), 0) : false; },
+      /** the ground under (x, y) as the rat's walk sees it (terrainAt: leaves / water / sand / puddle / null) */
+      terrainAt(x, y) { return terrainAt(+x, +y) || null; },
       /** one point inside each kind of ground the rat can walk through here (terrainStep): { leaves, water, sand, puddle } */
       terrainSpots() {
         const out = {};
@@ -37993,6 +38112,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     chestFx() { const m = Array.from(CP.ms).sort((a, b) => a - b), kinds = {}; for (let i = 0; i < CP.n; i++) { const k = CP.k[CP.live[i]]; kinds[k] = (kinds[k] | 0) + 1; } return { live: CP.n, peak: CP.peak, cap: CP.cap, max: CHP_MAX, colours: CH_PAL.length, msP50: +m[32].toFixed(2), msMax: +m[63].toFixed(2), frames: CP.frames, gov: CP.gov, q: +chQ.toFixed(3), kinds, spent: CP.spent, budget: CP.budget, refused: CP.refused, volleys: CP.volleys, stars: CP.fw }; },
     bench(n) { const out = []; perfReport(); for (let i = 0; i < (n || 120); i++) { renderMs += 16.7; const t = nowMs(); render(); ctx.getImageData(0, 0, 1, 1); out.push(nowMs() - t); } out.sort((a, b) => a - b); const r = perfReport(); return { frame: { avg: +(out.reduce((a, b) => a + b, 0) / out.length).toFixed(2), p95: +out[Math.floor(out.length * 0.95)].toFixed(2) }, amb: r.amb, sky: r.sky }; }, // debug: synchronous render benchmark (forces raster per frame)
     get renderScale() { return renderScale; }, // canvas backing px per logical px (hi-fi art: res-2 sprites need >= 2)
+    get codeart() { return { on: !!caArt(), bgRes: bgCanvas ? bgCanvas.width / G.W : bgRes(), bakeMs: +CODEART.ms.toFixed(2), bakes: CODEART.n }; }, // the code-art field (?codeart=off: today's); bakeMs: the last field composed (ms)
     setRenderScale(n) { n = Math.max(1, Math.min(8, n | 0)); GFX.baseRS = n; if (n !== renderScale) { renderScale = n; if (canvas) resizeCanvasNow(); } return renderScale; },
     /** graphics quality (perf pass): { pref: 'auto'|'high'|'low', level: 0-3 }. Assign 'auto'|'high'|'low' (a setting) or a level 0-3 (debug/QA: pins it until the setting changes) */
     get gfx() { return { pref: gfxPref(), level: GFX.level, renderScale, particles: GFX.part, liteNight: GFX.lite, lastP95: GFX.lastP95 == null ? null : +GFX.lastP95.toFixed(2), lastLate: GFX.lastLate, upNeed: GFX.upNeed, displayMs: +HZ.ema.toFixed(2), skipped: HZ.skipped }; }, // displayMs: the rAF interval; skipped: frames dropped on a >105 Hz display (perf, note 9)
@@ -38108,6 +38228,487 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 })();
+
+</script>
+<script>/* ---- art/codeart/codeart.js ---- */
+/* Range Rat CODE ART (2026-11-07; in the game since 2026-11-08): environment pieces authored as drawing code, at res 2 (2x2 art px per
+ * logical px, art/HIFI_STYLE.md), in the picked PixelLab look: 1 art px #2a1c16 outline on props, 3-5 tone hue-shifted
+ * ramps from the MASTER palette below, key light from the top-left, dithering only on big flat areas.
+ *
+ * Per range (muni Mudbank, county Oakridge, resort Lily Lagoon, neon Firefly Bays, links Gullhaven):
+ *   green(rid, o)     the target green + its flag (each range its own flag), 48x44 art px, anchor = the cup
+ *                     (o.noFlag: the cup only, for a Pin cosmetic)
+ *   tiles(rid)        the field's grass tiles, 32x32 art px (16 logical): base + 2 variants + worn + edge, in the two
+ *                     mow-stripe tones (A, B). Seamless (features wrap), so any arrangement tiles
+ *   edge(rid, side)   the boundary piece down each side of the field (Oakridge: the hedge), 24 x 64 art px, tiles in y
+ *   hedge(w, h, side) Oakridge's gameplay hedge band at any size (the trap zone), same drawing as its edge piece
+ *
+ * Pure pixel buffers (no canvas): the same code runs in the browser and in node (art/codeart/export.js writes PNGs for
+ * review and the style pass). The game (build.py bundles this file; loop/game.js "code art", Ben's OK 2026-11-08) uses the
+ * greens + flags, the grass tiles + ground and Oakridge's hedge (its edge piece and the gameplay hedge band); the other
+ * ranges' edge pieces stay here for review only (the game keeps today's fences / hedge / dyke for them). Each piece becomes
+ * a cached canvas baked into the field background; ?codeart=off in the page URL draws the old field (debugging).
+ */
+(function (root) {
+  'use strict';
+
+  // ===================================================================== MASTER PALETTE
+  // HIFI 64 (art/import_png.py: the palette the PixelLab picks are snapped to) + the environment ramps the field needs.
+  // Turf ramps are built round each range's theme greens (SPRITES.themes grassA / grassB stay the two stripe tones), the
+  // HIFI hue-shift rule: shadows cooler and bluer, highlights warmer and yellower. Every ramp is dark -> light.
+  const OUT = '#2a1c16'; // the outline (palette 0)
+  const RAMPS = {
+    // --- from HIFI 64 (unchanged)
+    wood: ['#2a1c16', '#4b3226', '#7d5636', '#a0703f', '#b8864f', '#dcb06c'],
+    cream: ['#d6c3a0', '#efdfb6', '#fffaee'],
+    red: ['#86292b', '#c9473b', '#e85e4a'],
+    gold: ['#8a6418', '#b98a2c', '#f2c641', '#fff2a6'],
+    foliage: ['#263d2b', '#3d5a2e', '#6b8b3c', '#a9bd5a', '#d8e08e'],
+    frog: ['#3b6b3c', '#63a84a', '#9fd36a'],
+    sea: ['#1f2947', '#2f5486', '#6a9fcb', '#9fd0e2'],
+    lagoon: ['#3a8c8a', '#4cb5ae'],
+    pink: ['#b76a6f', '#e8a193', '#f9d2c2'],
+    lilac: ['#4a2f63', '#6e5390', '#b98fcf', '#e2c8ef'],
+    stone: ['#383b43', '#80848e', '#b8bec2'],
+    sand: ['#a0703f', '#dcb06c', '#e8c47f', '#efdfb6'],
+    olive: ['#263d2b', '#8b9440', '#d8e08e'],
+    fox: ['#9a4a2a', '#dd7a36', '#f7a052'],
+    light: ['#e8892c', '#fff2a6'], // light sources only
+    glow: ['#d4ef6a'], // firefly
+    umber: ['#3d2226'],
+    // --- environment extension (new): turf per range [deep, shade, stripe B, stripe A, light, highlight]
+    turf_muni: ['#4b4a2c', '#5f6434', '#717d3d', '#7f8c46', '#959f4f', '#b2b466'],
+    turf_county: ['#2e4d2b', '#456f31', '#5f8a35', '#6e9a3e', '#8cb24a', '#b7d066'],
+    turf_resort: ['#3a6e3c', '#55963f', '#6aab43', '#7cbd4e', '#9ccf5b', '#c9e57d'],
+    turf_neon: ['#10232a', '#172f30', '#1d3d35', '#24493f', '#305d4d', '#4f8166'],
+    turf_links: ['#535f3e', '#6c7b49', '#849552', '#93a35c', '#acb66d', '#cfca88'],
+    // putting-surface ramps where the field turf has no lighter step (Firefly's moonlit green, Mudbank's tired one, Gullhaven's bleached top)
+    green_neon: ['#172f30', '#24493f', '#2f5c4c', '#3f7058', '#5c8f6e', '#8ab88a'],
+    green_muni: ['#4b4a2c', '#6a7438', '#7f8c46', '#919c4d', '#a9b05b', '#c6c477'],
+    green_links: ['#e3dca0'],
+        // mud (Mudbank's churned ground): rim, mud, wet middle, dried clod, wet glint
+    mud: ['#4e3c26', '#5d4c2e', '#665233', '#76603a', '#8d7c50', '#a8955f']
+  };
+  const TURF = { muni: RAMPS.turf_muni, county: RAMPS.turf_county, resort: RAMPS.turf_resort, neon: RAMPS.turf_neon, links: RAMPS.turf_links };
+  const RIDS = ['muni', 'county', 'resort', 'neon', 'links'];
+  const NAMES = { muni: 'Mudbank Municipal', county: 'Oakridge County Club', resort: 'Lily Lagoon Resort', neon: 'Firefly Bays', links: 'Gullhaven Links' };
+
+  // ===================================================================== pixel buffer + helpers
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function Buf(w, h) { this.w = w; this.h = h; this.c = new Array(w * h).fill(null); }
+  Buf.prototype.get = function (x, y) { return x < 0 || y < 0 || x >= this.w || y >= this.h ? null : this.c[y * this.w + x]; };
+  Buf.prototype.set = function (x, y, c) { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < this.w && y < this.h) this.c[y * this.w + x] = c; };
+  Buf.prototype.wset = function (x, y, c) { x = Math.round(x); y = Math.round(y); x = ((x % this.w) + this.w) % this.w; y = ((y % this.h) + this.h) % this.h; this.c[y * this.w + x] = c; }; // wraps: seamless tiles
+  Buf.prototype.wget = function (x, y) { x = ((x % this.w) + this.w) % this.w; y = ((y % this.h) + this.h) % this.h; return this.c[y * this.w + x]; };
+  Buf.prototype.fill = function (c) { this.c.fill(c); return this; };
+  Buf.prototype.clone = function () { const b = new Buf(this.w, this.h); b.c = this.c.slice(); return b; };
+  Buf.prototype.blit = function (s, ox, oy) { for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) { const c = s.c[y * s.w + x]; if (c) this.set(ox + x, oy + y, c); } return this; };
+  Buf.prototype.flipX = function () { const b = new Buf(this.w, this.h); for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) b.c[y * this.w + x] = this.c[y * this.w + this.w - 1 - x]; return b; };
+  // 4x4 Bayer: dither(x, y, t) is true on a share t of pixels, in an even ordered pattern
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const dither = (x, y, t) => t > (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
+  /** scattered dither: a fixed per-pixel hash instead of the ordered grid (organic, no screen-door on grass) */
+  const scatter = (x, y, t, s) => { let h = Math.imul((x & 1023) * 374761393 + (y & 1023) * 668265263 + (s | 0), 1274126177); h ^= h >>> 13; h = Math.imul(h, 1103515245); return ((h >>> 8) & 1023) / 1024 < t; };
+  /** 1 art px outline (OUT) on every empty pixel touching the silhouette (4-neighbours): Ben's "style A" bold outline */
+  function outline(b, col, test) {
+    col = col || OUT; const o = b.clone();
+    for (let y = 0; y < b.h; y++) for (let x = 0; x < b.w; x++) {
+      if (b.get(x, y)) continue;
+      if (b.get(x - 1, y) || b.get(x + 1, y) || b.get(x, y - 1) || b.get(x, y + 1)) { if (!test || test(x, y)) o.c[y * b.w + x] = col; }
+    }
+    return o;
+  }
+  /** a pixel-exact filled ellipse; f(x, y, u, v) picks the colour (u, v: -1..1 inside) */
+  function ellipse(b, cx, cy, rx, ry, f) {
+    for (let y = Math.floor(cy - ry - 1); y <= Math.ceil(cy + ry + 1); y++) for (let x = Math.floor(cx - rx - 1); x <= Math.ceil(cx + rx + 1); x++) {
+      const u = (x + 0.5 - cx) / rx, v = (y + 0.5 - cy) / ry; if (u * u + v * v > 1) continue;
+      const c = typeof f === 'function' ? f(x, y, u, v) : f; if (c) b.set(x, y, c);
+    }
+  }
+  const inE = (x, y, cx, cy, rx, ry) => { const u = (x + 0.5 - cx) / rx, v = (y + 0.5 - cy) / ry; return u * u + v * v <= 1; };
+  /** a lit round lump (leaf cluster, bush, stone): ramp dark -> light, light from the top-left, dithered terminator */
+  function lump(b, cx, cy, r, ramp, rnd, opts) {
+    opts = opts || {}; const ry = r * (opts.squash || 1), n = ramp.length;
+    ellipse(b, cx, cy, r, ry, (x, y, u, v) => {
+      const lit = -(u * 0.62 + v * 0.78), rim = u * u + v * v; // lit: +1 toward the light (top-left)
+      let t = 0.5 + lit * 0.55 - (rim > 0.72 ? 0.18 : 0); if (opts.wrap) t = Math.max(t, 0);
+      const k = t * (n - 1), i = Math.floor(k), fr = k - i; let ix = clampI(i + (fr > 0.5 && dither(x, y, (fr - 0.5) * 2 + 0.25) ? 1 : 0), 0, n - 1);
+      if (opts.speck && rnd && rnd() < opts.speck) ix = clampI(ix + (rnd() < 0.5 ? -1 : 1), 0, n - 1);
+      return ramp[ix];
+    });
+  }
+  const clampI = (v, a, z) => v < a ? a : v > z ? z : v;
+
+  // ===================================================================== (a) TARGET GREEN + FLAG
+  // Each range: the green's surface ramp, its lip (the raised edge, top-down: turf side, soil, sand, sod layers), and
+  // its flag: cloth ramps + a pattern, the stick and its top. The flag reads at game size and at night (bright top-left
+  // cloth, a light finial; Firefly Bays carries its own lantern, and hooks.py cuts a small light hole over every flag).
+  const FLAGS = {
+    muni: { // a tatty municipal flag: faded mustard, a red patch stitched on, a ragged fly edge, on a wooden stick
+      cloth: [RAMPS.gold.slice(1), RAMPS.red, RAMPS.cream], stick: ['#4b3226', '#b8864f'], top: ['#7d5636', '#a0703f'],
+      w: 13, h: 9, amp: 1.0, freq: 0.62, ragged: true,
+      pat: (u, v, x, y) => (x >= 8 && x <= 11 && y >= 4 && y <= 7) ? ((x + y) % 4 === 0 && (x === 8 || y === 4) ? 2 : 1) : 0
+    },
+    county: { // the club pin: crimson with a cream band at the foot, gold finial, white stick with red bands
+      cloth: [RAMPS.red, RAMPS.cream], stick: ['#d6c3a0', '#fffaee'], band: '#c9473b', top: ['#b98a2c', '#fff2a6'],
+      w: 13, h: 9, amp: 1.1, freq: 0.55,
+      pat: (u, v, x, y, h) => y >= h - 3 && y <= h - 2 ? 1 : 0
+    },
+    resort: { // a holiday pennant: pink and cream stripes tapering to a point, teal finial
+      cloth: [RAMPS.pink, RAMPS.cream], stick: ['#d6c3a0', '#fffaee'], top: ['#3a8c8a', '#9fd0e2'],
+      w: 14, h: 10, amp: 1.0, freq: 0.5, pennant: true,
+      pat: (u, v, x) => ((x >> 1) & 1)
+    },
+    neon: { // night flag: deep plum with a gold star, a little lantern hung from the top (reads in the dark)
+      cloth: [RAMPS.lilac.slice(0, 3), RAMPS.gold.slice(1)], stick: ['#4b3226', '#7d5636'], top: ['#2a1c16', '#2a1c16'], lantern: true,
+      w: 13, h: 9, amp: 1.0, freq: 0.55,
+      pat: (u, v, x, y) => { const dx = Math.abs(x - 6), dy = Math.abs(y - 4); return dx + dy <= 1 || (dx === 2 && dy === 0) || (dy === 2 && dx === 0) ? 1 : 0; }
+    },
+    links: { // a seaside saltire: navy with a white cross, longer and streaming flatter in the wind, salt-bleached stick
+      cloth: [RAMPS.sea.slice(0, 3), RAMPS.cream], stick: ['#80848e', '#b8bec2'], top: ['#80848e', '#fffaee'],
+      w: 16, h: 9, amp: 0.8, freq: 0.78,
+      pat: (u, v, x, y, h, w) => { const a = y - (x * (h - 1) / (w - 1)), b2 = y - ((w - 1 - x) * (h - 1) / (w - 1)); return Math.abs(a) < 1.05 || Math.abs(b2) < 1.05 ? 1 : 0; }
+    }
+  };
+  const GREEN_LOOK = {
+    muni: { turf: RAMPS.turf_muni, lip: 'mud', worn: 0.08 },
+    county: { turf: RAMPS.turf_county, lip: 'clipped', mow: true },
+    resort: { turf: RAMPS.turf_resort, lip: 'sand', collar: 'sand' },
+    neon: { turf: RAMPS.turf_neon, lip: 'moss', glow: true },
+    links: { turf: RAMPS.turf_links, lip: 'sod', fescue: true }
+  };
+  /** the putting surface: a lighter, finer ramp than the field (the green is the brightest grass on the range) */
+  function greenRamp(rid) {
+    const t = TURF[rid];
+    if (rid === 'neon') return RAMPS.green_neon;
+    if (rid === 'muni') return RAMPS.green_muni;
+    return [t[1], t[2], t[3], t[4], t[5], rid === 'links' ? RAMPS.green_links[0] : RAMPS.foliage[4]];
+  }
+
+  const GW = 48, GH = 44, GCX = 24, GCY = 31.5, GRX = 20.5, GRY = 8.5, CUPX = 27, CUPY = 31;
+  function green(rid, opts) {
+    const bare = !!(opts && opts.noFlag); // noFlag: the cup only (a Pin cosmetic stands in it instead of the range's own flag)
+    const L = GREEN_LOOK[rid] || GREEN_LOOK.county, F = FLAGS[rid] || FLAGS.county, R = greenRamp(rid), rnd = mulberry(hashStr('green:' + rid));
+    const b = new Buf(GW, GH);
+    // 1) the lip: the raised edge below the surface, 3 px deep (top-down: we see the front face of the green)
+    const lipD = rid === 'links' ? 4 : 3;
+    for (let x = 0; x < GW; x++) for (let d = 1; d <= lipD; d++) {
+      // the bottom of the surface ellipse at this column
+      const u = (x + 0.5 - GCX) / GRX; if (Math.abs(u) > 1) continue;
+      const yb = Math.floor(GCY + GRY * Math.sqrt(1 - u * u) - 0.5), y = yb + d, side = u > 0.15 ? 1 : 0; // right of centre: shade side
+      let c;
+      if (L.lip === 'mud') c = d === 1 ? R[1] : (rnd() < 0.18 ? RAMPS.mud[4] : side ? RAMPS.mud[0] : RAMPS.mud[2]);
+      else if (L.lip === 'clipped') c = d === 1 ? R[1] : d === 2 ? (side ? RAMPS.turf_county[0] : RAMPS.turf_county[1]) : (x % 3 === 0 ? RAMPS.turf_county[1] : '#4b3226');
+      else if (L.lip === 'sand') c = d === 1 ? RAMPS.sand[2] : side ? RAMPS.sand[0] : RAMPS.sand[1];
+      else if (L.lip === 'moss') c = d === 1 ? R[0] : (rnd() < 0.08 ? RAMPS.glow[0] : side ? '#10232a' : '#172f30');
+      else if (L.lip === 'sod') c = d % 2 ? (side ? RAMPS.turf_links[1] : RAMPS.turf_links[2]) : (side ? '#4b3226' : '#7d5636'); // revetted sod layers
+      b.set(x, y, c);
+    }
+    // 2) the surface: base tone, a lit crescent top-left (dithered into the base), a shaded crescent bottom-right, a fringe
+    ellipse(b, GCX, GCY, GRX, GRY, (x, y, u, v) => {
+      const r2 = u * u + v * v, lit = -(u * 0.55 + v * 0.83);
+      if (r2 > 0.86) return (lit > 0.25 ? R[2] : R[1]); // fringe / collar ring (a darker, longer cut)
+      let i = 3;
+      if (lit > 0.5) i = 4; else if (lit > 0.36 && scatter(x, y, (lit - 0.36) * 6, 11)) i = 4;
+      if (lit > 0.78 && r2 > 0.55) i = 5; // the rim catching the light (top-left)
+      if (lit < -0.5) i = 2; else if (lit < -0.36 && scatter(x, y, (-0.36 - lit) * 6, 12)) i = 2;
+      if (L.mow && i === 3 && ((x - y * 2 + 256) >> 2) % 2 === 0 && r2 < 0.75) i = 4; // manicured: diagonal mow bands
+      return R[i];
+    });
+    if (L.collar === 'sand') { // a sandy collar under the fringe, front only: the resort's raked edge
+      for (let x = 0; x < GW; x++) { const u = (x + 0.5 - GCX) / GRX; if (Math.abs(u) > 0.95) continue; const yb = Math.floor(GCY + GRY * Math.sqrt(1 - u * u) - 0.5); if (b.get(x, yb)) b.set(x, yb, dither(x, 0, 0.5) ? RAMPS.sand[2] : RAMPS.sand[3]); }
+    }
+    // 3) surface detail: a few highlight glints in the lit half, worn spots (muni), fescue wisps (links), dew/fireflies (neon)
+    for (let i = 0; i < 26; i++) {
+      const x = Math.round(GCX + (rnd() * 2 - 1) * GRX * 0.8), y = Math.round(GCY + (rnd() * 2 - 1) * GRY * 0.7); if (!inE(x, y, GCX, GCY, GRX * 0.86, GRY * 0.86)) continue;
+      if (Math.abs(x - CUPX) < 3 && Math.abs(y - CUPY) < 2) continue;
+      const u = (x - GCX) / GRX, v = (y - GCY) / GRY; if (-(u * 0.55 + v * 0.83) > 0) { b.set(x, y, R[5]); if (rnd() < 0.4) b.set(x + 1, y, R[4]); } else if (rnd() < 0.5) b.set(x, y, R[2]);
+    }
+    if (L.worn) for (let i = 0; i < 4; i++) { const x = Math.round(GCX + (rnd() * 2 - 1) * GRX * 0.6), y = Math.round(GCY + (rnd() * 1.6 - 0.8) * GRY * 0.6); if (Math.abs(x - CUPX) < 5) continue; b.set(x, y, RAMPS.mud[3]); b.set(x + 1, y, RAMPS.mud[2]); if (rnd() < 0.5) b.set(x, y + 1, RAMPS.mud[1]); }
+    if (L.fescue) for (let i = 0; i < 7; i++) { const x = Math.round(GCX + (rnd() * 2 - 1) * GRX), y0 = Math.round(GCY + GRY * Math.sqrt(Math.max(0, 1 - ((x - GCX) / GRX) ** 2))) - 1; if (!b.get(x, y0)) continue; b.set(x, y0 - 1, RAMPS.turf_links[5]); b.set(x + 1, y0 - 2, RAMPS.turf_links[4]); }
+    if (L.glow) for (const [x, y] of [[9, 33], [38, 28], [15, 27], [33, 36]]) { b.set(x, y, RAMPS.glow[0]); }
+    // 4) the cup: a dark hole, rim lit on the far (lower-right) lip; the stick's shadow falls down-right across the green
+    if (!bare) for (let k = 1; k <= 5; k++) { const sx = CUPX + 1 + k, sy = CUPY + (k >> 1); if (b.get(sx, sy) && inE(sx, sy, GCX, GCY, GRX * 0.9, GRY * 0.9)) b.set(sx, sy, R[1]); }
+    b.set(CUPX - 1, CUPY, OUT); b.set(CUPX, CUPY, OUT); b.set(CUPX + 1, CUPY, OUT); b.set(CUPX + 2, CUPY, '#3d2226'); b.set(CUPX - 2, CUPY, '#3d2226'); b.set(CUPX, CUPY - 1, '#3d2226'); b.set(CUPX - 1, CUPY - 1, R[1]); b.set(CUPX + 1, CUPY - 1, R[1]);
+    b.set(CUPX - 1, CUPY + 1, R[4]); b.set(CUPX, CUPY + 1, R[5]); b.set(CUPX + 1, CUPY + 1, R[4]);
+    // 5) the stick: 2 px (lit left, shade right) from the cup up; county: red bands
+    const top = 6, sx = CUPX;
+    if (!bare) for (let y = top; y < CUPY; y++) {
+      let l = F.stick[1], r = F.stick[0];
+      if (F.band && ((y - top) % 6 === 4 || (y - top) % 6 === 5)) { l = RAMPS.red[2]; r = RAMPS.red[0]; }
+      b.set(sx - 1, y, l); b.set(sx, y, r);
+    }
+    // 6) the cloth
+    if (!bare) flag(b, sx + 1, top, F, rnd);
+    // 7) the top: a finial ball (or Firefly's lantern)
+    if (bare) { /* no stick, no cloth, no top */ } else if (F.lantern) {
+      b.set(sx - 1, top - 1, F.stick[1]); b.set(sx, top - 1, F.stick[0]); b.set(sx - 1, top - 2, '#4b3226'); b.set(sx - 2, top - 2, '#4b3226'); b.set(sx - 3, top - 2, '#4b3226'); // a little crook
+      const lx = sx - 4, ly = top - 1; // the lantern hangs off the crook, left of the stick: cap, glass, base
+      b.set(lx, ly, OUT); b.set(lx - 1, ly + 1, OUT); b.set(lx, ly + 1, '#4b3226'); b.set(lx + 1, ly + 1, OUT);
+      for (let y = ly + 2; y <= ly + 4; y++) { b.set(lx - 1, y, RAMPS.light[0]); b.set(lx, y, RAMPS.light[1]); b.set(lx + 1, y, y === ly + 4 ? RAMPS.light[0] : RAMPS.gold[2]); }
+      b.set(lx - 1, ly + 5, '#4b3226'); b.set(lx, ly + 5, '#4b3226'); b.set(lx + 1, ly + 5, '#4b3226');
+    } else {
+      b.set(sx - 1, top - 1, F.top[1]); b.set(sx, top - 1, F.top[0]); b.set(sx - 1, top - 2, F.top[0]); b.set(sx, top - 2, F.top[0]);
+      b.set(sx - 1, top - 2, F.top[1]);
+    }
+    const o = outline(b);
+    o.meta = { ox: CUPX / 2, oy: CUPY / 2, flag: { x: (sx + 7) / 2, y: (top + 5) / 2 }, lantern: F.lantern && !bare ? { x: (sx - 4) / 2, y: (top + 2) / 2 } : null, bare };
+    return o;
+  }
+  /** the flag cloth: rows of a waving band. Each column is lit or shaded by the wave's slope (the folds), the
+   *  range's pattern picks the cloth ramp, the fly end is ragged (muni) or tapers to a point (resort) */
+  function flag(b, x0, y0, F, rnd) {
+    const W = F.w, H = F.h, ph = 0.6;
+    const top = (x) => Math.round(F.amp * Math.sin(x * F.freq + ph) * Math.min(1, x / 3));
+    for (let x = 0; x < W; x++) {
+      const t0 = top(x), slope = top(x + 1) - top(x - 1), fold = Math.cos(x * F.freq + ph); // fold: + facing the light
+      let h = H; if (F.pennant) h = Math.max(2, Math.round(H * (1 - x / (W + 1.5)))); if (F.ragged && x >= W - 2) h -= (x === W - 1 ? 3 : 1);
+      const yOff = F.pennant ? Math.round((H - h) / 2) : 0;
+      for (let y = 0; y < h; y++) {
+        if (F.ragged && x === W - 1 && (y === 2 || y === 5)) continue;
+        const pi = F.pat ? F.pat(x / W, y / h, x, y + yOff, H, W) : 0, ramp = F.cloth[pi] || F.cloth[0], n = ramp.length;
+        let i = n >= 3 ? 1 : n - 1; // base
+        if (fold > 0.45 || slope < 0) i = n - 1; // lit fold
+        if (fold < -0.55) i = 0; // fold in shade
+        if (y === h - 1 && i > 0) i -= 1; // the lower hem is a step darker (light from above)
+        if (y === 0 && x < 3 && i < n - 1 && fold > 0) i = n - 1; // the top edge by the hoist catches the light
+        b.set(x0 + x, y0 + t0 + y + yOff, ramp[clampI(i, 0, n - 1)]);
+      }
+    }
+  }
+
+  // ===================================================================== (b) GRASS TILES
+  // 32x32 art px (16 logical = one mow stripe). base / v1 / v2 / worn / edge, each in stripe A and B. The texture is
+  // calm on purpose (white balls must stay the brightest thing on the field): a low-contrast mottle with dithered edges,
+  // grass clumps (2-3 blades: lit tips, a shade root on the lower-right) and a few per-range accents.
+  const T = 32;
+  function valueNoise(seed, period) {
+    const r = mulberry(seed), g = []; for (let i = 0; i < period * period; i++) g.push(r());
+    const at = (x, y) => g[((y % period + period) % period) * period + ((x % period + period) % period)];
+    return (x, y, cell) => { const fx = x / cell, fy = y / cell, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fx - x0, ty = fy - y0, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+      return (at(x0, y0) * (1 - sx) + at(x0 + 1, y0) * sx) * (1 - sy) + (at(x0, y0 + 1) * (1 - sx) + at(x0 + 1, y0 + 1) * sx) * sy; };
+  }
+  /** one clump of blades at (x, y) (the root), wrapping. R = turf ramp, k = the stripe's base index */
+  function clump(b, x, y, R, k, rnd, opts) {
+    opts = opts || {}; const n = opts.n || (2 + (rnd() * 2 | 0)), tall = opts.tall || 0, lean = opts.lean || 0;
+    b.wset(x + 1, y + 1, R[k - 1]); // the root's shadow (down-right)
+    for (let i = 0; i < n; i++) {
+      const bx = x + (i === 0 ? 0 : i === 1 ? -1 : 1), h = 2 + (rnd() * 2 | 0) + tall - (i ? 1 : 0);
+      for (let j = 0; j < h; j++) { const lx = bx + (lean && j >= h - 2 ? lean : 0) + (i === 1 && j === h - 1 ? -1 : 0) + (i === 2 && j === h - 1 ? 1 : 0); b.wset(lx, y - j, j === h - 1 ? R[Math.min(R.length - 1, k + 2)] : R[k + 1]); }
+    }
+  }
+  const ACCENT = {
+    muni: (b, R, k, rnd, v) => { // dried clods and mud flecks; v2: a dandelion and a bottle-top of a weed
+      for (let i = 0; i < (v === 2 ? 6 : 3); i++) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x, y, RAMPS.mud[3]); b.wset(x + 1, y, RAMPS.mud[1]); }
+      if (v === 2) { const x = 6 + (rnd() * 20 | 0), y = 6 + (rnd() * 20 | 0); b.wset(x, y, RAMPS.gold[2]); b.wset(x - 1, y, RAMPS.gold[1]); b.wset(x, y - 1, RAMPS.gold[3]); b.wset(x + 1, y + 1, R[k - 1]); b.wset(x - 2, y + 1, R[k + 1]); b.wset(x + 2, y, R[k + 1]); }
+    },
+    county: (b, R, k, rnd, v) => { // clover: trefoils of light leaves round a dark heart
+      const n = v === 2 ? 4 : v === 1 ? 1 : 0;
+      for (let i = 0; i < n; i++) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x, y, R[k - 1]); b.wset(x - 1, y, R[k + 2]); b.wset(x + 1, y, R[k + 1]); b.wset(x, y - 1, R[k + 2]); b.wset(x + 1, y + 1, R[k - 1]); }
+      if (v === 2) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x, y, RAMPS.cream[2]); b.wset(x, y + 1, RAMPS.cream[0]); } // a white clover flower
+    },
+    resort: (b, R, k, rnd, v) => { // daisies: white petals round a gold eye
+      const n = v === 2 ? 4 : v === 1 ? 1 : 0;
+      for (let i = 0; i < n; i++) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x - 1, y, RAMPS.cream[2]); b.wset(x + 1, y, RAMPS.cream[1]); b.wset(x, y - 1, RAMPS.cream[2]); b.wset(x, y + 1, RAMPS.cream[0]); b.wset(x, y, RAMPS.gold[2]); b.wset(x + 1, y + 1, R[k - 1]); }
+    },
+    neon: (b, R, k, rnd, v) => { // moonlit blade tips; v2: a ring of tiny glowing toadstools; dew glints
+      for (let i = 0; i < 4; i++) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x, y, R[5]); }
+      if (v === 2) for (let i = 0; i < 3; i++) { const x = 8 + (rnd() * 16 | 0), y = 8 + (rnd() * 16 | 0); b.wset(x, y, RAMPS.glow[0]); b.wset(x, y + 1, '#d6c3a0'); b.wset(x + 1, y + 1, R[0]); }
+      if (v === 1) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x, y, '#9fd0e2'); }
+    },
+    links: (b, R, k, rnd, v) => { // fescue wisps leaning with the wind; v2: sea-pinks (thrift) and a shell
+      for (let i = 0; i < 4; i++) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x, y, R[5]); b.wset(x + 1, y - 1, R[5]); b.wset(x + 2, y - 2, R[4]); b.wset(x, y + 1, R[k - 1]); }
+      if (v === 2) for (let i = 0; i < 2; i++) { const x = rnd() * T | 0, y = rnd() * T | 0; b.wset(x, y, RAMPS.pink[1]); b.wset(x + 1, y, RAMPS.pink[2]); b.wset(x, y - 1, RAMPS.pink[2]); b.wset(x + 1, y + 1, R[k - 1]); b.wset(x - 1, y + 1, R[k + 1]); }
+    }
+  };
+  /** the worn tile: per range, the ground showing through */
+  const WORN = {
+    muni: (b, R, k, rnd) => { // a mud wallow: dark churned rim, wet middle, a glint, blades poking in at the rim
+      const cx = 16, cy = 16, rx = 11, ry = 6;
+      ellipse(b, cx, cy, rx + 1.5, ry + 1.5, (x, y, u, v) => (Math.abs(u) + Math.abs(v) > 1.25 && dither(x, y, 0.5)) ? null : RAMPS.mud[0]);
+      ellipse(b, cx, cy, rx, ry, (x, y, u, v) => { const lit = -(u * 0.55 + v * 0.83); return lit > 0.55 ? RAMPS.mud[4] : (u * u + v * v < 0.35 ? RAMPS.mud[2] : RAMPS.mud[3]); });
+      ellipse(b, cx + 2, cy + 1, 5, 2.5, RAMPS.mud[1]); b.set(cx - 1, cy, RAMPS.mud[5]); b.set(cx, cy, RAMPS.mud[5]); b.set(cx + 3, cy + 1, RAMPS.mud[4]);
+      for (let i = 0; i < 8; i++) { const x = rnd() * T | 0, y = rnd() * T | 0; if (!inE(x, y, cx, cy, rx + 3, ry + 3)) b.wset(x, y, rnd() < 0.5 ? RAMPS.mud[1] : RAMPS.mud[3]); }
+      for (let i = 0; i < 5; i++) { const a = rnd() * 6.283, x = Math.round(cx + Math.cos(a) * rx), y = Math.round(cy + Math.sin(a) * ry) + 1; clump(b, x, y, R, k, rnd, { n: 2 }); }
+    },
+    county: (b, R, k, rnd) => { // divots: a scar of bare soil with its turf flap folded back above it
+      for (const [cx, cy] of [[10, 12], [22, 23]]) {
+        for (let x = -3; x <= 3; x++) { b.wset(cx + x, cy, x > 1 ? '#4b3226' : '#7d5636'); b.wset(cx + x, cy + 1, '#4b3226'); }
+        b.wset(cx - 2, cy, '#a0703f'); for (let x = -2; x <= 2; x++) b.wset(cx + x, cy - 2, R[k + 2]); for (let x = -3; x <= 3; x++) b.wset(cx + x, cy - 1, R[k - 1]);
+      }
+    },
+    resort: (b, R, k, rnd) => { // a sandy scuff (from the beach path), dithered into the turf
+      ellipse(b, 16, 16, 12, 7, (x, y, u, v) => { const r = u * u + v * v; if (r > 0.6 && !dither(x, y, (1 - r) * 2.5)) return null; const lit = -(u * 0.55 + v * 0.83); return lit > 0.4 ? RAMPS.sand[3] : lit < -0.4 ? RAMPS.sand[1] : RAMPS.sand[2]; });
+      for (let i = 0; i < 5; i++) { const x = 8 + (rnd() * 16 | 0), y = 12 + (rnd() * 8 | 0); b.wset(x, y, RAMPS.sand[1]); }
+    },
+    neon: (b, R, k, rnd) => { // a mossy hollow with dew catching the moon
+      ellipse(b, 16, 16, 11, 6, (x, y, u, v) => { const r = u * u + v * v; if (r > 0.55 && !dither(x, y, (1 - r) * 2.2)) return null; return r < 0.3 ? R[0] : R[1]; });
+      for (let i = 0; i < 6; i++) { const x = 7 + (rnd() * 18 | 0), y = 12 + (rnd() * 8 | 0); b.wset(x, y, rnd() < 0.3 ? '#9fd0e2' : R[4]); }
+    },
+    links: (b, R, k, rnd) => { // a sandy scrape, rippled, with a bleached shell
+      ellipse(b, 16, 16, 12, 7, (x, y, u, v) => { const r = u * u + v * v; if (r > 0.6 && !dither(x, y, (1 - r) * 2.5)) return null; return ((y + (x >> 2)) % 3 === 0) ? RAMPS.sand[1] : (-(u * 0.55 + v * 0.83) > 0.35 ? RAMPS.sand[3] : RAMPS.sand[2]); });
+      b.set(14, 15, RAMPS.cream[2]); b.set(15, 15, RAMPS.pink[2]); b.set(15, 16, RAMPS.sand[1]);
+    }
+  };
+  /** the ground under the tiles, for a whole field at once (so the mottle runs on across tile edges, never repeats):
+   *  the stripe tone per 32-row band, the rough (a step darker) in the first and last 32 columns, a low-contrast mottle */
+  function mottleAt(rid, nz, x, y, R, kk, b) {
+    const n = nz(x, y, 8), sd = hashStr(rid);
+    if (n > 0.8 || (n > 0.7 && scatter(x, y, (n - 0.7) * 5, sd))) b.c[y * b.w + x] = R[kk - 1]; // sparse shade blobs
+    else if (n < 0.18 && scatter(x, y, (0.22 - n) * 1.6, sd + 1)) b.c[y * b.w + x] = R[kk + 1];
+  }
+  function ground(rid, w, h, edgeW) {
+    const R = TURF[rid] || TURF.county, b = new Buf(w, h), nz = valueNoise(hashStr('ground:' + rid), 64);
+    for (let y = 0; y < h; y++) { const k = ((y / T) | 0) % 2 ? 2 : 3; for (let x = 0; x < w; x++) { const kk = x < edgeW || x >= w - edgeW ? k - 1 : k; b.c[y * w + x] = R[kk]; mottleAt(rid, nz, x, y, R, kk, b); } }
+    return b;
+  }
+  function tile(rid, stripe, kind, bare) {
+    const R = TURF[rid] || TURF.county, k = stripe === 'A' ? 3 : 2, rnd = mulberry(hashStr('tile:' + rid + ':' + kind)), b = new Buf(T, T);
+    const edge = kind === 'edge';
+    const kk = edge ? k - 1 : k; // the rough at the field edge: a step darker and longer
+    if (!bare) b.fill(R[kk]);
+    // low-contrast mottle (one ramp step down), dithered edges: a value-noise field that tiles (period = the tile)
+    const nz = valueNoise(hashStr('mottle:' + rid + kind) + (stripe === 'A' ? 0 : 7), 4);
+    if (!bare) for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) mottleAt(rid + kind, nz, x, y, R, kk, b);
+    // clumps
+    const nC = edge ? 16 : kind === 'base' ? 7 : 9;
+    for (let i = 0; i < nC; i++) clump(b, rnd() * T | 0, rnd() * T | 0, R, kk, rnd, { tall: edge ? 1 + (rnd() * 2 | 0) : 0, lean: rid === 'links' ? 1 : 0 });
+    const v = kind === 'v1' ? 1 : kind === 'v2' ? 2 : 0;
+    if (!edge && ACCENT[rid]) ACCENT[rid](b, R, kk, rnd, v);
+    if (kind === 'worn' && WORN[rid]) WORN[rid](b, R, kk, rnd);
+    return b;
+  }
+  const TILE_KINDS = ['base', 'v1', 'v2', 'worn', 'edge'];
+  function tiles(rid, bare) { const o = { A: {}, B: {} }; for (const s of ['A', 'B']) for (const k of TILE_KINDS) o[s][k] = tile(rid, s, k, bare); return o; }
+  // how often each tile appears (worn: the per-range share; Mudbank is churned)
+  const MIX = { muni: { v1: 0.14, v2: 0.1, worn: 0.16 }, county: { v1: 0.12, v2: 0.07, worn: 0.03 }, resort: { v1: 0.14, v2: 0.1, worn: 0.03 }, neon: { v1: 0.14, v2: 0.07, worn: 0.05 }, links: { v1: 0.16, v2: 0.08, worn: 0.08 } };
+  /** which tile goes at grid cell (i, j) of the field (seeded: the same field every visit) */
+  function fieldPick(rid, i, j, cols) {
+    if (i === 0 || i === cols - 1) return 'edge';
+    const m = MIX[rid] || MIX.county, r = mulberry(hashStr(rid + ':' + i + ',' + j))();
+    if (r < m.worn) return 'worn'; if (r < m.worn + m.v1) return 'v1'; if (r < m.worn + m.v1 + m.v2) return 'v2'; return 'base';
+  }
+
+  // ===================================================================== (c) EDGE PIECES (tile in y, 24 x 64 art px)
+  const EW = 24, EH = 64;
+  /** Oakridge's hedge, the reference piece: a clipped hedge of overlapping leaf clusters, 5-tone foliage, light from the
+   *  top-left, dark hollows between clusters, a scalloped outlined face, a few autumn leaves and haws */
+  function hedgeBuf(w, h, side, seed, wrapY) {
+    const b = new Buf(w, h), rnd = mulberry(seed), F = RAMPS.foliage, L = side < 0;
+    const body = new Buf(w, h); // the hedge mass (deep), then clusters on top
+    const face = (y) => (L ? w - 3 : 2); // the field-side face column
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const inside = L ? x <= face(y) - 1 : x >= face(y) + 1; if (inside) body.set(x, y, F[0]); }
+    const put = wrapY ? (bb, x, y, c) => { if (x >= 0 && x < w) bb.wset(x, y, c); } : (bb, x, y, c) => bb.set(x, y, c);
+    // clusters: three depths (back, mid, front), front ones bulge over the face
+    for (const layer of [0, 1, 2]) {
+      const step = layer === 2 ? 7 : 6, n = Math.ceil(h / step) + 1;
+      for (let i = 0; i < n; i++) {
+        const r = layer === 2 ? 4 + (rnd() * 2 | 0) : 3 + (rnd() * 2 | 0), cy = i * step + (layer * 3) + (rnd() * 3 | 0);
+        const cx = layer === 2 ? (L ? w - 4 - (rnd() * 2 | 0) : 3 + (rnd() * 2 | 0)) : L ? (rnd() * (w - 6) | 0) + 2 : (rnd() * (w - 6) | 0) + 4;
+        const tmp = new Buf(w + 12, r * 2 + 4); lump(tmp, r + 2 + 6 + (cx - cx), r + 2, r, F.slice(layer === 0 ? 0 : 1), rnd, { speck: 0.08, squash: 0.92 });
+        for (let yy = 0; yy < tmp.h; yy++) for (let xx = 0; xx < tmp.w; xx++) { const c = tmp.c[yy * tmp.w + xx]; if (c) put(body, cx + xx - (r + 2 + 6), cy + yy - (r + 2), c); }
+      }
+    }
+    // autumn leaves and haws (a few, warm)
+    for (let i = 0; i < h / 10; i++) { const x = 2 + (rnd() * (w - 5) | 0), y = rnd() * h | 0; if (!body.get(x, y)) continue; put(body, x, y, rnd() < 0.5 ? RAMPS.fox[1] : RAMPS.gold[1]); if (rnd() < 0.5) put(body, x + 1, y + 1, RAMPS.fox[0]); }
+    for (let i = 0; i < h / 16; i++) { const x = 3 + (rnd() * (w - 7) | 0), y = rnd() * h | 0; if (!body.get(x, y)) continue; put(body, x, y, RAMPS.red[1]); put(body, x + 1, y, RAMPS.red[0]); put(body, x, y - 1, RAMPS.red[2]); }
+    // outline the face only (the outer side runs off the field)
+    const o = new Buf(w, h); o.c = body.c.slice();
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (body.get(x, y)) continue; const n = (xx, yy) => wrapY ? (xx >= 0 && xx < w && body.wget(xx, yy)) : body.get(xx, yy);
+      if (n(x - 1, y) || n(x + 1, y) || n(x, y - 1) || n(x, y + 1)) o.c[y * w + x] = OUT;
+    }
+    // the hedge's shadow on the grass, down-right of the face (right hedge: under it; left: a strip on the field side)
+    return o;
+  }
+  const EDGES = {
+    county: (side) => hedgeBuf(EW, EH, side, hashStr('edge:county' + side), true),
+    muni: (side) => { // a weathered post-and-rail fence: grey-brown rail, chunky posts with lit caps, nettles at the feet, a trodden strip
+      const b = new Buf(EW, EH), rnd = mulberry(hashStr('edge:muni' + side)), L = side < 0, rx = L ? 9 : 12, W2 = RAMPS.wood;
+      for (let y = 0; y < EH; y++) { // the trodden mud strip on the field side
+        const x0 = L ? rx + 4 : rx - 6; for (let x = x0; x < x0 + 4; x++) if (dither(x, y, 0.45 + 0.3 * Math.sin(y * 0.3))) b.set(x, y, (x + y) % 5 ? RAMPS.mud[3] : RAMPS.mud[1]);
+      }
+      for (let y = 0; y < EH; y++) { b.set(rx - 1, y, OUT); b.set(rx, y, (y % 9 === 3) ? W2[3] : W2[4]); b.set(rx + 1, y, W2[2]); b.set(rx + 2, y, OUT); if (y % 13 === 6) b.set(rx + 1, y, W2[1]); } // the rail (lit left)
+      for (let py = 4; py < EH; py += 16) { // posts: 6x5 tops, lit top-left, outlined, a crack
+        for (let y = -1; y <= 5; y++) for (let x = -2; x <= 3; x++) { const e = y === -1 || y === 5 || x === -2 || x === 3; b.set(rx + x, py + y, e ? OUT : (x <= -1 || y === 0) ? W2[4] : (x >= 2 || y >= 4) ? W2[2] : W2[3]); }
+        b.set(rx, py + 2, W2[1]); b.set(rx + 1, py + 3, W2[1]); b.set(rx - 1, py + 1, W2[5]);
+        // nettles at the post's foot
+        for (let k = 0; k < 3; k++) { const x = rx + (L ? 4 : -4) + (rnd() * 3 | 0) - 1, y = py + 6 + k * 2; lumpLeaf(b, x, y, rnd); }
+      }
+      return b;
+    },
+    resort: (side) => { // a reed bed: a ribbon of lagoon water on the outside, clumps of reeds with cattail heads, outlined
+      const b = new Buf(EW, EH), rnd = mulberry(hashStr('edge:resort' + side)), L = side < 0, F = RAMPS.foliage;
+      const wx0 = L ? 0 : EW - 7, wx1 = L ? 7 : EW;
+      for (let y = 0; y < EH; y++) for (let x = wx0; x < wx1; x++) b.set(x, y, ((x + y * 3) % 11 === 0) ? RAMPS.sea[3] : (y + (x >> 1)) % 7 === 0 ? RAMPS.lagoon[1] : RAMPS.lagoon[0]);
+      const body = new Buf(EW, EH);
+      for (let cy = 2; cy < EH + 6; cy += 7) { // clumps along the bank
+        const cx = L ? 9 + (rnd() * 4 | 0) : EW - 10 - (rnd() * 4 | 0);
+        for (let k = 0; k < 6; k++) { // blades fanning out from the clump's root
+          const a = -Math.PI / 2 + (k - 2.5) * 0.32 + (rnd() - 0.5) * 0.2, len = 5 + (rnd() * 4 | 0);
+          for (let j = 0; j < len; j++) { const x = Math.round(cx + Math.cos(a) * j * 0.9), y = cy + 3 - j; body.wset(x, y, j > len - 3 ? F[3] : (k < 3 ? F[2] : F[1])); }
+        }
+        if (rnd() < 0.7) { const hx = cx + (rnd() < 0.5 ? -1 : 1), hy = cy - 4; // a cattail head: brown sausage, lit top-left
+          body.wset(hx, hy - 1, '#a0703f'); body.wset(hx, hy, '#7d5636'); body.wset(hx, hy + 1, '#4b3226'); body.wset(hx + 1, hy, '#4b3226'); body.wset(hx, hy - 2, F[2]); }
+      }
+      const o = outline(body, OUT); for (let i = 0; i < o.c.length; i++) if (o.c[i]) b.c[i] = o.c[i];
+      // fix the wrap seam of the outline: copy the top rows' outline from the wrapped body
+      return b;
+    },
+    neon: (side) => { // a rope fence on dark posts, a lantern on every other post, fireflies in the long grass
+      const b = new Buf(EW, EH), rnd = mulberry(hashStr('edge:neon' + side)), L = side < 0, px = L ? 9 : 14;
+      for (let y = 0; y < EH; y++) { const sag = Math.round(Math.sin(((y % 32) / 32) * Math.PI) * 2); b.set(px + (L ? sag : -sag), y, (y % 4 === 0) ? '#a0703f' : '#7d5636'); } // the rope, sagging between posts
+      for (let py = 0; py < EH; py += 32) {
+        for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) { const e = Math.abs(x) === 2 || Math.abs(y) === 2; if (Math.abs(x) === 2 && Math.abs(y) === 2) continue; b.wset(px + x, py + y, e ? OUT : (x < 0 || y < 0) ? '#7d5636' : '#4b3226'); }
+        if ((py / 32) % 2 === 0) { // a lantern on the post: frame, warm glass, bright core
+          const lx = px + (L ? 3 : -3), ly = py - 1;
+          for (let y = -3; y <= 3; y++) for (let x = -2; x <= 2; x++) { const e = Math.abs(x) === 2 || Math.abs(y) === 3; if (e && Math.abs(x) === 2 && Math.abs(y) === 3) continue; b.wset(lx + x, ly + y, e ? OUT : (x <= 0 && y <= 0) ? RAMPS.light[1] : y === 2 ? RAMPS.light[0] : RAMPS.gold[2]); }
+          b.wset(lx, ly - 4, OUT);
+        }
+      }
+      for (let i = 0; i < 7; i++) { const x = (L ? 2 : 14) + (rnd() * 8 | 0), y = rnd() * EH | 0; if (b.get(x, y)) continue; b.set(x, y, RAMPS.glow[0]); if (rnd() < 0.4) b.set(x, y - 1, RAMPS.light[1]); }
+      return b;
+    },
+    links: (side) => { // a dune bank: rippled sand outside, marram tufts, gorse bushes in yellow flower
+      const b = new Buf(EW, EH), rnd = mulberry(hashStr('edge:links' + side)), L = side < 0, S = RAMPS.sand;
+      for (let y = 0; y < EH; y++) for (let x = 0; x < EW; x++) {
+        const d = L ? x : EW - 1 - x, edge = 9 + Math.round(2 * Math.sin(y * 0.2 + (L ? 0 : 2))); if (d > edge) continue;
+        b.set(x, y, d > edge - 1 ? S[1] : ((y + (x >> 1)) % 4 === 0 ? S[1] : (x + y) % 9 === 0 ? S[3] : S[2]));
+      }
+      const body = new Buf(EW, EH);
+      for (let cy = 4; cy < EH + 8; cy += 16) { // gorse: dark spiky bush, lit top-left, yellow flowers
+        const cx = L ? 13 + (rnd() * 3 | 0) : EW - 14 - (rnd() * 3 | 0), r = 5;
+        const tmp = new Buf(16, 16); lump(tmp, 8, 8, r, [RAMPS.foliage[0], RAMPS.foliage[1], RAMPS.foliage[2], RAMPS.foliage[3]], rnd, { speck: 0.3 });
+        for (let yy = 0; yy < 16; yy++) for (let xx = 0; xx < 16; xx++) { const c = tmp.c[yy * 16 + xx]; if (c) body.wset(cx + xx - 8, cy + yy - 8, c); }
+        for (let k = 0; k < 11; k++) { const a = rnd() * 6.283, rr = rnd() * (r - 1), x = Math.round(cx + Math.cos(a) * rr), y = Math.round(cy + Math.sin(a) * rr * 0.9); body.wset(x, y, rnd() < 0.3 ? RAMPS.gold[3] : RAMPS.gold[2]); if (rnd() < 0.5) body.wset(x + 1, y + 1, RAMPS.gold[1]); }
+        for (let k = 0; k < 6; k++) { const a = rnd() * 6.283, x = Math.round(cx + Math.cos(a) * (r + 0.6)), y = Math.round(cy + Math.sin(a) * (r * 0.9 + 0.6)); body.wset(x, y, RAMPS.foliage[1]); } // spikes
+      }
+      for (let cy = 12; cy < EH + 8; cy += 16) { // marram tufts on the sand
+        const cx = L ? 5 + (rnd() * 3 | 0) : EW - 6 - (rnd() * 3 | 0);
+        for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k - 2) * 0.38, len = 4 + (k === 2 ? 2 : k % 2); for (let j = 1; j <= len; j++) body.wset(Math.round(cx + Math.cos(a) * j), Math.round(cy + Math.sin(a) * j), j === len ? RAMPS.olive[2] : j < 2 ? RAMPS.olive[1] : '#dcb06c'); }
+      }
+      const o = outline(body, OUT); for (let i = 0; i < o.c.length; i++) if (o.c[i]) b.c[i] = o.c[i];
+      return b;
+    }
+  };
+  /** a nettle / dock leaf: 2-3 px, lit tip */
+  function lumpLeaf(b, x, y, rnd) { const F = RAMPS.foliage; b.set(x, y, F[1]); b.set(x - 1, y, F[2]); b.set(x, y - 1, F[3]); b.set(x + 1, y + 1, F[0]); if (rnd() < 0.5) b.set(x + 1, y - 1, F[2]); }
+  function edge(rid, side) { const f = EDGES[rid] || EDGES.muni; return f(side < 0 ? -1 : 1); }
+  /** Oakridge's gameplay hedge band (any size; logical w x h -> art px 2w x 2h) */
+  function hedge(wl, hl, side) { return hedgeBuf(Math.round(wl * 2), Math.round(hl * 2), side < 0 ? -1 : 1, hashStr('hedgeband' + side), false); }
+  /** a woven wattle hurdle (Hedge Windbreak), 6 x 22 art px: stakes, woven withies lit top-left */
+  function hurdle() {
+    const b = new Buf(6, 22), W2 = RAMPS.wood;
+    for (let y = 1; y < 21; y++) { b.set(1, y, W2[3]); b.set(4, y, W2[2]); b.set(2, y, ((y >> 1) & 1) ? W2[4] : W2[1]); b.set(3, y, ((y >> 1) & 1) ? W2[1] : W2[3]); }
+    b.set(1, 0, '#dcb06c'); b.set(4, 0, '#dcb06c'); return outline(b);
+  }
+
+  // ===================================================================== exports
+  const API = { RAMPS, OUT, RIDS, NAMES, FLAGS, TURF, Buf, outline, green, tiles, tile, ground, fieldPick, MIX, edge, hedge, hurdle, TILE: T, EW, EH,
+    palette() { const s = new Set(); for (const k in RAMPS) for (const c of RAMPS[k]) s.add(c.toLowerCase()); return [...s]; } };
+  if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.RR_CODEART_ART = API;
+})(typeof window !== 'undefined' ? window : this);
 
 </script>
 <script>/* ---- ui/layout.js ---- */

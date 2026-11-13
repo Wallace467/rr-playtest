@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-13-32ef8fa1-62310012">
+<meta name="rr-pwa" content="2026-11-14-605f2ed0-20857f00">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-13-32ef8fa1">
+<meta name="range-rat-build" content="2026-11-14-605f2ed0">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-13-32ef8fa1", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-605f2ed0", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-13-32ef8fa1", "builtAt": "2026-11-13T19:34:26Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-605f2ed0", "builtAt": "2026-11-13T23:54:59Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -9054,6 +9054,7 @@ window.DIALOG = {
       sr: "{name} settings"
     },
     sr: {
+      deposit: "Deposited {n} balls. +{c} acorns.",
       bought: "Bought {name}.",
       gearUp: "New gear: {name}.",
       goalDone: "Goal done. Plus {n} acorns.",
@@ -12198,6 +12199,7 @@ window.DIALOG = {
         sr: "Optionen: {name}"
       },
       sr: {
+        deposit: "{n} Bälle abgeliefert. +{c} Eicheln.",
         bought: "{name} gekauft.",
         gearUp: "Neue Ausrüstung: {name}.",
         goalDone: "Ziel geschafft. Plus {n} Eicheln.",
@@ -15258,6 +15260,7 @@ window.DIALOG = {
         sr: "Ajustes de {name}"
       },
       sr: {
+        deposit: "Entregaste {n} bolas. +{c} bellotas.",
         bought: "Compraste {name}.",
         gearUp: "Equipo nuevo: {name}.",
         goalDone: "Meta cumplida. Más {n} bellotas.",
@@ -18219,6 +18222,7 @@ window.DIALOG = {
         sr: "Configurações: {name}"
       },
       sr: {
+        deposit: "Você entregou {n} bolas. +{c} bolotas.",
         bought: "Comprou {name}.",
         gearUp: "Equipamento novo: {name}.",
         goalDone: "Meta cumprida. Mais {n} bolotas.",
@@ -21272,6 +21276,7 @@ window.DIALOG = {
         sr: "{name}设置"
       },
       sr: {
+        deposit: "存球{n}个。加{c}橡果。",
         bought: "已购买{name}。",
         gearUp: "新工具：{name}。",
         goalDone: "目标达成。加{n}橡果。",
@@ -23266,6 +23271,7 @@ window.DIALOG = {
 .rr-banner.rr-trophy .rw{display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:3px}
 .rr-banner.rr-trophy .rw .rr-chip{background:none;border:0;padding:0;font-size:calc(14px*var(--rr-fs))}
 .rr-reduced .rr-banner.rr-trophy,.rr-reduced .rr-banner.rr-trophy.on{transform:translate(-50%,0);transition:visibility 0s;}
+.rr-reduced .rr-banner.rr-trophy.on .tm img{animation:none} /* a11y 2026-11-14: the trophy card's cup spun in (scale .2 -> 1.25, 25 deg) under Less motion: this rule outranked the plain banner's off switch */
 .rr-root-title .rr-banner.rr-trophy{visibility:hidden!important} /* never over the title or the credits roll; the chest waits in Trophies (count badge) */
 /* reward chips (card + list) */
 .rr-chip{position:relative;display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 4px;border-radius:999px;background:rgba(242,198,65,.16);border:1px solid rgba(242,198,65,.65);color:var(--rr-gold);font-family:var(--rr-font-label);font-weight:700;font-size:calc(14px*var(--rr-fs));line-height:1.25;font-variant-numeric:tabular-nums;max-width:100%}
@@ -31144,7 +31150,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (next != null && mode === 'game') { playChestScene(next, true); sc.remove(); syncInert(); return; } // straight into the next chest, no gap
       sc.classList.add('out'); layerClosing(sc); syncInert(); setTimeout(() => sc.remove(), rm ? 0 : 220);
       ui_.refresh && ui_.refresh(true);
-      if (inputMode === 'kb' || inputMode === 'pad') setTimeout(() => { try { const nb = [...document.querySelectorAll('[data-openchest]')].find((x) => x.offsetParent) || trophyTabs().find((x) => x.offsetParent); if (nb) nb.focus({ preventScroll: true }); } catch (er) { /* ignore */ } }, 120); // keyboard / pad: back to the next waiting chest
+      if (inputMode === 'kb' || inputMode === 'pad') setTimeout(() => { try { const live = (x) => x.offsetParent && !x.closest('[inert]'); const nb = [...document.querySelectorAll('[data-openchest]')].find(live) || (sheet && sheet.sh.isConnected && [...sheet.sh.querySelectorAll('[role=tab][aria-selected=true], button')].find(live)) || trophyTabs().find(live); if (nb) nb.focus({ preventScroll: true }); } catch (er) { /* ignore */ } }, 120); /* a11y 2026-11-14: never an inert button (the bar under the phone's Trophies sheet): focus fell to <body> */ // keyboard / pad: back to the next waiting chest
     };
     const feet = () => chAt(F, cv, 0.5, 0.97), seam = () => chAt(F, cv, 0.5, 0.36);
     S.abort = () => { if (!S.done) { S.done = true; W.removeEventListener('keydown', keyH, true); chFxClose(F); paused.modal = wasPaused; layerClosing(sc); syncInert(); } };
@@ -32150,7 +32156,8 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const frame = p.moving || p.stun > 0 ? frameAt(e, p.animMs) : 0;
       drawReachRing(g, p);
       // gear-up morph: flicker old/new sprite during the freeze (classic RPG transform)
-      if (p.morph) { const mt = renderMs - (p.morph.start == null ? (p.morph.start = renderMs) : p.morph.start); if (mt < feel.gearUp.morphMs) { if (Math.floor(mt / feel.gearUp.flickerMs) % 2 === 0) name = p.morph.from; } else p.morph = null; }
+      // (a 10 Hz flicker: under Flashes off / Less motion the old sprite simply holds through the freeze, then the new one. a11y 2026-11-14)
+      if (p.morph) { const mt = renderMs - (p.morph.start == null ? (p.morph.start = renderMs) : p.morph.start); if (mt < feel.gearUp.morphMs) { const old = noFlash() || RM_() || Math.floor(mt / feel.gearUp.flickerMs) % 2 === 0; if (old) name = p.morph.from; p.morph.seen = (p.morph.seen || '') + (old ? 'o' : 'n'); } else p.morph = null; }
       // idle breathing (never frozen) + lean into the run
       const breath = !p.moving && !RM_() ? Math.sin(renderMs / ((feel.idle.breathMs[0] + feel.idle.breathMs[1]) / 2) * 6.283) * feel.squash.breath : 0;
       const lean = RM_() ? 0 : p.lean;
@@ -34397,6 +34404,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-pop.money{display:inline-flex;align-items:center;gap:3px;padding-left:4px}.rr-pop.money img{width:calc(14px*var(--rr-fs));height:calc(14px*var(--rr-fs));image-rendering:pixelated;flex:0 0 auto}.rr-pop.money b{font-weight:inherit}
 .rr-pop.big{font-family:var(--rr-font-head);font-weight:600;font-size:calc(22px*var(--rr-fs));padding:2px 10px;border:2px solid rgba(242,198,65,.6)}
 .rr-pop.huge{font-family:var(--rr-font-head);font-weight:600;font-size:calc(28px*var(--rr-fs));padding:3px 12px;border:2px solid var(--rr-gold)}
+#rr-root .rr-fx>.rr-pop{width:max-content;max-width:calc(100% - 8px);white-space:normal;overflow-wrap:normal;text-align:center} /* a11y 2026-11-14: a floater wider than the field ("Open Day! Bays full, prices up!!" at 375 px, Large text, German) wraps instead of losing both ends; one that fits is the same single line */
 .rr-bubble{position:absolute;transform:translate(-50%,-100%);width:max-content;max-width:min(230px,90%);overflow-wrap:normal;padding:5px 8px;border-radius:calc(9px*var(--rr-round));background:var(--rr-badge);border:1px solid #6a5040;font-size:calc(15px*var(--rr-fs));line-height:1.3;color:var(--rr-text)}
 .rr-bubble.below{transform:translate(-50%,0)}
 .rr-bubble.below:after{bottom:auto;top:-6px;border-top:0;border-bottom:5px solid var(--rr-badge)}
@@ -34584,6 +34592,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-peek{position:relative;align-self:flex-start;margin:0 0 14px 8px;display:flex;align-items:flex-end;gap:4px;z-index:9;transform:translateX(-110%);transition:transform .3s cubic-bezier(.3,1.4,.6,1);pointer-events:auto;cursor:pointer;max-width:calc(100% - 16px)}
 .rr-pdock-top>.rr-peek{align-items:flex-start;margin:0 0 0 8px}
 .rr-peek.on{transform:translateX(0)}
+.rr-reduced .rr-peek{transform:none;opacity:0;transition:opacity .2s linear}.rr-reduced .rr-peek.on{transform:none;opacity:1}.rr-reduced .rr-pdock-top{transition:none} /* a11y 2026-11-14: Less motion: Gus's peek fades in and out (it slid in from the side with an overshoot); the popup dock no longer glides when a card above it comes and goes */
 .rr-gus-new{animation:rr-gusnew .9s ease-out}@keyframes rr-gusnew{0%{box-shadow:0 0 0 3px #f2c641}100%{box-shadow:0 0 0 0 rgba(242,198,65,0)}}
 .rr-peek canvas{width:96px;height:96px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto;background:var(--rr-sheet-tx),var(--rr-sheet-bg);border:3px solid var(--rr-line);border-image:var(--rr-fr-dialog);border-radius:calc(12px*var(--rr-round));box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .rr-peek .rr-bubble{position:relative;transform:none;margin-bottom:46px;font-size:calc(16px*var(--rr-fs));flex:0 1 auto;min-width:0;max-width:320px}
@@ -36527,6 +36536,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 
   // ---- modals ----
   let modal = null;
+  let modalHeadN = 0;
   function openModal(html, opts) {
     closeModal();
     const ret = takeReturn(); // a return point (see leaveSettingsFor), or the one of the modal this replaces
@@ -36537,6 +36547,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     modal = { m, scrim, prev: document.activeElement, ret };
     paused.modal = true; syncInert();
     modalCloseX(m);
+    // a11y 2026-11-14: a dialog needs a name (Our promises, Trophy chests, the sale's cards... were read as a bare "dialog").
+    // Its heading names it, unless the caller labels it itself right after (Pip's card, the Work timer): a microtask later
+    queueMicrotask(() => { if (m.hasAttribute('aria-label') || m.hasAttribute('aria-labelledby')) return; const h = m.querySelector('h2, h3'); if (!h || !h.textContent.trim()) return; if (!h.id) h.id = 'rr-mh-' + (++modalHeadN); m.setAttribute('aria-labelledby', h.id); });
     setTimeout(() => { if (m.contains(document.activeElement)) return; /* already placed (restoreReturn) */ const f = m.querySelector('[role=tab][aria-selected=true]') || m.querySelector('button:not(.rr-modalx)') || m.querySelector('button'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 30);
     const sheetLike = !!(opts && opts.sheet && layout.root && layout.root.classList.contains('rl-narrow')); // a phone bottom sheet (Pip's card)
     try { m.animate(reducedMotion() ? [{ opacity: 0 }, { opacity: 1 }] : sheetLike ? [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }] : [{ transform: 'translate(-50%,-50%) scale(.85)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }], { duration: 200, easing: 'ease-out' }); } catch (e) { /* ignore */ } // a11y M3: a fade under Less motion
@@ -38107,7 +38120,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   // a trophy lost lines and the 4th came ~5.6 s late). Everything waiting when the announcer is free goes out as ONE
   // message ("A. B. C."), so nothing is lost and nothing lags more than one gap behind.
   const SR_GAP_MS = 1400, SR_MAX_CHARS = 600;
-  const sr = { el: null, q: [], t: -1e9, last: '', lastAt: 0, hopAt: -1e9 };
+  const sr = { el: null, q: [], t: -1e9, last: '', lastAt: 0, hopAt: -1e9, depAt: -1e9 }, SR_DEPOSIT_MS = 8000;
   const srEnd = (t) => (/[.!?…。！？]$/.test(t) ? t : t + '.');
   function announce(text) {
     if (!text) return; text = String(text).trim(); if (!text) return;
@@ -38134,6 +38147,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     on('stockEmpty', () => announce(tx('sr.stockEmpty', 'Ball house is empty. Fetch some balls!')));
     on('prestigeReady', () => announce(tx('sr.prestigeReady', 'You can sell the range now.')));
     on('stun', () => announce(tx('sr.stunned', 'Bonked by a ball!')));
+    // a11y 2026-11-14: your own drop-off at the ball house said what it paid (a sighted player sees "+10 balls +45"; a screen
+    // reader heard nothing). Yours only (beetles / Pip deposit all the time), at most one every SR_DEPOSIT_MS
+    on('deposit', (p) => { if (!p || p.by !== 'player' || !(p.count > 0)) return; const n = nowMs(); if (n - sr.depAt < SR_DEPOSIT_MS) return; sr.depAt = n; announce(tx('sr.deposit', 'Deposited {n} balls. +{c} acorns.', { n: fmt(p.count), c: fmt(p.cash || 0) })); });
     on('hopperFull', () => { const n = nowMs(); if (n - sr.hopAt > 30000) { sr.hopAt = n; announce(tx('sr.hopperFull', 'Hopper full. Head to the ball house.')); } });
     on('dialog', (p) => { if (p && p.kind === 'bubble' && p.text) announce(tx('sr.says', '{name}: {n}', { name: tx('dialog.gus', 'Gus'), n: p.text })); });
   }
@@ -39692,7 +39708,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
   }
   const portraits = new Set();
-  function portraitCanvas() { const c = document.createElement('canvas'); c.width = 48; c.height = 48; c.className = 'rl-pcv'; c.setAttribute('role', 'img'); portraits.add(c); drawPortrait(c, 0); return c; }
+  function portraitCanvas() { const c = document.createElement('canvas'); c.width = 48; c.height = 48; c.className = 'rl-pcv'; c.setAttribute('aria-hidden', 'true'); /* a11y 2026-11-14: decoration (an unnamed img before); the mood line under it says how the rat is */ portraits.add(c); drawPortrait(c, 0); return c; }
   function animate() {
     const t = performance.now();
     for (const c of [...portraits]) { if (!c.isConnected) { portraits.delete(c); continue; } drawPortrait(c, t); }
@@ -40992,7 +41008,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       if (!force && h.sig === sig) continue;
       if (!gl) { gl = goalList(s); shape = goalShape(gl, left); }
       if (!force && h.shape === shape) { h.sig = sig; patchGoalHost(h, gl, left); continue; }
+      // a11y 2026-11-14: a rebuild under keyboard / pad focus (the next goal changes, a goal is done) dropped focus to <body>;
+      // it goes back to the same control in the new cards (the ↻ of the same slot, the Next goal chip), or the host's first
+      const fa = document.activeElement, fsel = fa && fa !== h.el && h.el.contains(fa) ? (fa.dataset.rlReroll != null ? `[data-rl-reroll="${fa.dataset.rlReroll}"]` : fa.dataset.rlAct ? `[data-rl-act="${fa.dataset.rlAct}"]` : '*') : null;
       h.sig = sig; h.shape = shape; h.el.innerHTML = h.kind === 'next' ? nextGoalHTML(s, h.compact) : goalsHTML(s, h.opts);
+      if (fsel) { const nb = (fsel !== '*' && h.el.querySelector(fsel)) || h.el.querySelector('button, [tabindex="0"]'); if (nb) try { nb.focus({ preventScroll: true }); } catch (er) { /* ignore */ } }
       h.el.querySelectorAll('[data-rl-act=goals]').forEach((b) => { b.addEventListener('click', (e) => { e.stopPropagation(); tap(); openPanel('goals'); }); b.addEventListener('keydown', (e) => { if (e.target === b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); b.click(); } }); });
       h.el.querySelectorAll('[data-rl-reroll]').forEach((b) => b.addEventListener('click', (e) => {
         e.stopPropagation(); const i = +b.dataset.rlReroll, had = document.activeElement === b; const ok = R.rerollGoal(i);
@@ -41036,7 +41056,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (now) { g.sh.remove(); g.scrim.remove(); try { R.syncInert && R.syncInert(); } catch (e) { /* ignore */ } return; }
     g.sh.classList.remove('on'); g.scrim.classList.remove('on'); g.sh.removeAttribute('aria-modal'); g.sh.inert = true; setTimeout(() => { g.sh.remove(); g.scrim.remove(); }, 300);
     try { R.syncInert && R.syncInert(); } catch (e) { /* ignore */ } // the page comes back before focus goes to it
-    try { g.prev && g.prev.focus && g.prev.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+    // a11y 2026-11-14: the chip that opened it may have been rebuilt meanwhile (goal progress): then its new self, else the Journal button
+    let back = g.prev && g.prev.isConnected && g.prev !== document.body ? g.prev : null;
+    if (!back) back = [...root.querySelectorAll('#rl-nextbar [data-rl-act=goals], .rr-bar [data-b=goals]')].find((e) => e.getClientRects().length && !e.closest('[inert]')) || null;
+    try { back && back.focus && back.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
   }
   W.addEventListener('keydown', (e) => { if (e.key === 'Escape' && gsheet && !(W.RANGE_RAT_HELP && (W.RANGE_RAT_HELP.layers || W.RANGE_RAT_HELP.isOpen))) { e.stopPropagation(); closeGoalsSheet(); } }, true); // ui/help.js popovers / cards sit above the sheet: their Escape first
 
@@ -43576,6 +43599,8 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
 #rr-town .rt-where .h{font-family:var(--rr-font-head);font-weight:600;font-size:calc(20px*var(--rr-fs));line-height:1.1;color:var(--rr-cash-fg,var(--rr-gold));text-shadow:var(--rr-head-sh,none)}
 #rr-town .rt-sp{flex:1 1 auto}
 #rr-town .rt-earn{font-size:calc(13px*var(--rr-fs));line-height:1.25;color:var(--rr-text2);text-align:right;max-width:46%}
+#rr-root.rr-large.rl-narrow #rr-town .rt-top{flex-wrap:wrap;row-gap:0} /* a11y 2026-11-14: Large text on a phone: the "keeps earning" line ran 3 lines tall, out of the bar and into the town's name; it takes a row of its own */
+#rr-root.rr-large.rl-narrow #rr-town .rt-earn{flex:1 0 100%;max-width:none}
 #rr-town .rt-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:4px 14px;border:2px solid var(--rr-town-btn-line,#1a110c);border-radius:calc(10px*var(--rr-round,1));font:700 calc(16px*var(--rr-fs))/1.1 var(--rr-font-label);cursor:pointer;background:var(--rr-town-btn-bg,#565c64);color:var(--rr-town-btn-fg,#fffaee);border-image:var(--rr-fr-off,none);box-shadow:var(--rr-town-btn-sh,0 3px 0 rgba(0,0,0,.35))}
 #rr-town .rt-btn.gold{background:var(--rr-gold);color:#2a1c16;border-image:var(--rr-fr-btn,none);box-shadow:var(--rr-town-btn-sh,inset 0 -3px 0 #b98a2c,0 3px 0 rgba(0,0,0,.35))}
 #rr-town .rt-btn:focus-visible,#rr-town .rt-goal:focus-visible,.rt-sheet .rt-btn:focus-visible{outline:3px solid var(--rr-focus,#f2c641);outline-offset:2px}

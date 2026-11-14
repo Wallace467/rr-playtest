@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-14-83c0fdff-a236a19b">
+<meta name="rr-pwa" content="2026-11-14-d882de95-abc05500">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-14-83c0fdff">
+<meta name="range-rat-build" content="2026-11-14-d882de95">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-83c0fdff", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-d882de95", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-83c0fdff", "builtAt": "2026-11-14T02:43:37Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-d882de95", "builtAt": "2026-11-14T06:03:43Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -1052,9 +1052,16 @@ window.BALANCE = {
     // paid 1.4-1.9x a whole range's price (late QA S1), so a night skipped the second half of every range. The cap is what's
     // left of that part: the price of the next instalment less the wallet (when the wallet already covers it, the part
     // after). The rest isn't paid; the away card says how much ("the till was full"). Efficiency and capHours as before.
-    // Away time only (applyOffline: launch, a tab or phone back from the background, a sleep): the desktop build and Desk
-    // mode keep simulating while hidden, and that's play. No till in Free roam, the trial's free play or a Grand Tour lap.
+    // Away time (applyOffline: launch, a tab or phone back from the background, a sleep); time on screen gets it only once
+    // unattended (below). No till in Free roam, the trial's free play or a Grand Tour lap.
     till: true,
+    // the on-screen till (DECISIONS 52, approved by Ben 14 Nov 2026): after afterSec of game time with no player input (a
+    // tap, a key, a click, the wheel, a pad), the game on screen is "unattended": the field keeps its full pace and looks
+    // the same (beetles, Pip, the Ledger), but the wallet takes at most the till, measured ONCE when the stretch starts
+    // (awayTill()'s room then; measured continuously it would never bind), and Gus's Ledger stops once it's used up. Any
+    // input ends the stretch; what wasn't paid is lost, as away, and the away card reports it. Active play never meets it.
+    // Desktop idlers 3.5-5.6 -> 9.5-11.6 days to the credits (qa/idle_pacing.js). null = off.
+    unattended: { afterSec: 600 },
     ledger: { home: 'county', unlockAt: 0.4, costFrac: 0.004, rebuyCost: 20000, everySec: 3, cheapFrac: 0.05, awayEverySec: 600, awayMaxBuys: 24, logN: 8, reserveMax: 0.9, reserveStep: 0.05 },
   },
 
@@ -9935,6 +9942,7 @@ window.DIALOG = {
         "tillRow": "Not paid: the till was full",
         "tillNote": "Away pay stops once you can pay part {k}/{n}.",
         "desktop": "The range kept running while the window was hidden.",
+        "onscreen": "The range kept running while you were away.",
         "mixed": "Part at full pace, the rest at {n}% while it slept.",
         "rate": "Your beetles worked at {n}% pace.",
         "ranges": "Earning: {list}",
@@ -13006,6 +13014,7 @@ window.DIALOG = {
         "tillRow": "Nicht gezahlt: die Kasse war voll",
         "tillNote": "Weg-Lohn endet, sobald du Rate {k}/{n} zahlen kannst.",
         "desktop": "Die Range lief weiter, während das Fenster verborgen war.",
+        "onscreen": "Die Range lief weiter, während du weg warst.",
         "mixed": "Erst volles Tempo, dann {n} %, während das Spiel ruhte.",
         "rate": "Deine Käfer arbeiteten mit {n} % Tempo.",
         "ranges": "Es verdienen: {list}",
@@ -15983,6 +15992,7 @@ window.DIALOG = {
         "tillRow": "Sin cobrar: la caja estaba llena",
         "tillNote": "Fuera dejas de ganar al poder pagar la parte {k}/{n}.",
         "desktop": "El campo siguió en marcha con la ventana oculta.",
+        "onscreen": "El campo siguió en marcha mientras no estabas.",
         "mixed": "Parte a todo ritmo, el resto al {n}% mientras dormía.",
         "rate": "Tus escarabajos trabajaron al {n}% de ritmo.",
         "ranges": "Ganando: {list}",
@@ -18951,6 +18961,7 @@ window.DIALOG = {
         "tillRow": "Não pago: o caixa estava cheio",
         "tillNote": "O ganho fora para quando dá para pagar a parcela {k}/{n}.",
         "desktop": "O campo continuou rodando com a janela escondida.",
+        "onscreen": "O campo continuou rodando enquanto você estava fora.",
         "mixed": "Parte a todo vapor, o resto a {n}% enquanto dormia.",
         "rate": "Seus besouros trabalharam a {n}% do ritmo.",
         "ranges": "Rendendo: {list}",
@@ -22003,6 +22014,7 @@ window.DIALOG = {
         "tillRow": "未入账：钱箱满了",
         "tillNote": "钱够付第 {k}/{n} 期时，离开收入就停。",
         "desktop": "窗口隐藏时，球场一直在运转。",
+        "onscreen": "你离开时，球场一直在运转。",
         "mixed": "一部分全速，其余在休眠时按 {n}% 计。",
         "rate": "你的甲虫按 {n}% 的速度干活。",
         "ranges": "收入来自：{list}",
@@ -25211,11 +25223,16 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function earn(amount, source, at) {
     if (!isNum(amount) || amount <= 0) return 0;
     if (!isNum(state.cash + amount) || !isNum(state.allTimeCash + amount)) return 0; // never Infinity in the wallet (JSON saves it as null)
-    state.cash += amount;
-    if (source !== 'debug') { state.runCash += amount; state.allTimeCash += amount; state.stats.cashEarned += amount; }
-    if (!['goal', 'milestone', 'achievement', 'debug', 'offline', 'chest'].includes(source)) incomeAcc += amount;
-    if (!CAL_SKIP[source]) { rateCal.acc += amount; etaInc.acc += amount; } // DECISIONS 30: what really came in, for the HUD rate's calibration (and the main goal's estimate)
-    emit('cash', { amount, source });
+    // the on-screen till (DECISIONS 52): unattended, the wallet takes at most what's left of the till measured when the
+    // stretch began; the rest isn't paid (the field, its popups and the HUD rate carry on as if it were)
+    const pay = UN.on && UN.till && source !== 'debug' && source !== 'offline' ? unattendedTake(amount) : amount;
+    if (pay > 0) {
+      state.cash += pay;
+      if (source !== 'debug') { state.runCash += pay; state.allTimeCash += pay; state.stats.cashEarned += pay; }
+      if (!['goal', 'milestone', 'achievement', 'debug', 'offline', 'chest'].includes(source)) incomeAcc += pay;
+      emit('cash', { amount: pay, source });
+    }
+    if (!CAL_SKIP[source]) { rateCal.acc += amount; etaInc.acc += amount; } // DECISIONS 30: what really came in, for the HUD rate's calibration (and the main goal's estimate); the field's pace, held by the till or not
     return amount;
   }
   function incomePerSec(windowSec) {
@@ -29708,6 +29725,50 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     let need = 0, k = paid; for (; k < n; k++) { need += cost(k); if (need > have + 1e-9) break; }
     return { room: Math.max(0, need - have), part: Math.min(k, n - 1) + 1, n };
   }
+  // ---- the on-screen till (DECISIONS 52, approved by Ben 14 Nov 2026; BALANCE.idle.unattended) ----
+  // DECISIONS 39's till, for time on screen nobody is touching: after afterSec of game time with no player input (a tap, a
+  // click, a key, the wheel, a pad; the API's player actions, for the bots), the stretch is "unattended". The field keeps
+  // its full pace and looks the same (beetles, Pip, the Ledger at work), but the wallet takes at most the till's room,
+  // measured ONCE when the stretch starts (measured continuously it would never bind: once the wallet covers a part, the
+  // till reaches to the next), and Gus's Ledger stops once that's used up. Any input ends it; what wasn't paid is lost,
+  // as away, and the "While you were away" card reports it (its till row and note). No timer, prompt or nag (Pillar 0).
+  // Runtime only: a reload starts a new count. quiet: game s since the last input; snap: the card's starting point.
+  const UN = { quiet: 0, on: false, till: null, room: 0, over: 0, snap: null, n: 0 };
+  const UNATT_ = () => (B.idle && B.idle.unattended) || null;
+  /** a player input: ends an unattended stretch (and reports what it withheld) */
+  function noteInput(kind) {
+    const q = UN.quiet; UN.quiet = 0;
+    if (UN.on) unattendedEnd(kind || 'input', q);
+  }
+  function unattendedTick(dt) {
+    const U = UNATT_(), after = U && +U.afterSec;
+    if (!(after > 0)) { if (UN.on) unattendedEnd('off', UN.quiet); UN.quiet = 0; return; }
+    const q0 = UN.quiet; UN.quiet += dt;
+    const at = Math.min(2, after / 2); if (q0 < at && UN.quiet >= at) UN.snap = awaySnap(); // the card counts from just after the last input
+    if (!UN.on && UN.quiet >= after) {
+      const t = awayTill(); UN.on = true; UN.n++; UN.till = t; UN.room = t ? Math.max(0, Math.ceil(t.room)) : Infinity; // whole acorns up: the wallet really reaches the part (float sums stopped it 1e-9 short) UN.over = 0;
+      emit('unattended', { on: true, room: t ? Math.floor(t.room) : null, part: t ? t.part : 0, quiet: Math.round(UN.quiet) });
+    }
+  }
+  /** earn() while unattended: how much of `amount` the wallet takes (the rest is withheld) */
+  function unattendedTake(amount) {
+    const pay = Math.max(0, Math.min(amount, UN.room)); UN.room -= pay; UN.over += amount - pay;
+    return pay;
+  }
+  function unattendedEnd(why, quiet) {
+    const over = Math.floor(UN.over), till = UN.till, snap = UN.snap;
+    UN.on = false; UN.till = null; UN.room = 0; UN.over = 0;
+    emit('unattended', { on: false, why, over, quiet: Math.round(quiet || 0) });
+    if (!(over > 0) || !till || !state || mode !== 'game') return;
+    const rec = awayRecord(snap, null, quiet || 0);
+    Object.assign(rec, { over, till, onscreen: true, live: false, desktop: false });
+    setTimeout(() => { if (state && mode === 'game') showAwayCard(rec); }, 0); // after the input that ended it is handled
+  }
+  /** a card for hidden time (awayShow) while a stretch is on: it reports what the stretch withheld so far */
+  function unattendedFold(rec) {
+    if (!rec || !UN.on || !(UN.over >= 1) || !UN.till) return;
+    rec.over = (rec.over || 0) + Math.floor(UN.over); if (!rec.till) rec.till = UN.till; UN.over -= Math.floor(UN.over);
+  }
   /** firefly jars while away (idle-friendly): with a beetle, helpers catch helperCatchPerMin x away efficiency fireflies/min */
   function offlineJars(sec, effN) {
     const J = jarCfg(); if (!jarsHere() || robotCount() < 1) return { n: 0, jars: 0 };
@@ -29746,7 +29807,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (mode !== 'game' || modal || sheet || awayCardOpen) { pendingAway = rec; return false; }
     pendingAway = null; awayCardOpen = true;
     const T = (k, fb, v) => tx('away.' + k, fb, v), rm = reducedMotion() || prefersReduced();
-    const timeTxt = awayTimeText(rec.sec), capNote = !rec.desktop && rec.sec > rec.capH * 3600 + 1 ? T('capped', 'Beetles stop after {n} h. Longer shifts in the clubhouse.', { n: rec.capH }) : '';
+    const timeTxt = awayTimeText(rec.sec), capNote = !rec.desktop && !rec.onscreen && rec.sec > rec.capH * 3600 + 1 ? T('capped', 'Beetles stop after {n} h. Longer shifts in the clubhouse.', { n: rec.capH }) : '';
     const rows = [];
     rows.push(`<div class="rr-awayrow big"><span>${esc(T('acorns', 'Acorns'))}</span><b data-count="${Math.floor(rec.cash)}">${esc(rm ? '+' + fmt(rec.cash) : '+0')}</b></div>`);
     if (rec.balls > 0) rows.push(`<div class="rr-awayrow"><span>${esc(T('balls', 'Balls collected'))}</span><b>${esc(fmt(rec.balls))}</b></div>`);
@@ -29757,7 +29818,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (till) rows.push(`<div class="rr-awayrow rr-tillrow" data-till><span>${esc(T('tillRow', 'Not paid: the till was full'))}</span><b>${esc(fmt(rec.over))}</b></div>`);
     const tillNote = till ? T('tillNote', 'Away pay stops once you can pay part {k}/{n}.', { k: till.part, n: till.n }) : '';
     const rangesTxt = rec.ranges.map((r) => r.here ? rangeShort(r.id) : tx('away.rangeShare', '{name} +{n}%', { name: rangeShort(r.id), n: Math.round((r.share || 0) * 100) })).join(' · ');
-    const how = rec.desktop ? T('desktop', 'The range kept running while the window was hidden.') : rec.live ? T('mixed', 'Part of it at full pace, the rest at {n}% while the game slept.', { n: Math.round(rec.eff * 100) }) : T('rate', 'Your beetles worked at {n}% pace.', { n: Math.round(rec.eff * 100) });
+    const how = rec.onscreen ? T('onscreen', 'The range kept running while you were away.') : rec.desktop ? T('desktop', 'The range kept running while the window was hidden.') : rec.live ? T('mixed', 'Part of it at full pace, the rest at {n}% while the game slept.', { n: Math.round(rec.eff * 100) }) : T('rate', 'Your beetles worked at {n}% pace.', { n: Math.round(rec.eff * 100) });
     let buys = '';
     if (rec.buys.length) { const names = {}; for (const b of rec.buys) { const nm = ledgerItemName(b); names[nm] = (names[nm] || 0) + 1; } buys = `<p class="rr-awayledger">${esc(T('ledger', 'Gus bought: {list}', { list: Object.entries(names).slice(0, 4).map(([k, n]) => (n > 1 ? k + ' ×' + n : k)).join(', ') + (Object.keys(names).length > 4 ? ' …' : '') }))}</p>`; }
     const m = openModal(`<div class="rr-awaycard"><div class="rr-awayhd"><canvas width="28" height="26" data-g></canvas><div><h2>${esc(T('title', 'While you were away'))}</h2><p class="rr-awaytime">${esc(T('time', 'Away for {t}', { t: timeTxt }))}</p></div></div><div class="rr-awayrows">${rows.join('')}</div>${tillNote ? `<p class="rr-awayhow rr-awaytill">${esc(tillNote)}</p>` : ''}<p class="rr-awayhow">${esc(how)}</p>${capNote ? `<p class="rr-awayhow">${esc(capNote)}</p>` : ''}<p class="rr-awayranges">${esc(T('ranges', 'Earning: {list}', { list: rangesTxt }))}</p>${buys}<div><button class="rr-btn gold rr-awaygo" data-collect data-x data-k="awaycollect">${esc(T('collect', 'Collect'))}</button></div></div>`, { sticky: true });
@@ -29768,7 +29829,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const done = (e) => { if (e) e.stopPropagation(); if (m._iv) clearInterval(m._iv); if (num) num.textContent = '+' + fmt(rec.cash); awayCollectFx(m.querySelector('[data-collect]'), rec); closeModal(); awayCardOpen = false; emit('awayCollect', { cash: rec.cash, sec: Math.round(rec.sec), buys: rec.buys.length }); if (pendingFocusCard) { const fr = pendingFocusCard; pendingFocusCard = null; setTimeout(() => showFocusCard(fr), 600); } };
     m.querySelector('[data-collect]').addEventListener('click', done);
     sfx('special_ball', { volume: 0.5, pitch: 2 });
-    emit('awayCard', { cash: rec.cash, sec: Math.round(rec.sec), balls: rec.balls, fireflies: rec.fireflies, chests: rec.chests, buys: rec.buys.length, ranges: rec.ranges.map((r) => r.id), eff: rec.eff, capH: rec.capH, desktop: rec.desktop, over: till ? rec.over : 0, tillPart: till ? till.part : 0 });
+    emit('awayCard', { cash: rec.cash, sec: Math.round(rec.sec), balls: rec.balls, fireflies: rec.fireflies, chests: rec.chests, buys: rec.buys.length, ranges: rec.ranges.map((r) => r.id), eff: rec.eff, capH: rec.capH, desktop: rec.desktop, onscreen: !!rec.onscreen, over: till ? rec.over : 0, tillPart: till ? till.part : 0 });
     announce(T('title', 'While you were away') + '. ' + T('acorns', 'Acorns') + ' +' + fmt(rec.cash) + (till ? '. ' + T('tillRow', 'Not paid: the till was full') + ' ' + fmt(rec.over) + '. ' + tillNote : ''));
     return true;
   }
@@ -29801,6 +29862,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (gap > 60) o = applyOffline(gap); else state.lastSeenMax = Math.max(+state.lastSeenMax || 0, Date.now());
     if (!(wall > (IDLE_().cardMinSec || 60))) return null;
     const rec = awayRecord(L, o, wall);
+    unattendedFold(rec);
     if (o && o.buys) ledgerAway(o.buys, rec);
     showAwayCard(rec); return rec;
   }
@@ -29861,6 +29923,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   function ledgerTick(dt) {
     if (!ledgerOn() || paused.user || paused.menu || trialLocked()) return;
+    if (UN.on && UN.till && !(UN.room > 0)) return; // DECISIONS 52: unattended and the till is full: Gus spends nothing
     if ((world.ledgerT = (world.ledgerT == null ? 2 : world.ledgerT) - dt) > 0) return;
     world.ledgerT = (LEDGER_() || {}).everySec || 3;
     ledgerBuyOne(false);
@@ -30299,6 +30362,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     gameT += dt;
     if (mode === 'game') {
       state.stats.playSeconds += dt;
+      unattendedTick(dt); // DECISIONS 52: before this step's earnings
       updateDayNight(dt);
       updateTimers(dt);
       tickIncome(dt);
@@ -37568,6 +37632,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const up = (e) => { if (pointerId === e.pointerId) { pointerId = null; if (world.player && world.player.stick) { world.player.stick = null; } showStick(null); } };
     fw.addEventListener('pointerup', up); fw.addEventListener('pointercancel', up);
     W.addEventListener('pointerdown', (e) => { lastPointerTouch = e.pointerType !== 'mouse'; if (!focused) { focused = true; kick(); } }, { capture: true });
+    for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) W.addEventListener(ev, () => noteInput(ev), { capture: true, passive: true }); // DECISIONS 52: any input ends an unattended stretch
     // dodge button (touch): bottom-right, only once owned, with a cooldown ring. Never starts the joystick.
     dodgeBtnEl = el('button', 'rr-dodgebtn'); dodgeBtnEl.type = 'button'; dodgeBtnEl.setAttribute('aria-label', ui('dodge', 'Dodge Roll'));
     dodgeBtnEl.innerHTML = '<i class="ring"></i><span class="gl">⤻</span><small>' + esc(ui('roll', 'Roll')) + '</small>';
@@ -38094,7 +38159,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     let x = Math.abs(ax) > DZ ? ax : 0, y = Math.abs(ay) > DZ ? ay : 0;
     if (btn(14)) x = -1; if (btn(15)) x = 1; if (btn(12)) y = -1; if (btn(13)) y = 1;
     const any = x || y || pad.buttons.some((b) => b && b.pressed);
-    if (any) { if (!focused) { focused = true; kick(); } unlockAudio(); gp.active = true; setInputMode('pad'); }
+    if (any) { if (!focused) { focused = true; kick(); } unlockAudio(); gp.active = true; setInputMode('pad'); noteInput('pad'); }
     if (sideMode) { padAfterHours(btn, down, (i) => !btn(i) && gp.prev[i], x); gp.prev = pad.buttons.map((b) => !!(b && b.pressed)); return; }
     const top = topLayer(), menu = top || (mode === 'game' && padFocusMode() ? layout.root : null);
     if (menu) {
@@ -38610,6 +38675,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** hold (on=true) / release the fixed-step sim: no game time passes (no pickups, golfers, day clock) while the page
        *  renders and the UI's own timers run on. _test.step still advances it. test_reveal: a fresh game sampled with no clock race */
       hold(on) { testHold = on !== false; return testHold; },
+      /** DECISIONS 52: the on-screen till now ({ on, quiet, room, over, n, part, afterSec }); o.input: a player input (as a tap) */
+      unattended(o) { if (o && o.input) noteInput('test'); const U = UNATT_(); return { on: UN.on, quiet: UN.quiet, room: UN.on && UN.till ? UN.room : null, over: UN.over, n: UN.n, part: UN.till ? UN.till.part : 0, afterSec: U ? U.afterSec : null }; },
       step(sec) { const n = Math.min(7200, Math.max(1, Math.round((+sec || DT) / DT))); for (let i = 0; i < n; i++) step(DT); return n * DT; },
       /** would the frame loop advance the sim right now (no dialog / modal / first-open hold / pause / trial lock)? A hit stop
        *  (a few real-time ms of feel) isn't counted. qa/fullrun.py's turbo bots hold the sim and step it themselves, only while
@@ -38758,14 +38825,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     grantChest(tier, ach) { if (!isDebug()) return false; const cs = chestState(); cs.seq = (cs.seq | 0) + 1; cs.inv.push({ id: cs.seq, tier: tier || 'wood', ach: ach || 'balls_100', at: Date.now() }); emit('chest', { tier: tier || 'wood', ach: ach || 'debug', count: cs.inv.length }); return cs.seq; },
     rerollGoal(i) { return rerollGoal(i); },
     goalRerollIn() { return Math.ceil(goalRerollIn()); },
-    dodge() { return tryDodge(); },
+    dodge() { noteInput('api'); return tryDodge(); },
     buy(kind, id, amount) {
-      let el = null;
+      noteInput('api'); let el = null;
       try { const host = document.querySelector(`[data-buy="${kind}:${String(id).replace(/"/g, '')}"]`); if (host) el = host; } catch (e) { /* ignore */ }
       if (kind === 'cosmetic' && id && !String(id).includes(':')) { const slot = SLOTS.find((s) => (B.cosmetics[s] || []).some((c) => c.id === id)); if (slot) id = slot + ':' + id; }
       return buy(kind, id, el, amount);
     },
-    equip(slot, id) { return equip(slot, id, null); },
+    equip(slot, id) { noteInput('api'); return equip(slot, id, null); },
     /** the rat look (note 4): RAT_LOOKS ids; setting one saves it (Style > Rat does the same) */
     get ratLooks() { return RAT_LOOKS.slice(); },
     get ratLook() { return ratLook(); },
@@ -38783,15 +38850,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         field: P ? { x: Math.round(P.x * 10) / 10, y: Math.round(P.y * 10) / 10, hopN: P.hopN, moving: P.moving, goal: P.goal ? { x: P.goal.x, y: P.goal.y, home: !!P.goal.home, rest: !!P.goal.rest } : null, working: pipOn(), whistle: P.whistleT > 0 } : null } };
     },
     hireAssistant(id, free) { if (id !== 'pip' || !PIP_() || mode !== 'game') return false; if (free) { hireAsst('pip'); emit('asstHire', { id: 'pip', free: true }); ui_.refresh && ui_.refresh(true); save(); return true; } escState().open.pip = 1; return buyAsst('pip'); },
-    buyAssistant(id, line) { return buyAsst(String(id) + (line ? ':' + line : '')); },
+    buyAssistant(id, line) { noteInput('api'); return buyAsst(String(id) + (line ? ':' + line : '')); },
     setAssistantRest(id, rest) { return setAsstRest(id, rest !== false); },
     openAssistantCard(id) { return openAsstCard(id || 'pip'); },
     /** the palette swap key the rat is drawn with right now (look + outfit + paint), for tests */
     ratSwapKey(sprite) { return state ? playerSwapKey(sprite || 'player_hands') : null; },
-    movePlayerTo(x, y) { if (world.player) { world.player.target = { x: +x, y: +y }; world.player.keys = { x: 0, y: 0 }; return true; } return false; },
-    stopPlayer() { if (world.player) { world.player.target = null; world.player.keys = { x: 0, y: 0 }; } return true; },
-    sellRange() { return sellRange(false); }, // = pay the next instalment (the name predates buying ranges)
-    payInstalment() { return sellRange(false); },
+    movePlayerTo(x, y) { noteInput('api'); if (world.player) { world.player.target = { x: +x, y: +y }; world.player.keys = { x: 0, y: 0 }; return true; } return false; },
+    stopPlayer() { noteInput('api'); if (world.player) { world.player.target = null; world.player.keys = { x: 0, y: 0 }; } return true; },
+    sellRange() { noteInput('api'); return sellRange(false); }, // = pay the next instalment (the name predates buying ranges)
+    payInstalment() { noteInput('api'); return sellRange(false); },
     /** the carry-over cap (DECISIONS 47): { next, cap, wallet, keep, over, crate, beetles, line, overNow } for signing now
      *  (wallet: after the last part; pass one to ask about another amount), or null (no next range in the main run) */
     carryInfo(wallet) { if (!state) return null; const ci = carryInfo(wallet); return ci ? Object.assign({ line: carryLine(ci), overNow: carryOverNow(), known: rangeKnown(rIdx(ci.next)) }, ci) : null; },
@@ -38801,9 +38868,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     starBoost(from, to) { return starBoost(from, to); },
     /** has the player seen range i's name (route map rule)? Until then it's ??? and its tease */
     rangeKnown(i) { return rangeKnown(typeof i === 'string' ? rIdx(i) : i); },
-    buyRange() { return buyRange(); },
-    visitRange(i) { return visitRange(typeof i === 'string' ? B.ranges.findIndex((r) => r.id === i) : i); },
-    dismissDialogs() { frDismissed(); dismissDialogs(); return true; }, // (an outside dismiss, like a tap: a first-time line on screen counts as read)
+    buyRange() { noteInput('api'); return buyRange(); },
+    visitRange(i) { noteInput('api'); return visitRange(typeof i === 'string' ? B.ranges.findIndex((r) => r.id === i) : i); },
+    dismissDialogs() { noteInput('api'); frDismissed(); dismissDialogs(); return true; }, // (an outside dismiss, like a tap: a first-time line on screen counts as read)
     mountPanel, unmountPanel, setViewport, toScreen, dialogDone,
     fieldSize() { return { w: G.W, h: G.H, orientation: 'portrait' }; },
     // Desk mode (DECISIONS 38; ui/desk.js owns its layout + menu, desktop/app/main.js its window)

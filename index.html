@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-14-d882de95-abc05500">
+<meta name="rr-pwa" content="2026-11-14-fce89120-16e1355c">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-14-d882de95">
+<meta name="range-rat-build" content="2026-11-14-fce89120">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-d882de95", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-fce89120", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-d882de95", "builtAt": "2026-11-14T06:03:43Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-fce89120", "builtAt": "2026-11-14T11:11:57Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -8603,6 +8603,7 @@ window.DIALOG = {
       fullGameSub: "The whole world is open",
       fore: "Fore!",
       double: "Double! +{n}",
+      partPaid: "Paid! {n}/{m}",
       golden: "Golden golfer!",
       shoo: "Shoo!",
       rakedSmooth: "Raked smooth! +{n}",
@@ -10230,6 +10231,7 @@ window.DIALOG = {
       "prefs": {
         "gusPick": "Show Gus's pick in the shop",
         "background": "When in the background",
+        "fullscreen": "Fullscreen",
         "keys": "Keyboard and gamepad…",
         "advanced": "Advanced…",
         "advancedHide": "Hide advanced",
@@ -11753,6 +11755,7 @@ window.DIALOG = {
         fullGameSub: "Die ganze Welt steht offen",
         fore: "Fore!",
         double: "Doppelt! +{n}",
+        partPaid: "Bezahlt! {n}/{m}",
         golden: "Goldener Golfer!",
         shoo: "Husch!",
         rakedSmooth: "Glatt geharkt! +{n}",
@@ -13330,6 +13333,7 @@ window.DIALOG = {
       "prefs": {
         "gusPick": "Gus' Tipp im Laden zeigen",
         "background": "Im Hintergrund",
+        "fullscreen": "Vollbild",
         "keys": "Tastatur und Gamepad…",
         "advanced": "Erweitert…",
         "advancedHide": "Erweitert ausblenden",
@@ -14815,6 +14819,7 @@ window.DIALOG = {
         fullGameSub: "El mundo entero te espera",
         fore: "¡Fore!",
         double: "¡Doble! +{n}",
+        partPaid: "¡Pagado! {n}/{m}",
         golden: "¡Golfista dorado!",
         shoo: "¡Fuera!",
         rakedSmooth: "¡Rastrillado! +{n}",
@@ -16308,6 +16313,7 @@ window.DIALOG = {
       "prefs": {
         "gusPick": "Mostrar la elección de Gus en la tienda",
         "background": "En segundo plano",
+        "fullscreen": "Pantalla completa",
         "keys": "Teclado y mando…",
         "advanced": "Avanzado…",
         "advancedHide": "Ocultar avanzado",
@@ -17778,6 +17784,7 @@ window.DIALOG = {
         fullGameSub: "O mundo todo está aberto",
         fore: "Olha a bola!",
         double: "Em dobro! +{n}",
+        partPaid: "Pago! {n}/{m}",
         golden: "Golfista dourado!",
         shoo: "Xô!",
         rakedSmooth: "Rastelado! +{n}",
@@ -19277,6 +19284,7 @@ window.DIALOG = {
       "prefs": {
         "gusPick": "Mostrar a dica do Gus na loja",
         "background": "Em segundo plano",
+        "fullscreen": "Tela cheia",
         "keys": "Teclado e controle…",
         "advanced": "Avançado…",
         "advancedHide": "Ocultar avançado",
@@ -20833,6 +20841,7 @@ window.DIALOG = {
         fullGameSub: "整个世界都开放了",
         fore: "看球！",
         double: "一杆双球！+{n}",
+        partPaid: "已付！{n}/{m}",
         golden: "金牌球友！",
         shoo: "去去去！",
         rakedSmooth: "耙平了！+{n}",
@@ -22330,6 +22339,7 @@ window.DIALOG = {
       "prefs": {
         "gusPick": "在商店里显示古斯推荐",
         "background": "在后台时",
+        "fullscreen": "全屏",
         "keys": "键盘和手柄…",
         "advanced": "高级…",
         "advancedHide": "收起高级",
@@ -23092,10 +23102,18 @@ window.DIALOG = {
     shake: { stun: 4, cageBlock: 2, gearUp: 3, prestige: 5, deposit: 0.8, depositFull: 2, achievement: 1.5, special: 1, decay: 10 },
     hitStopMs: { achievement: 70, swing: 50, stun: 110, cageBlock: 50, gearUp: 220, prestige: 260, special: 30, deposit: 0, depositFull: 45, tip: 40 },
     squash: { pickup: 0.16, deposit: 0.3, land: 0.35, buy: 0.22, swing: 0.1, stun: 0.45, robotLevel: 0.5, anticipation: 0.07, followThrough: -0.08, stop: 0.12, turn: 0.1, breath: 0.035, spring: 240, damping: 14 },
-    popup: { rise: 16, ms: 1150, bigMs: 1500, stagger: 70, maxPxPerSec: 36, mergeMs: 1000, momentQuietMs: 2000 }, // field numbers: slow + large (QA #6), stacked '+x' merge into one counter
+    ambientToasts: 2, // a recurring critter toast (gull, moths) shows this many times a visit, then the field and the sound say it (Ben 13 Nov; the sea gust has its own cap, GUST_SAY)
+    popup: { rise: 16, ms: 1150, bigMs: 1500, stagger: 70, maxPxPerSec: 36, mergeMs: 1000, momentQuietMs: 2000, chipBudget: 5 }, // field numbers: slow + large (QA #6), stacked '+x' merge into one counter; chipBudget: small chips up at once (Ben 13 Nov)
     particles: { max: 500, scale: 1, pickup: 5, deposit: 10, land: 3, buy: 18, gearUp: 40, confetti: 46, achievement: 30, stun: 12, special: 14, prestige: 60 },
     flash: { stun: 0.35, gearUp: 0.6, prestige: 0.8, achievement: 0.2, decay: 4 },
     counterRollMs: 450,
+    // the main goal's quarter notches (Ben 13 Nov, "satisfaction loops"): each quarter of the part you're saving for is
+    // marked on the main goal bar, and reaching one chimes and flashes the bar once (a part at Gullhaven is ~8 min of income)
+    partNotches: { on: true, quarters: 4, sound: 'achievement_progress', volume: 0.5, flashMs: 560 },
+    // the helpers' income ticker (Ben 13 Nov, "too much stuff on screen?"): what the beetles, crews, lit / lucky balls they
+    // bring in and the tour groups' doubles earn rolls into one small "+X" by the acorns, a batch every batchMs, instead of
+    // a number on the field for each. The rat's own deposits, tips, requests and catches keep their numbers
+    incomeTicker: { on: true, batchMs: 4000, holdMs: 700, ease: 0.35 },
     // the pickup sound (playtest round 3 note 8): quick pickups climb a pentatonic ladder (step 0..top, a sparkle at 4 and 9),
     // a pause of resetMs drops it back to the bottom; past the top it wanders wander[0..1] (hundreds of pickups never sit on
     // one high note). More than perFrame pickups in one frame are silent, the 2nd plays at crowdVol (a sweep sounds like one)
@@ -23204,12 +23222,20 @@ window.DIALOG = {
    *  BALANCE normalise (cosmeticUniverseOf) asks before this line runs */
   function wtBuild() { try { return !!((W.RANGE_RAT_CONFIG || {}).desktop || W.RR_DESKTOP); } catch (e) { return false; } }
   const deskHidden = () => DESK.on && (DESK.occluded || !!(W.document && W.document.hidden));
+  // Steam readiness 2026-11-14: the desktop wrapper says when the normal window is minimised / hidden (backgroundThrottling
+  // is off there, so document.hidden stays false and the 12 fps unfocused loop kept drawing the whole field into a window
+  // nobody can see). Occluded: the sim runs on a slow timer in batched steps (full speed, as desk mode does); no drawing,
+  // no particles / pops / coin flights, the HUD at 2 Hz. RANGE_RAT.windowOccluded(bool), from desktop/app/glue.js (only
+  // the wrapper sets it); the desk window keeps its own (DESK.occluded)
+  const WIN = { occluded: false, hiddenMs: 250, skipped: 0 };
+  const winHidden = () => WIN.occluded && !DESK.on && DESKTOP_RUN; // occluded first: DESKTOP_RUN is defined further down (only read once set)
+  const unseen = () => deskHidden() || winHidden(); // nothing on screen to draw into
   const deskQuiet = () => DESK.on && !(state && state.settings && state.settings.deskSound);
   function spawnParticle(p) {
     // level >= 1: every other particle is dropped here, after the caller drew its random numbers (Math.random is shared
     // with the sim, so its stream - and so the game - is the same at any quality)
     if (GFX.part < 1 && (GFX.pn = (GFX.pn + 1) % 2) === 1) return p;
-    if (deskHidden()) return p; // desk mode, hidden: nothing is drawn, so no particles (same random stream)
+    if (unseen()) return p; // desk mode or a minimised window: nothing is drawn, so no particles (same random stream)
     const max = feel.particles.max * (reducedMotion() ? feel.reduced.particles : 1) * GFX.part;
     if (particles.length >= max) { const old = particles[0]; particles[0] = particles[particles.length - 1]; particles.pop(); particlePool.push(old); }
     const o = particlePool.pop() || {};
@@ -23444,6 +23470,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** sim speed under fx.slowmo: slowK for the first 60%, easing back to 1 by the end (real time) */
   const slowScale = () => { if (!(fxState.slowT > 0)) return 1; const u = 1 - fxState.slowT / Math.max(0.001, fxState.slowDur); return u < 0.6 ? fxState.slowK : lerp(fxState.slowK, 1, (u - 0.6) / 0.4); };
   let momentQuietUntil = 0; // renderMs until which small popups are hushed (fx.moment)
+  const chipEnds = []; // render-clock ms each small chip on screen leaves (fx.popup's chip budget)
+  function chipRoom(o) {
+    let m = null; if (o.merge) try { m = popMerge[o.merge]; } catch (e) { /* the UI isn't built yet */ }
+    if (m && m.e && m.e.isConnected && renderMs - m.t < feel.popup.mergeMs) return true; // it rolls into a chip already up
+    for (let i = chipEnds.length - 1; i >= 0; i--) if (chipEnds[i] <= renderMs) chipEnds.splice(i, 1);
+    if (chipEnds.length >= (feel.popup.chipBudget || 1e9) && !(o.big || o.huge)) return false; // big chips (a tip ball, your own deposit) always show, and count
+    chipEnds.push(renderMs + (o.big || o.huge ? feel.popup.bigMs : feel.popup.ms)); return true;
+  }
   const fx = {
     /** camera nudge: a directional punch (logical px) that springs back. Off in reduced motion. */
     nudge(dx, dy) {
@@ -23510,6 +23544,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       // callouts wait it out (QA #6). The value still counts; only the floating text is skipped.
       // + §4g: during a focus block only milestone popups (big ones) show
       if ((opts.chip && renderMs < momentQuietUntil) || (focusQuiet() && (opts.chip || !(opts.big || opts.huge)))) { emit('fx', { kind: 'popup', text: String(text), suppressed: true }); return; }
+      // the chip budget (Ben 13 Nov, "too much stuff on screen?"; feel gate: 19-24 numbers up at once late game): at most
+      // feel.popup.chipBudget small chips float at once. Past it a new chip is skipped (its acorns still count and the HUD
+      // counter rolls them in); one that merges into a chip already up is an update, not a new one. Big chips (what the rat
+      // did: a tip ball, a deposit) always show.
+      if (opts.chip && !chipRoom(opts)) { emit('fx', { kind: 'popup', text: String(text), suppressed: true, budget: true }); return; }
       emit('fx', { kind: 'popup', text: String(text) });
       if (ui_ && ui_.popup) ui_.popup(String(text), x, y, opts);
     },
@@ -23577,6 +23616,13 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** Settings > Display > Desk mode: desktop builds only (the wrapper opens the desk window; the page reloads into it) */
   // not on a Steam Deck (RR_DESKTOP.deck): Gamescope has one fullscreen surface, no corner window (desktop/README Deck)
   function deskAvailable() { try { const d = W.RR_DESKTOP && W.RR_DESKTOP.desk; return !DESK.on && W.RR_DESKTOP.deck !== true && !!(d && typeof d.enter === 'function'); } catch (e) { return false; } }
+  /** Settings > Display > Fullscreen (Steam readiness 2026-11-14): the desktop window's F11 / Alt+Enter for mouse- and pad-only
+   *  players. Desktop normal window only (never the desk window; not on a Steam Deck, which is always full screen) */
+  function fsAvailable() { try { const d = W.RR_DESKTOP; return !DESK.on && !!d && d.deck !== true && typeof d.toggleFullscreen === 'function' && typeof d.isFullscreen === 'function'; } catch (e) { return false; } }
+  function fsOn() { try { return !!W.RR_DESKTOP.isFullscreen(); } catch (e) { return false; } }
+  /** the title screen's Quit (Steam readiness 2026-11-14): a full-screen desktop game with only a mouse or a pad had no way
+   *  out but Alt+F4 or the Steam overlay. Desktop wrapper only (RR_DESKTOP.desk.quit closes the window, which saves + flushes) */
+  function quitAvailable() { try { const d = W.RR_DESKTOP; return !DESK.on && !!d && !!d.desk && typeof d.desk.quit === 'function'; } catch (e) { return false; } }
   function enterDesk() { if (!deskAvailable()) return false; try { save(); W.RR_DESKTOP.storage.flush(); } catch (e) { /* the wrapper saves on switch too */ } try { W.RR_DESKTOP.desk.enter(); } catch (e) { return false; } return true; }
   function setDeskSound(on) {
     if (!state) return false; state.settings.deskSound = !!on; saveDeviceSettings();
@@ -23832,7 +23878,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const h = p.house, hx = h ? h.x : p.x, hy = h ? h.y - 3 : p.y - 6; // hatch tray
       if (!p.byPlayer) {
         fx.squash(p.house, feel.squash.deposit * 0.5);
-        if (p.cash > 0 && !p.asst) fx.popup('+' + fmt(p.cash), p.x, p.y - 18, { color: '#f2c641', small: true, chip: true, money: true, merge: 'dep' + Math.round(p.x / 24) + ':' + Math.round(p.y / 24), value: p.cash, prefix: '+' }); // beetles / crews: one counter per drop spot per second
+        if (p.cash > 0 && !p.asst && !helperIncome(p.cash)) fx.popup('+' + fmt(p.cash), p.x, p.y - 18, { color: '#f2c641', small: true, chip: true, money: true, merge: 'dep' + Math.round(p.x / 24) + ':' + Math.round(p.y / 24), value: p.cash, prefix: '+' }); // beetles / crews: one counter per drop spot per second
         return;
       }
       fx.squash(p.player, -feel.squash.deposit * 0.6);
@@ -23881,6 +23927,35 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       fx.sprite('sparkle', p.x, p.y - 10);
       fx.popup(tx('fx.clang', 'CLANG!'), p.x, p.y - 20, { color: '#9fd0e2' });
       haptic('clang');
+    },
+    /** a part of the main goal paid (Ben 13 Nov: it had a sound and a toast, nothing on the field): the ball house takes the
+     *  money: a short freeze, coins burst at the hatch, a "Paid! 2/4" stamp, the main goal row pops, a bump. The moment
+     *  hushes the small chips (fx.moment). Less motion: no shake; the stamp and the row pop still play. */
+    onInstalment(p) {
+      fx.moment(feel.popup.momentQuietMs);
+      fx.hitstop(feel.hitStopMs.depositFull || 60);
+      if (world.house) fx.squash(world.house, feel.squash.deposit * 1.6);
+      fx.shake((feel.shake.depositFull || 2) * 1.2);
+      fx.particles('part', p.x, p.y - 4, 22, { colors: ['#f2c641', '#fff2a6', '#b98a2c', '#fffaee'], speed: 75, up: 45, g: 130, life: 0.75 });
+      fx.particles('coins', p.x, p.y - 4, 8, { sprite: 'coin', animated: true, speed: 65, up: 70, g: 170, life: 0.8, drag: 1.5 });
+      fx.sprite('sparkle', p.x, p.y - 14);
+      fx.popup(tx('fx.partPaid', 'Paid! {n}/{m}', { n: p.part, m: p.of }), p.x + 30, p.y - 6, { color: '#f2c641', huge: true });
+      try { const ob = layout.root && layout.root.querySelector('.rh-obj'); if (ob) fx.pop(ob, 1.08); } catch (e) { /* ignore */ }
+      haptic('bump', 0.9);
+    },
+    /** a quarter of the part being saved for (feel.partNotches): a small chime; the main goal bar flashes once and the
+     *  notch just reached pops. Flashes off: the notch pops, no flash. Less motion: the chime, and the notch is lit (no
+     *  animation). No haptic, no field fx, no screen-reader line (the bar is aria-hidden; the goal's label has the numbers). */
+    onPartNotch(p) {
+      const P = feel.partNotches; sfx(P.sound || 'achievement_progress', { volume: P.volume == null ? 0.5 : P.volume });
+      if (!layout.root || RM_()) return;
+      if (!noFlash()) emit('fx', { kind: 'flash', target: 'ui', what: 'partNotch', q: p.q });
+      for (const bar of layout.root.querySelectorAll('.rh-obj:not([hidden]) .bar')) {
+        try {
+          if (!noFlash()) bar.animate([{ filter: 'brightness(1)', boxShadow: '0 0 0 0 rgba(255,242,166,0)' }, { filter: 'brightness(1.75)', boxShadow: '0 0 0 2px rgba(255,242,166,.9)', offset: 0.22 }, { filter: 'brightness(1)', boxShadow: '0 0 0 0 rgba(255,242,166,0)' }], { duration: P.flashMs || 560, easing: 'ease-out' });
+          const n = bar.querySelector('.nq i:nth-child(' + p.q + ')'); if (n) n.animate([{ transform: 'translateX(-50%) scaleY(2.2)' }, { transform: 'translateX(-50%) scaleY(1)' }], { duration: 380, easing: 'ease-out' });
+        } catch (e) { /* ignore */ }
+      }
     },
     onBuy(p) {
       // press squash on the button, a coin flies from the wallet to the item, then the level number pops
@@ -26240,7 +26315,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const b = launchBall(g, aimed);
     if (game) { const T = tierDef(golferTier(g)); if ((T.balls || 1) > 1 && state.stock > 0 && Math.random() < (T.balls - 1)) { // the tour group: a second ball
       state.stock--; const pr = swingPrice() * (T.pay || 1); earn(pr, 'swing'); emit('swing', { bay: g.bay, price: pr, aimed: false, golden: false, extra: true }); launchBall(g, false);
-      fx.popup(tx('fx.double', 'Double! +{n}', { n: fmt(pr) }), g.x, g.y - 30, { chip: true, color: '#f2c641' }); // every double hit says so
+      if (!helperIncome(pr)) fx.popup(tx('fx.double', 'Double! +{n}', { n: fmt(pr) }), g.x, g.y - 30, { chip: true, color: '#f2c641', merge: 'dbl' + g.bay, value: pr, prefix: tx('fx.double', 'Double! +{n}', { n: '' }) }); // a double says so: one rolling chip per bay, inside the chip budget
       if (state.stock <= 0 && !world.stockEmpty) { world.stockEmpty = true; emit('stockEmpty', {}); } } }
     if (aimed && game) fx.popup(tx('fx.fore', 'Fore!'), g.x, g.y - 24, { color: '#e8a193', small: true });
     return b;
@@ -28031,7 +28106,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         if (!st.thief && st.t <= 0 && mode === 'game') {
           st.t = rand(gc.everySec[0], gc.everySec[1]);
           const cands = world.balls.filter((b) => pickable(b) && b.type === 'range' && !b.tip); const b = pick(cands);
-          if (b) { st.thief = { x: -10, y: b.y - 30, tx: b.x, ty: b.y, ball: b, phase: 'in', carry: false, t: 0 }; toast(tx('toast.gull', 'A gull is after a ball!')); if (!frSaid('gull')) firstNow('gull', { at: () => (st.thief && st.thief.phase !== 'gone' ? { x: st.thief.x, y: st.thief.y } : null) }); }
+          if (b) { st.thief = { x: -10, y: b.y - 30, tx: b.x, ty: b.y, ball: b, phase: 'in', carry: false, t: 0 }; ambientToast('gull', tx('toast.gull', 'A gull is after a ball!')); if (!frSaid('gull')) firstNow('gull', { at: () => (st.thief && st.thief.phase !== 'gone' ? { x: st.thief.x, y: st.thief.y } : null) }); }
         }
         const th = st.thief; if (!th) return;
         th.t += dt;
@@ -28103,6 +28178,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const v = earn(f * swingPrice(), 'lantern'); if (!(v > 0)) return;
     if (robot && robot.asst) { const a = asstSt(robot.asst); if (a) a.earned = (+a.earned || 0) + v; return; } // Pip: no number pops (his card)
     if (!robot) { fx.popup('+' + fmt(v), b.x, b.y - 8, { small: true, chip: true, money: true, merge: 'litrat', value: v, prefix: '+', color: '#f2a65a' }); return; }
+    if (helperIncome(v)) return; // the helpers' ticker by the acorns (feel.incomeTicker)
     LITB.v += v; if (renderMs - LITB.t < 600) return; // perf: beetles' lit pickups roll into one amber chip at most every 0.6 s
     fx.popup('+' + fmt(LITB.v), b.x, b.y - 8, { small: true, chip: true, money: true, merge: 'litbug', value: LITB.v, prefix: '+', color: '#f2a65a' }); LITB.v = 0; LITB.t = renderMs;
   }
@@ -28159,7 +28235,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
           if (gb) { gb.glimT = gameT + 8; fx.sprite('sparkle', gb.x, gb.y - 2, { add: true }); }
         }
         const moths = beatVal('moths', null);
-        if (moths) { st.moth -= dt; if (st.mothLeft > 0) { st.mothLeft -= dt; if (st.mothLeft <= 0) st.mothPool = -1; } if (st.moth <= 0 && m.pools.length) { st.moth = moths.everySec || 40; st.mothLeft = moths.dimSec || 20; st.mothPool = Math.floor(Math.random() * m.pools.length); toast(tx('toast.moths', 'Moths are crowding a lantern!')); if (!frSaid('moths')) firstNow('moths', { at: () => (st.mothLeft > 0 && st.mothPool >= 0 && m.pools[st.mothPool] ? { x: m.pools[st.mothPool].x, y: m.pools[st.mothPool].y } : null) }); } }
+        if (moths) { st.moth -= dt; if (st.mothLeft > 0) { st.mothLeft -= dt; if (st.mothLeft <= 0) st.mothPool = -1; } if (st.moth <= 0 && m.pools.length) { st.moth = moths.everySec || 40; st.mothLeft = moths.dimSec || 20; st.mothPool = Math.floor(Math.random() * m.pools.length); ambientToast('moths', tx('toast.moths', 'Moths are crowding a lantern!')); if (!frSaid('moths')) firstNow('moths', { at: () => (st.mothLeft > 0 && st.mothPool >= 0 && m.pools[st.mothPool] ? { x: m.pools[st.mothPool].x, y: m.pools[st.mothPool].y } : null) }); } }
         if (jarsHere() && mode === 'game') m.fireflies(dt);
       },
       // ---- firefly jars: catch fireflies by running through them; 10 fill a jar; a full jar powers the next lantern ----
@@ -28227,11 +28303,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       /** drawn after the night mask (ambientPass): glowing fireflies, their trails home, the jar and its glow */
       lightFx(g, night) {
         if (!jarsHere() || mode !== 'game') return;
-        const J = jarCfg(), js = jarState(), jp = m.jarXY(), life = J.lifeSec || 30, lite = GFX.lite, red = reducedMotion();
+        const J = jarCfg(), js = jarState(), jp = m.jarXY(), life = J.lifeSec || 30, lite = GFX.lite, red = reducedMotion(), F = nlCfg().fx.ff;
         g.globalCompositeOperation = 'lighter';
         for (const f of st.ff) {
           const a = clamp(f.t / 0.4, 0, 1) * clamp((life - f.t) / 2, 0, 1) * (red ? 0.9 : 0.6 + 0.4 * Math.sin(renderMs / 260 + f.ph * 3));
-          blob(g, 'gold', f.x, f.y, 9, 9, 0.85 * a); if (!lite) blob(g, 'warm', f.x, f.y, 4, 4, 0.8 * a); // catchable: bigger and golder than the decorative fireflies
+          blob(g, 'gold', f.x, f.y, F[0], F[0], F[1] * a); if (!lite) blob(g, 'warm', f.x, f.y, F[2], F[2], F[3] * a); // catchable: bigger and golder than the decorative fireflies
         }
         for (const q of st.fly) { blob(g, 'green', q.x, q.y, 5, 5, 0.8); for (let k = 0; k < q.tr.length; k += 2) { g.fillStyle = `rgba(212,239,106,${0.5 * (1 - k / q.tr.length)})`; g.fillRect(Math.round(q.tr[k]), Math.round(q.tr[k + 1]), 1, 1); } }
         const full = (js.fill | 0) / (J.size || 10);
@@ -28389,7 +28465,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const v = earn(Math.max(0, (m || 3) - 1) * swingPrice(), 'lucky'); if (!(v > 0)) return;
     BP.lucky++; emit('luckyBall', { by: robot ? (robot.asst ? 'pip' : 'beetle') : 'rat', value: v });
     if (robot && robot.asst) { const a = asstSt(robot.asst); if (a) a.earned = (+a.earned || 0) + v; return; } // Pip: no number pops (his card)
-    fx.popup('+' + fmt(v), b.x, b.y - 8, { small: true, chip: true, money: true, merge: robot ? 'luckbug' : 'luckrat', value: v, prefix: '+', color: '#d4ef6a' });
+    if (!(robot && helperIncome(v))) fx.popup('+' + fmt(v), b.x, b.y - 8, { small: true, chip: true, money: true, merge: robot ? 'luckbug' : 'luckrat', value: v, prefix: '+', color: '#d4ef6a' });
     if (!robot) sfx('special_ball', { pitch: 9, volume: 0.6 });
   }
   // ---- the duckling parade (Lily Lagoon) ----
@@ -32751,7 +32827,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const flS = fl.map((v, i) => v > 0 && steady('flood' + i)), blS = bl.map((v, i) => v > 0 && steady('bay' + i)), dlS = dl.map((v, i) => v > 0 && steady('deck' + i)), tlS = tl.map((v, i) => v > 0 && steady('terr' + i));
       const hlS = hl === 0 || steady('house');
       const sig = [rid, th.night ? 1 : 0, flS.join(), blS.join(), dlS.join(), tlS.join(), tls.length, hlS ? hl : 'f', lit, posts.join(), dls.length, h ? (h.x | 0) + ',' + (h.y | 0) : '', world.scenery.length,
-        (world.pools || []).map((q) => (q.x | 0) + ':' + (q.r | 0)).join(), game && !isOpen(), G.teeD, RS, caMaskSig()].join('|');
+        (world.pools || []).map((q) => (q.x | 0) + ':' + (q.r | 0) + (q.pw ? 'p' : '')).join(), game && !isOpen(), G.teeD, RS, caMaskSig(), NLOOK.id].join('|');
       const lampHoles = (m, st) => {
         floods.forEach((f, i) => { if (fl[i] && flS[i] === st) { blob(m, 'white', lerp(f.x, f.aim * G.W, 0.75), 168, 40, 118, 0.62 * fl[i]); blob(m, 'white', f.x, f.top + 2, 10, 8, 0.9 * fl[i]); } });
         posts.forEach((x, i) => { if (bl[i] && blS[i] === st) { blob(m, 'white', x + 10, G.teeD - 10, 18, 20, bl[i]); blob(m, 'white', x + 10, G.teeD - 2, 22, 10, 0.9 * bl[i]); } });
@@ -32776,16 +32852,20 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (mc._key !== sig) {
         mc._key = sig; const m = mc.getContext('2d');
         m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = 'source-over'; m.globalAlpha = 1; m.clearRect(0, 0, mc.width, mc.height);
-        m.fillStyle = css3(NIGHT_TINT, nightMaskA(th)); m.fillRect(0, 0, mc.width, mc.height);
+        const nlOn = NLOOK.id !== 'cur' && !!(world.pools && world.pools.length); // Firefly Bays' lantern light, capped (nlPaint)
+        if (nlOn) nlPaint(mc, backingCanvas('warmC'), nlCfg());
+        else { m.fillStyle = css3(NIGHT_TINT, nightMaskA(th)); m.fillRect(0, 0, mc.width, mc.height); }
         m.globalCompositeOperation = 'destination-out';
         lampHoles(m, true);
         for (const s of world.scenery) if (s.lantern && lit) blob(m, 'white', s.x, s.y - 10, 24, 24, 0.9);
         caFlagHoles(m); // code art: the flags read in the dark (Firefly's pin lantern a warm pool)
-        for (const pl of world.pools || []) blob(m, 'pool', pl.x, pl.y, pl.r * 1.12, pl.r * 1.12, 1);
+        if (!nlOn) for (const pl of world.pools || []) blob(m, 'pool', pl.x, pl.y, pl.r * 1.12, pl.r * 1.12, 1);
         if (world.pools && world.pools.length) { // warm lamplight baked into the cached mask (free per frame): amber pools, jar-powered ones firefly-gold
           m.globalCompositeOperation = 'source-over';
-          for (const pl of world.pools) { blob(m, 'pool', pl.x, pl.y, pl.r * 1.08, pl.r * 1.08, 0.36); }
-          m.globalCompositeOperation = 'source-atop'; for (const pl of world.pools) blob(m, pl.pw ? 'gold' : 'amber', pl.x, pl.y, pl.r * 1.1, pl.r * 1.1, 1);
+          if (!nlOn) { // the old paint (NLOOK 'cur')
+            for (const pl of world.pools) { blob(m, 'pool', pl.x, pl.y, pl.r * 1.08, pl.r * 1.08, 0.36); }
+            m.globalCompositeOperation = 'source-atop'; for (const pl of world.pools) blob(m, pl.pw ? 'gold' : 'amber', pl.x, pl.y, pl.r * 1.1, pl.r * 1.1, 1);
+          }
           m.globalCompositeOperation = 'source-over'; m.lineWidth = 1; // a faint warm rim: inside it, balls glow, beetles see them and they pay more
           for (const pl of world.pools) { m.strokeStyle = pl.pw ? 'rgba(232,245,154,0.4)' : 'rgba(255,196,112,0.32)'; m.setLineDash([2, 2]); m.beginPath(); m.ellipse(Math.round(pl.x) + 0.5, Math.round(pl.y) + 0.5, pl.r, pl.r, 0, 0, 6.283); m.stroke(); }
           m.setLineDash([]); m.globalCompositeOperation = 'destination-out';
@@ -32793,7 +32873,8 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         if (game && !isOpen()) blob(m, 'white', 105, 48, 10, 8, 0.7);
         m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = 'source-over';
         // the lamplight alone (what the mask is where its darkness is cut right out): the rat's light gives it back (below)
-        if (world.pools && world.pools.length) {
+        if (nlOn) mc._warm = backingCanvas('warmC'); // nlPaint drew it
+        else if (world.pools && world.pools.length) {
           const wc = backingCanvas('warmC'), w2 = wc.getContext('2d'); w2.setTransform(1, 0, 0, 1, 0, 0); w2.globalCompositeOperation = 'source-over'; w2.clearRect(0, 0, wc.width, wc.height);
           for (const pl of world.pools) blob(w2, 'pool', pl.x, pl.y, pl.r * 1.08, pl.r * 1.08, 0.36);
           w2.globalCompositeOperation = 'source-atop'; for (const pl of world.pools) blob(w2, pl.pw ? 'gold' : 'amber', pl.x, pl.y, pl.r * 1.1, pl.r * 1.1, 1);
@@ -32861,17 +32942,17 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (gc._bb) blitLayer(g, gc, 'lighter', gc._bb, RS > 1 ? AMB.glowHi : null);
       g.globalCompositeOperation = 'lighter';
       lampGlows(g, false);
-      for (const pl of world.pools || []) blob(g, pl.pw ? 'green' : 'amber', pl.x, pl.y - 8, 11, 11, 0.7 * night);
+      const NFX = world.pools && world.pools.length ? nlCfg().fx : NL_FX; for (const pl of world.pools || []) blob(g, pl.pw ? 'green' : 'amber', pl.x, pl.y - 8, NFX.head[0], NFX.head[0], NFX.head[1] * night);
       if (world.pools) { g.fillStyle = `rgba(255,196,112,${0.4 * night})`; g.beginPath(); for (const b of world.balls) if (b.lit && !b.trapped && b.z < 1) g.rect(Math.round(b.x) - 2, Math.round(b.y) - 3, 5, 4); g.fill(); } // lit balls glow warm (perf: one fill)
       if (state.cos.equipped.decor === 'lanterns' && h) { const he = getSprite('ball_house'); const pts = (sprMeta('decor_lanterns') || {}).glow; const att = ((he.meta || {}).decor || {}).eave || { x: 14, y: 9 }; const de = getSprite('decor_lanterns'); for (const pt of (pts && pts.points) || []) blob(g, 'amber', h.x - he.ox + att.x - de.ox + pt[0], h.y - he.oy + att.y - de.oy + pt[1], 5, 5, 0.55 * night); }
       for (const s of world.scenery) if (s.lantern && lit) { const m = sprMeta('led_post'); const gl = (m && m.glow) || { x: 3, y: 3, r: 10 }; const e = getSprite('led_post'); const rr = (gl.r || 10) * (1 + 0.08 * Math.sin(renderMs / 160 + s.t0)); blob(g, 'amber', s.x - e.ox + gl.x, s.y - e.oy + gl.y, rr, rr, 0.5 * night); }
       if (RL.has[2]) { const ga = g.globalAlpha; g.globalAlpha = Math.min(1, 0.6 * night); restLayerBlit(g, 3); g.globalAlpha = ga; } // resting glow balls' halos (cached)
       haloLayer(g, 0.6 * night); // the trapped ones (cached; b._hl)
       for (const b of world.balls) if (b.type === 'glow' && !b._rl && !b._hl) blob(g, 'green', b.x, b.y - b.z - 1, 6, 6, 0.6 * night);
-      { const lr = game ? swarmDef().lightRadius : 0; if (lr) for (const r of world.robots) blob(g, 'amber', r.x, r.y - 4, 6, 6, (0.4 + 0.15 * Math.sin(renderMs / 200 + r.id)) * night); }
+      { const lr = game ? swarmDef().lightRadius : 0; if (lr) for (const r of world.robots) blob(g, 'amber', r.x, r.y - 4, 6, 6, (0.4 + 0.15 * Math.sin(renderMs / 200 + r.id)) * night * NFX.bug); }
       if (!GFX.lite) for (const f of world.fireflies || []) { // lite: fireflies keep their bright pixel (step 4), not the halo
         const x = f.x + Math.sin(renderMs / 1000 * f.sp + f.ph) * 6, y = f.y + Math.cos(renderMs / 1300 * f.sp + f.ph) * 4;
-        blob(g, 'green', x, y, 4, 4, 0.55 * (0.5 + 0.5 * Math.sin(renderMs / 400 + f.ph * 3)) * night);
+        blob(g, 'green', x, y, NFX.deco[0], NFX.deco[0], NFX.deco[1] * (0.5 + 0.5 * Math.sin(renderMs / 400 + f.ph * 3)) * night);
       }
       if (AMB.beam && L > 0.3) { // Gullhaven lighthouse sweep
         const bx = AMB.beam.x, by = AMB.beam.y, ang = red ? 0.9 : renderMs / 1600, c = Math.cos(ang), dir = c >= 0 ? 1 : -1, len = 44 * Math.abs(c) + 6;
@@ -32946,7 +33027,55 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   function hasLights_() { return mode !== 'game' || hasLights(); }
   /** night mask strength: night-only ranges (Firefly Bays) sit lighter so the field and rat always read (owner playtest) */
-  function nightMaskA(th) { return th.night ? 0.5 : 0.78; }
+  function nightMaskA(th) { return th.night ? nlCfg().dark : 0.78; }
+  // ---- Firefly Bays' lantern light (Ben 2026-11-14: "the lighting in the fire flies bay looks so bad"). The lantern pools
+  // were painted into the cached night mask as a 0.36 warm fill per pool, source-over: overlapping pools stacked with no cap
+  // (2 pools 59%, 3 74%, 6 93% opaque amber), the darkness was cut right out of every pool, and as the pools grow (Long
+  // Wicks, jar power x1.35, the Lantern Festival x2) they cover the whole field: a flat orange sheet, no night left, the
+  // grass texture and balls under paint. Now the pools' light is one buffer: each pixel takes the BRIGHTEST pool (max, never
+  // a sum), so overlaps can't saturate, and the night and the warm tint are worked out from that light per pixel (cached:
+  // rebuilt only when the pools change, like the mask). The look is B, lantern glow (approved by Ben 14 Nov 2026, DECISIONS
+  // 53; options A 'capped wash' and C 'moonlit' were previewed and dropped): dithered falloff bands from each lantern, night
+  // between them, a gold lift; smaller firefly halos. 'cur' (the old paint) stays for tests only: check fireflylight proves
+  // the old look fails its limits. Only RANGE_RAT._test.nightLook switches it; nothing in play, settings or saves does
+  const NLOOK = { id: 'B' };
+  // fx: the additive lights over the grade at Firefly Bays: ff = a catchable firefly's [halo r, a, core r, a], deco = a
+  // decorative firefly's halo [r, a], bug = x the lamp beetles' glow, head = a lantern head's glow [r, a]
+  const NL_FX = { ff: [9, 0.85, 4, 0.8], deco: [4, 0.55], bug: 1, head: [11, 0.7] };
+  const NL_CFG = {
+    cur: { dark: 0.5, fx: NL_FX }, // tests only (_test.nightLook('cur')): the old paint
+    // fall(u): light 0..1 at u = distance / pool radius; bands: pixel-art light levels, ordered-dithered between; warm: the
+    // tint's alpha at full light; cols: [lantern, jar-powered lantern] tint colours (code-art RAMPS)
+    // B lantern glow: the light falls off from each lantern in three pixel-art bands (ordered dither between them), so even
+    // where the pools overlap there is night between the lanterns; the pool's edge (where balls stop glowing) stays a little
+    // lifted and keeps its dashed rim. A darker night between (0.62), a gold lift on the grass (warm lamplight on green),
+    // jar-powered lanterns a paler, brighter gold; smaller firefly halos (small bright points)
+    B: { dark: 0.62, tint: [14, 18, 54], warm: 0.22, bands: [0, 0.28, 0.6, 1], cols: [[242, 198, 65], [255, 242, 166]], // RAMPS.gold[2], RAMPS.light[1]
+      fx: { ff: [6, 0.7, 3, 0.8], deco: [3, 0.5], bug: 0.75, head: [11, 0.7] },
+      fall: (u, r) => { const c = Math.min(0.5, Math.max(0.22, 11 / r)), m = Math.min(0.85, Math.max(0.6, 19 / r)); return u < c ? 1 : u < m ? 1 - 0.55 * (u - c) / (m - c) : u < 1 ? 0.45 - 0.17 * (u - m) / (1 - m) : u < 1.1 ? 0.28 * (1.1 - u) / 0.1 : 0; } } // a small pool (early) keeps an 11 px lit core
+  };
+  const nlCfg = () => NL_CFG[NLOOK.id] || NL_CFG.cur;
+  const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
+  const NLB = { L: null, P: null, md: null, wd: null };
+  /** the night mask's base (darkness + the pools' warm light, per logical pixel) into mc, and the lamplight alone into wc */
+  function nlPaint(mc, wc, cfg) {
+    const W = mc.width, H = mc.height, n = W * H;
+    if (!NLB.L || NLB.L.length !== n) { NLB.L = new Float32Array(n); NLB.P = new Uint8Array(n); NLB.md = new ImageData(W, H); NLB.wd = new ImageData(W, H); }
+    const L = NLB.L, P = NLB.P, md = NLB.md.data, wd = NLB.wd.data; L.fill(0); P.fill(0);
+    for (const pl of world.pools) { // each pixel: the brightest pool and whose it is (powered = gold)
+      const R = pl.r * 1.15, x0 = Math.max(0, Math.floor(pl.x - R)), x1 = Math.min(W - 1, Math.ceil(pl.x + R)), y0 = Math.max(0, Math.floor(pl.y - R)), y1 = Math.min(H - 1, Math.ceil(pl.y + R)), ir = 1 / pl.r;
+      for (let y = y0; y <= y1; y++) { const dy = (y + 0.5 - pl.y) * ir; for (let x = x0; x <= x1; x++) { const dx = (x + 0.5 - pl.x) * ir, v = cfg.fall(Math.sqrt(dx * dx + dy * dy), pl.r), i = y * W + x; if (v > L[i]) { L[i] = v; P[i] = pl.pw ? 1 : 0; } } }
+    }
+    const T = cfg.tint, A0 = cfg.cols[0], A1 = cfg.cols[1], B = cfg.bands;
+    for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+      let v = L[i];
+      if (B && v > 0) { let k = 0; while (k < B.length - 2 && v >= B[k + 1]) k++; const f = (v - B[k]) / (B[k + 1] - B[k]); v = f > BAYER4[((y & 3) << 2) | (x & 3)] ? B[k + 1] : B[k]; }
+      const aN = cfg.dark * (1 - v), aW = v * cfg.warm, a = Math.min(1, aN + aW), C = P[i] ? A1 : A0, o = i << 2;
+      if (a > 0) { md[o] = (T[0] * aN + C[0] * aW) / a; md[o + 1] = (T[1] * aN + C[1] * aW) / a; md[o + 2] = (T[2] * aN + C[2] * aW) / a; } md[o + 3] = Math.round(a * 255);
+      wd[o] = C[0]; wd[o + 1] = C[1]; wd[o + 2] = C[2]; wd[o + 3] = Math.round(aW * 255);
+    }
+    mc.getContext('2d').putImageData(NLB.md, 0, 0); wc.getContext('2d').putImageData(NLB.wd, 0, 0);
+  }
   // ---- the rat's torch at night (owner request, every range): a warm cone ahead of the rat that follows its facing with a
   //      little lag and bobs with the walk; balls inside it glint. Firefly jars brighten it (+3% reach per jar, up to 10).
   //      Perf: 3 moving-light cuts (1 circle at Graphics level 2+), one warm blob, a few pixels.
@@ -34419,6 +34548,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-hud .rr-stat b{color:var(--rr-text);font-weight:700;font-size:calc(17px*var(--rr-fs))}
 .rr-hud .rr-stat .rr-starpct{font-size:calc(12px*var(--rr-fs));color:var(--rr-gold,#f2c641);font-weight:700;margin-left:1px}
 .rr-hud .rr-cash{font-size:calc(20px*var(--rr-fs))!important;color:var(--rr-cash-fg)!important}
+/* the helpers' income ticker (feel.incomeTicker): a small "+X" right of the acorns. Its room is kept from the first helper
+   income on (no shift each time it comes and goes); when the acorns' row has no room for it, it shares the rate's slot */
+.rr-hud .rr-stat:first-child{position:relative}
+.rr-hud .rr-tick{display:none;margin-left:6px;white-space:nowrap;text-align:left;font-family:var(--rr-font-label);font-weight:700;font-size:calc(14px*var(--rr-fs));font-variant-numeric:tabular-nums;color:var(--rr-gold,#f2c641);opacity:0;transition:opacity .35s ease;pointer-events:none}
+.rr-hud .rr-tick.res{display:inline-block;min-width:6.2ch}.rr-hud .rr-tick.on{opacity:1}
+.rr-hud .rr-tick.inrate{position:absolute;margin:0;min-width:0}
+.rr-reduced .rr-hud .rr-tick,.rr-reduced .rr-hud>.rl-rate{transition:none}
+.rr-hud .rr-tick.pop{animation:rr-tickpop .3s ease-out}@keyframes rr-tickpop{0%{transform:scale(1.18)}100%{transform:none}}.rr-reduced .rr-hud .rr-tick.pop{animation:none}
+.rr-hud>.rl-rate{transition:opacity .35s ease}.rr-hud.rr-tickrate.rr-tickon>.rl-rate{opacity:0}
 /* the sun / moon dial (round 4 tester T6): dusk to just after dawn, by the acorns */
 .rr-hud .rr-dial{display:inline-flex;width:calc(18px*var(--rr-fs));height:calc(18px*var(--rr-fs));margin-left:5px;flex:0 0 auto;opacity:0;transition:opacity .8s ease}
 .rr-hud .rr-dial[hidden]{display:none}.rr-hud .rr-dial.on{opacity:1}.rr-reduced .rr-hud .rr-dial{transition:none}
@@ -34510,7 +34648,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-shopbtn .fill{position:absolute;left:0;top:0;bottom:0;background:var(--rr-shop-prog);transition:width .3s}
 .rr-shopbtn span{position:relative}
 .rr-shopbtn small{position:relative;display:block;font-weight:400;white-space:normal;font-size:calc(15px*var(--rr-fs));color:var(--rr-btn-fg2,var(--rr-text2))}
-.rr-shopbtn.ready{border-color:var(--rr-green);animation:rr-pulse 1s infinite;will-change:transform}
+.rr-shopbtn.ready{border-color:var(--rr-green)}.rr-shopbtn.rr-ping{animation:rr-pulse .8s 3;will-change:transform}/* Ben 13 Nov: the pulse plays when something new is affordable, not for ever (late game something always is) */
 .rr-row.rr-done{opacity:.55;filter:saturate(.25);min-height:0;padding-top:6px;padding-bottom:6px}.rr-row.rr-done .ic{width:28px;height:28px}
 .rr-donetag{flex:0 0 auto;font-weight:700;color:var(--rr-text2);padding:0 8px;white-space:nowrap}
 .rr-doneh{margin:14px 0 2px;color:var(--rr-text2)}
@@ -34519,7 +34657,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-sellrow{padding:0 8px}.rr-sellrow:empty{display:none}.rr-carrynote{margin:2px 0 4px;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.35);color:var(--rr-text2,#d9c79c);font-size:calc(13px*var(--rr-fs,1));line-height:1.25;text-align:center}
 .rr-sellbtn{width:100%;margin-top:6px;font-weight:700;min-height:48px;line-height:1.1;border:2px solid var(--rr-gold);border-radius:10px;background:#5a3e14;color:var(--rr-gold)!important;font-family:var(--rr-font-label)!important;padding:0 10px;animation:rr-pulse 1.2s infinite;will-change:transform}
 @keyframes rr-pulse{0%,100%{box-shadow:0 0 0 0 rgba(169,189,90,0)}50%{box-shadow:0 0 0 4px rgba(169,189,90,.55)}}/* perf (note 9): the pulsing buttons sit on their own layer (will-change), so the pulse repaints the button, not the whole HUD / panel around it */
-.rr-reduced .rr-shopbtn.ready,.rr-reduced .rr-sellbtn{animation:none}
+.rr-reduced .rr-shopbtn.ready,.rr-reduced .rr-shopbtn.rr-ping,.rr-reduced .rr-sellbtn{animation:none}
 /* the shop introduction (playtest round 3 notes 16 + 17): the Shop glows until it's opened or used; the first buy glows in it */
 @keyframes rr-cta{0%,100%{box-shadow:0 0 0 0 rgba(242,198,65,0);transform:scale(1)}50%{box-shadow:0 0 0 3px rgba(242,198,65,.95),0 0 16px 6px rgba(242,198,65,.5);transform:scale(1.04)}}
 .rr-shopbtn.rr-cta,.rl-tab.rr-cta{border-color:var(--rr-gold)!important;animation:rr-cta 1.1s ease-in-out infinite;z-index:1}
@@ -35481,7 +35619,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     settings: component('settings', {
       // a11y + i18n pass: Language, Sound, Accessibility, Controls (+ key list), Layout, Save, More.
       // Every row is a real control with its own accessible name; hints are visible text tied by aria-describedby.
-      sig: (inst) => JSON.stringify(state.settings) + isUnlocked() + (inst.state.io || '') + '|' + ((W.DIALOG && W.DIALOG.locale) || 'en') + '|' + mode + '|' + !!paused.user + '|' + keyLabelsSig() + '|' + setTabGet() + '|' + (hapticSupported() ? 'v' : '') + '|' + (inst.state.adv ? 'A' : '') + (keysRowsShown(inst) ? 'K' : ''),
+      sig: (inst) => JSON.stringify(state.settings) + isUnlocked() + (inst.state.io || '') + '|' + ((W.DIALOG && W.DIALOG.locale) || 'en') + '|' + mode + '|' + !!paused.user + '|' + keyLabelsSig() + '|' + setTabGet() + '|' + (hapticSupported() ? 'v' : '') + '|' + (inst.state.adv ? 'A' : '') + (keysRowsShown(inst) ? 'K' : '') + (fsAvailable() ? (fsOn() ? 'F' : 'f') : ''),
       html(inst) {
         const st = state.settings;
         const S = (k, fb) => sl_(k, fb);
@@ -35513,6 +35651,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         { const m = motionMode(st); h += cycP('motion', S('motionMode', 'Motion'), S('m' + m[0].toUpperCase() + m.slice(1), { full: 'Full', calm: 'Calm', still: 'Still', custom: 'Custom' }[m]), P('hints.motion.' + m, '')); } // Less motion + Screen shake + Flashes in one
         h += cyc('gfx', S('graphics', 'Graphics'), { auto: S('auto', 'Auto'), high: S('high', 'High'), low: S('low', 'Low') }[st.gfx || 'auto'] || S('auto', 'Auto'), 'graphics'); // perf pass (Show FPS: About > Advanced)
         h += inv('intro', S('intro', 'Play intro'), 'intro'); // launch intro (ui/intro.js): studio logo + opening, default on
+        if (fsAvailable()) { const f = fsOn(), lbl = P('fullscreen', 'Fullscreen'); h += `<div class="rr-set"><span aria-hidden="true">${esc(lbl)}</span><button class="rr-toggle" role="switch" data-k="set-fullscreen" data-act="fullscreen" aria-checked="${f}" aria-pressed="${f}" aria-label="${esc(lbl)}">${onOff(f)}</button></div>`; } // the desktop window (F11 / Alt+Enter do the same)
         if (deskAvailable()) h += `<div class="rr-set"><span aria-hidden="true">${esc(S('deskMode', 'Desk mode'))}</span><button class="rr-toggle" data-k="set-desk" data-act="desk" aria-label="${esc(S('deskMode', 'Desk mode'))}" aria-describedby="rr-h-deskMode">${esc(S('deskOpen', 'Open'))}</button>${hint('deskMode')}</div>`; // DECISIONS 38: desktop builds only
         }
         // Controls & access tab: touch + keys, haptics, the keyboard / gamepad lists
@@ -35597,6 +35736,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           else if (a && a.startsWith('focus')) { focusSettingAct(a, b); inst.update(true); }
           else if (a === 'title') { closeSheet(); save(); showTitle(); }
           else if (a === 'desk') { closeSheet(); enterDesk(); }
+          else if (a === 'fullscreen') { try { W.RR_DESKTOP.toggleFullscreen(); } catch (e) { /* no wrapper */ } setTimeout(() => { try { inst.update(true); const f = inst.el.querySelector('[data-k=set-fullscreen]'); if (f) f.focus({ preventScroll: true }); } catch (e) { /* closed */ } }, 300); }
           else if (a === 'newgame') { confirmModal(tx('title.newGameQ', 'New game?'), tx('title.wipeExport', 'This wipes your progress here. Export your save first.'), tx('title.wipeIt', 'Wipe it'), () => { closeSheet(); hardReset(); }); }
         }));
       }
@@ -35665,7 +35805,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   let hudCashTween = null;
   function buildHud() {
     const h = els().hud;
-    h.innerHTML = `<div class="rr-stat" role="group" aria-label="${esc(ui('cash', 'Acorns'))}" title="${esc(ui('cash', 'Acorns'))}"><img alt="" src="${iconURL('coin', 4)}"><b class="rr-cash" data-h="cash">0</b><span class="rr-dial" data-h="dial" role="img" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><circle class="trk" cx="10" cy="10" r="8"/><circle class="arc" cx="10" cy="10" r="8" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 10 10)"/><circle class="sun" cx="10" cy="10" r="3.4"/><mask id="rr-dial-m"><rect width="20" height="20" fill="#fff"/><circle cx="12.2" cy="8.4" r="3.3" fill="#000"/></mask><circle class="moon" cx="10" cy="10" r="4.2" mask="url(#rr-dial-m)"/></svg></span></div>
+    h.innerHTML = `<div class="rr-stat" role="group" aria-label="${esc(ui('cash', 'Acorns'))}" title="${esc(ui('cash', 'Acorns'))}"><img alt="" src="${iconURL('coin', 4)}"><b class="rr-cash" data-h="cash">0</b><span class="rr-tick" data-h="tick" aria-hidden="true"></span><span class="rr-dial" data-h="dial" role="img" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><circle class="trk" cx="10" cy="10" r="8"/><circle class="arc" cx="10" cy="10" r="8" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 10 10)"/><circle class="sun" cx="10" cy="10" r="3.4"/><mask id="rr-dial-m"><rect width="20" height="20" fill="#fff"/><circle cx="12.2" cy="8.4" r="3.3" fill="#000"/></mask><circle class="moon" cx="10" cy="10" r="4.2" mask="url(#rr-dial-m)"/></svg></span></div>
       <span class="rr-sp"></span>
       <div class="rr-meters"><div class="rr-stat" data-h="stockwrap" role="group" aria-label="${esc(ui('stock', 'Stock'))}" title="${esc(ui('stock', 'Stock'))}"><span>${esc(ui('stock', 'Stock'))}</span><b data-h="stock">0</b></div>
       </div>
@@ -35683,6 +35823,74 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (ui_.sellInst) ui_.sellInst.destroy();
     ui_.sellInst = mountPanel('sell', sellRow);
     ui_.goalsInst = mountPanel('goals', els().goalsdock);
+  }
+  // the Shop button's "something new to buy" ping (Ben 13 Nov: the ready pulse ran for ever; late game something is always
+  // affordable, so it said nothing). It pulses 3 times when the button turns ready, or when more rows become affordable
+  // (at most every 8 s), with a soft chime when it turns ready from not ready (at most every 20 s). Less motion: the green
+  // border only. Never on the first HUD pass of a visit (n < 0) or while a sheet covers the bar.
+  const SPING = { ready: null, n: -1, t: -1e9, ts: -1e9 };
+  function shopPing(sb, ready, n) {
+    const was = SPING.ready, wn = SPING.n; SPING.ready = ready; SPING.n = ready ? n : 0;
+    if (!ready || was === null || mode !== 'game' || sheet) return;
+    const fresh = was === false, more = n > wn;
+    if (!(fresh || more) || renderMs - SPING.t < 8000) return;
+    SPING.t = renderMs; sb.classList.remove('rr-ping'); void sb.offsetWidth; sb.classList.add('rr-ping');
+    emit('fx', { kind: 'popup', target: 'ui', what: 'shopPing' });
+    if (fresh && renderMs - SPING.ts > 20000) { SPING.ts = renderMs; sfx('dodge_ready', { volume: 0.3 }); }
+  }
+  // the main goal's quarter notches (feel.partNotches): the highest quarter of the current part the wallet has reached.
+  // A new part (paid, a new range, a load) starts where the wallet stands, silently; spending below a notch and coming back
+  // doesn't chime it again (at most 3 chimes a part); the 4th quarter is the Pay button's own moment
+  const NOTCH = { key: null, hi: 0 };
+  function partNotchTick() {
+    const P = feel.partNotches;
+    if (!P || !P.on || mode !== 'game' || !state || state.freeRoam || state.freePlay || visiting()) { NOTCH.key = null; NOTCH.hi = 0; return; }
+    const cost = nextPartCost(); if (!(cost > 0) || !isFinite(cost)) { NOTCH.key = null; NOTCH.hi = 0; return; }
+    const Q = P.quarters || 4, q = Math.min(Q, Math.floor(Q * Math.min(state.cash, cost) / cost + 1e-9)), key = rangeId() + ':' + (state.paid | 0) + ':' + (state.tour | 0);
+    if (NOTCH.key !== key) { NOTCH.key = key; NOTCH.hi = q; return; }
+    if (q <= NOTCH.hi) return;
+    NOTCH.hi = q; if (q >= Q) return;
+    emit('partNotch', { q, of: Q, part: (state.paid | 0) + 1, parts: parts() }); fire('onPartNotch', { q, of: Q });
+  }
+  // the helpers' income ticker (feel.incomeTicker): helperIncome() takes a helper's acorns (already earned) instead of a field
+  // number; tickerTick (HUD, 10 Hz) shows them as one "+X" by the acorns, counting up for batchMs, held holdMs, then faded;
+  // what comes in while it fades starts the next batch. aria-hidden: no screen-reader line (the acorns' count has it all)
+  const TK = { v: 0, nv: 0, shown: 0, start: -1, out: false, w: -1 };
+  function helperIncome(v) {
+    const T = feel.incomeTicker; if (!T || !T.on || !(v > 0) || mode !== 'game') return false;
+    if (TK.out) TK.nv += v; else { TK.v += v; if (TK.start < 0) TK.start = renderMs; }
+    return true;
+  }
+  function tickerTick() {
+    const T = feel.incomeTicker, h = els().hud, e = h && h.querySelector('[data-h=tick]'); if (!e) return;
+    const show = (on) => { if (e.classList.contains('on') !== on) { e.classList.toggle('on', on); h.classList.toggle('rr-tickon', on); } };
+    if (!T || !T.on || mode !== 'game' || TK.start < 0) { show(false); return; }
+    if (!e.classList.contains('res')) { e.classList.add('res'); TK.w = -1; } // its room, from the first helper income on
+    const age = renderMs - TK.start, rm = reducedMotion();
+    if (!TK.out && age >= T.batchMs) { TK.out = true; TK.shown = TK.v; }
+    if (TK.out && age >= T.batchMs + T.holdMs) { // the batch is done: fade it; the next one (if any came in) starts after the fade
+      show(false); TK.out = false; TK.v = TK.nv; TK.nv = 0; TK.shown = 0; TK.start = TK.v > 0 ? renderMs + 400 : -1; return;
+    }
+    if (age < 0) { show(false); return; }
+    TK.shown = rm || TK.out ? TK.v : TK.shown + (TK.v - TK.shown) * (T.ease || 0.35); if (TK.v - TK.shown < TK.v * 0.002) TK.shown = TK.v;
+    const txt = '+' + fmt(TK.shown);
+    if (e.textContent !== txt) {
+      e.textContent = txt;
+      if (tickerKey(h) !== TK.w) tickerPlace(h, e);
+      if (TK.out && !rm) { e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); }
+    }
+    show(true);
+  }
+  const tickerKey = (h) => h.clientWidth + '|' + (layout.root ? layout.root.className + '|' + (layout.root.dataset.rrSkin || '') : '') + '|' + ((W.DIALOG && W.DIALOG.locale) || '');
+  /** where the ticker goes: right of the acorns if the acorns' row still fits with it (nothing in the HUD pushed past its
+   *  edge or into the next stat); else over the rate's slot (the rate fades while it shows). Re-checked when the HUD's width changes */
+  function tickerPlace(h, e) {
+    TK.w = tickerKey(h); e.classList.remove('inrate'); h.classList.remove('rr-tickrate'); e.style.left = e.style.top = '';
+    const st = e.parentNode, eb = e.getBoundingClientRect(), hb = h.getBoundingClientRect();
+    let over = h.scrollWidth > h.clientWidth + 1 || eb.right > hb.right - 4;
+    for (const o of h.children) { if (o === st || o.contains(e) || o.offsetParent === null) continue; const ob = o.getBoundingClientRect(); if (ob.width && ob.top < eb.bottom - 2 && ob.bottom > eb.top + 2 && ob.left < eb.right && ob.right > eb.left) { over = true; break; } }
+    const rate = h.querySelector('.rl-rate');
+    if (over && rate) { const sb = st.getBoundingClientRect(), rb = rate.getBoundingClientRect(); e.classList.add('inrate'); h.classList.add('rr-tickrate'); e.style.left = (rb.left - sb.left) + 'px'; e.style.top = (rb.top - sb.top + (rb.height - e.offsetHeight) / 2) + 'px'; }
   }
   const wasAffordable = {};
   function checkAffordable() {
@@ -35728,7 +35936,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
   }
   function updateHud(force) {
-    checkAffordable();
+    checkAffordable(); partNotchTick(); tickerTick();
     const h = els().hud; if (!h) return;
     dialTick(h.querySelector('[data-h=dial]'));
     const q = (k) => h.querySelector(`[data-h=${k}]`);
@@ -35769,7 +35977,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (sb && gp) {
       const frac = clamp(state.cash / Math.max(1, gp.cost), 0, 1);
       setW(sb.querySelector('.fill'), Math.round(frac * 100) + '%');
-      sb.classList.toggle('ready', frac >= 1); sb.classList.add('rr-gus');
+      sb.classList.toggle('ready', frac >= 1); sb.classList.add('rr-gus'); shopPing(sb, frac >= 1, frac >= 1 ? 1 : 0);
       const r = Math.max(incomePerSec(30), 0), need = gp.cost - state.cash;
       const nxt = need <= 0 ? tx('hud.gusPickReady', "Gus's pick: {name} · ready", { name: gp.name }) : tx('hud.gusPick', "Gus's pick: {name}", { name: gp.name }) + ' · ' + (r > 0.01 ? fmtEta(need / r) : fmt(gp.cost));
       const ne = sb.querySelector('[data-b=next]'); if (ne && ne.textContent !== nxt) ne.textContent = nxt;
@@ -35782,6 +35990,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       let nReady = 0;
       for (const id of allUpIds()) if (upVisible(id) && !upMaxed(id) && canAfford(bulkPlan(id, 1).cost)) nReady++;
       if (state.gear + 1 < B.gear.length && gearShown() && canAfford(gearCost(state.gear + 1))) nReady++;
+      shopPing(sb, !!ready, nReady);
       const cbName = cb ? (cb.kind === 'gear' ? gearName(state.gear + 1) : upName(cb.id)) : '';
       let nxt = '';
       if (nReady > 1) nxt = tx('hud.upgradesReady', '{n} upgrades ready', { n: nReady });
@@ -35834,7 +36043,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   const popW = new Map(); // perf: popup width by class|text|scale
   const popMerge = {}; // merge key -> { e, sum, t } : stacked "+x" chips become one rolling counter (QA #6)
   ui_.popup = (text, x, y, o) => {
-    const fxl = els().fx; if (!fxl || deskHidden()) return; // desk mode, hidden: no DOM for pops nobody sees
+    const fxl = els().fx; if (!fxl || unseen()) return; // desk mode hidden / a minimised window: no DOM for pops nobody sees
     if (o.merge && isNum(o.value)) {
       const m = popMerge[o.merge];
       if (m && m.e.isConnected && renderMs - m.t < feel.popup.mergeMs) {
@@ -35915,7 +36124,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   };
   /** coins fly from the wallet (sheet header) or the HUD counter to a bought item */
   ui_.coinSpend = (target, n) => {
-    if (!target || !target.getBoundingClientRect || !layout.root || deskHidden()) return;
+    if (!target || !target.getBoundingClientRect || !layout.root || unseen()) return;
     const root = layout.root, rr = root.getBoundingClientRect();
     const src = (sheet && sheet.sh.querySelector('[data-wallet]')) || (els().hud && els().hud.querySelector('[data-h=cash]')); if (!src) return;
     const a = src.getBoundingClientRect(), b = target.getBoundingClientRect();
@@ -35975,7 +36184,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   }
   /** a move to another range (a sale, a visit, the trial's free play and its end): toasts still waiting from the range you
    *  left are dropped (QA 2026-11-06 night: the old range's goal toasts played at the new one) */
-  function toastNewRange() { toastHeld.length = 0; }
+  function toastNewRange() { toastHeld.length = 0; for (const k in ambSeen) delete ambSeen[k]; SPING.ready = null; SPING.n = -1; } // (and the Shop ping starts over: no ping on arrival)
+  // recurring news from the range itself (a gull after a ball, moths at a lantern): a toast the first feel.ambientToasts
+  // times a visit; after that the gull, the dimmed lantern and the sounds tell it (the sea gust: GUST_SAY in its module)
+  const ambSeen = {};
+  function ambientToast(key, text) { const n = ambSeen[key] = (ambSeen[key] | 0) + 1; if (n <= (feel.ambientToasts == null ? 1e9 : feel.ambientToasts)) toast(text); else emit('ambientQuiet', { key, n }); }
   function toastHeldTick(dt) {
     if (!toastHeld.length) return;
     if (mode !== 'game') { toastHeld.length = 0; return; }
@@ -37287,7 +37500,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     screenEl = el('div', 'rr-screen rr-title' + (intro ? ' rr-ih' : ''));
     if (intro) screenEl.inert = true;
     screenEl.innerHTML = `<div class="rr-logo">RANGE<br>RAT</div><div class="rr-profiles" data-profiles role="list" aria-label="${esc(tx('profile.profiles', 'Profiles'))}"></div>
-      <div class="rr-title-row">${DESKTOP_RUN ? '' : `<button class="rr-btn" data-t="move">${esc(tx('save.moveHere', 'Move a save here'))}</button>`}<button class="rr-btn" data-t="settings">${esc(ui('settings', 'Settings'))}</button><button class="rr-btn" data-t="credits">${esc(tx('title.credits', 'Credits'))}</button></div>`;
+      <div class="rr-title-row">${DESKTOP_RUN ? '' : `<button class="rr-btn" data-t="move">${esc(tx('save.moveHere', 'Move a save here'))}</button>`}<button class="rr-btn" data-t="settings">${esc(ui('settings', 'Settings'))}</button><button class="rr-btn" data-t="credits">${esc(tx('title.credits', 'Credits'))}</button>${quitAvailable() ? `<button class="rr-btn" data-t="quit">${esc(tx('desk.quit', 'Quit'))}</button>` : ''}</div>`;
     layout.root.appendChild(screenEl);
     screenEl.addEventListener('pointerdown', () => unlockAudio(), { capture: true });
     screenEl.querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', (e) => {
@@ -37295,6 +37508,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       if (t === 'settings') openTitleSettings();
       else if (t === 'move') { const m = openModal(`<h2>${esc(tx('save.moveHere', 'Move a save here'))}</h2><div data-mv style="text-align:left"></div><button class="rr-btn" data-x>${esc(ui('close', 'Close'))}</button>`); mountImportUI(m.querySelector('[data-mv]'), () => { closeModal(); renderProfiles(); }); m.querySelector('[data-x]').addEventListener('click', () => { closeModal(); renderProfiles(); }); }
       else if (t === 'credits') showCredits(false);
+      else if (t === 'quit') { try { save(); W.RR_DESKTOP.desk.quit(); } catch (er) { /* the wrapper saves on close too */ } } // the window's close: save + flush, then quit
     }));
     renderProfiles();
   }
@@ -37761,7 +37975,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function frameBody(t) {
     const now = t || nowMs();
     let dtReal = lastT ? (now - lastT) / 1000 : DT; lastT = now;
-    const lp = lowPower() || DESK.on; // desk mode runs on timers (up to DESK.hiddenMs apart): never drop that time
+    const lp = lowPower() || DESK.on || winHidden(); // desk mode / a minimised window run on timers (up to DESK.hiddenMs / WIN.hiddenMs apart): never drop that time
     if (dtReal > (lp ? 2 : 0.25)) dtReal = lp ? 2 : 0.25; // clamp big gaps (tab switch / sleep); >60s away is handled as offline time
     renderMs += dtReal * 1000;
     // fixed timestep sim
@@ -37789,8 +38003,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (DESK.on) { DESK.frames++; if (deskSkip) DESK.skipped++; else { DESK.renders++; DESK.dirty = false; } }
     const townCovers = !!(W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.covers && W.RANGE_RAT_TOWN.covers()); // the town covers the field: the sim runs, nothing is drawn
     if (introLater && mode === 'game' && !(W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.showing)) rangeIntro(); // the town just closed: Gus tells the new range's story now
-    if (!deskSkip && !townCovers && !(sideMode && sideMode.paused) && !(chestScene && (++chestSkipN & 7))) try { const _pt = nowMs(); render(); perfPush('frame', nowMs() - _pt); } catch (e) { if (!render._warned) { render._warned = true; console.error('[RangeRat] render', e); } }
-    hudTick += dtReal; if (hudTick > (chestScene || DESK.on ? 0.5 : 0.1) && mode === 'game' && !(sideMode && sideMode.paused)) { checkReveals(hudTick); try { focusTick(); } catch (e) { frameError('focus', e); } hudTick = 0; updateHud(); refreshPanels(false); }
+    const winSkip = winHidden(); if (winSkip) WIN.skipped++; // minimised / hidden desktop window: nothing to draw into
+    if (!deskSkip && !winSkip && !townCovers && !(sideMode && sideMode.paused) && !(chestScene && (++chestSkipN & 7))) try { const _pt = nowMs(); render(); perfPush('frame', nowMs() - _pt); } catch (e) { if (!render._warned) { render._warned = true; console.error('[RangeRat] render', e); } }
+    hudTick += dtReal; if (hudTick > (chestScene || DESK.on || winHidden() ? 0.5 : 0.1) && mode === 'game' && !(sideMode && sideMode.paused)) { checkReveals(hudTick); try { focusTick(); } catch (e) { frameError('focus', e); } hudTick = 0; updateHud(); refreshPanels(false); }
     if (fpsEl) { fpsAcc += dtReal; fpsN++; if (fpsAcc > 0.5) { fpsEl.textContent = Math.round(fpsN / fpsAcc) + ' fps' + (lowPower() ? ' (low)' : '') + ' ×' + timeScale; fpsAcc = 0; fpsN = 0; } }
   }
   let hudTick = 0, chestSkipN = 0;
@@ -37798,7 +38013,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (!running || rafId || loTimer) return;
     // desk mode: timers only (no rAF): DESK.fps while it shows, a few batched sim steps every DESK.hiddenMs while hidden
     if (DESK.on) { loTimer = setTimeout(() => frame(0), deskHidden() ? DESK.hiddenMs : Math.round(1000 / DESK.fps)); return; }
-    if (lowPower() || (DESKTOP_RUN && document.hidden)) loTimer = setTimeout(() => frame(nowMs()), 80); // ~12 fps when hidden/unfocused; desktop: rAF stops in a hidden window, timers don't (backgroundThrottling off)
+    if (winHidden()) loTimer = setTimeout(() => frame(nowMs()), WIN.hiddenMs); // minimised desktop window: sim-only steps, 4 a second
+    else if (lowPower() || (DESKTOP_RUN && document.hidden)) loTimer = setTimeout(() => frame(nowMs()), 80); // ~12 fps when hidden/unfocused; desktop: rAF stops in a hidden window, timers don't (backgroundThrottling off)
     else rafId = requestAnimationFrame(frame);
   }
   function kick() { DESK.dirty = true; if (rafId) { cancelAnimationFrame(rafId); rafId = 0; } if (loTimer) { clearTimeout(loTimer); loTimer = 0; } schedule(); }
@@ -37953,7 +38169,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (reopen && reopen.tab) { requestAnimationFrame(() => openSheet(reopen.tab)); const back = reopen.k; if (back) setTimeout(() => { const f = sheet && sheet.sh.querySelector(`[data-k="${back}"]`); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 120); }
     refreshPanels(true);
     if (mode === 'title' && screenEl) {
-      const T = { continue: dstr('title.continue', 'Continue'), new: state.started ? ui('newGame', 'New game') : tx('title.play', 'Play'), settings: ui('settings', 'Settings'), credits: tx('title.credits', 'Credits') };
+      const T = { continue: dstr('title.continue', 'Continue'), new: state.started ? ui('newGame', 'New game') : tx('title.play', 'Play'), settings: ui('settings', 'Settings'), credits: tx('title.credits', 'Credits'), quit: tx('desk.quit', 'Quit') };
       screenEl.querySelectorAll('[data-t]').forEach((b) => { if (T[b.dataset.t]) b.textContent = T[b.dataset.t]; });
       const tag = screenEl.querySelector('.rr-tag'); if (tag) tag.textContent = rangeName(rangeId());
     }
@@ -38475,7 +38691,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       dodges: state.stats.dodges | 0, dodgeOwned: dodgeState().owned, dodgeLevels: Object.assign({}, dodgeState().levels), swarm: swarmState().type, swarmOwned: Object.keys(swarmState().owned), bugBook: Object.keys(bugBook()), goalRerollIn: Math.ceil(goalRerollIn()),
       beats: Object.keys(state.beats || {}), mechanic: (RM().mechanic || 'none'), trapped: trapCount(), unlocked: isUnlocked(), mode, tour: state.tour | 0, freeRoam: !!state.freeRoam, tourOn: tourOn(), starBoost: starBoost(0, state.stars), starsForSale: prestigeAvailable() || (state.paid | 0) >= parts() - 1 ? starsForSale() : 0, perStarPct: Math.round((B.prestige.multPerStar || 0) * 1000) / 10,
       // Escalation Plan: the price, its parts, ownership, the portfolio and visits
-      price: sellTarget(), parts: parts(), paid: state.paid | 0, partCost: nextPartCost(), priceLeft: priceLeft(), paidTotal: state.paidTotal || 0, frontier: state.frontier | 0,
+      price: sellTarget(), parts: parts(), paid: state.paid | 0, partCost: nextPartCost(), partNotch: NOTCH.key ? NOTCH.hi : 0, priceLeft: priceLeft(), paidTotal: state.paidTotal || 0, frontier: state.frontier | 0,
       owned: ownedIds(), portfolio: portfolioMult(), visiting: visiting(), visitPayMult: visitPayMult(), saveNeed: saveNeed(),
       gusSave: (() => { const g = gusPick().pick; return !!g && g.kind === 'save'; })(),
       // the idle pass + the third deck: away efficiency (and what makes it up), the away cap, Gus's Ledger, bays with the deck
@@ -38606,6 +38822,26 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** the fog layer's densest and brightest pixel in logical rect r: { a: alpha 0..255, rgb: max channel } (the night set is thinner + dimmer) */
       fogInk(r) { const F = WX.F, c = F.cv; if (!c || !(F.lv > 0)) return null; const k = c.width / G.W, x0 = Math.round(r[0] * k), y0 = Math.round(r[1] * k), w = Math.max(1, Math.round((r[2] - r[0]) * k)), h = Math.max(1, Math.round((r[3] - r[1]) * k));
         const d = c.getContext('2d').getImageData(x0, y0, w, h).data; let a = 0, m = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { a = Math.max(a, d[i + 3]); m = Math.max(m, d[i], d[i + 1], d[i + 2]); } return { a, rgb: m, night: !!F.night }; },
+      /** Firefly Bays' lantern light look (NLOOK, tests only): 'B' (the shipped look) or 'cur' (the old paint, which check
+       *  fireflylight shows failing its limits); read it with no id. The night caches rebuild on the next frame */
+      nightLook(id) { if (id != null && NL_CFG[id]) { NLOOK.id = id; bgDirty = true; } return NLOOK.id; },
+      /** Ben 2026-11-14 ("the lighting in the fire flies bay looks so bad"): the field as drawn, in logical rect r (default: the
+       *  grass inside the fence), after one render at clock ms (null: the last frame drawn). lum = mean luma 0..255, sat = mean
+       *  HSV saturation 0..1, white = share of near-white px (every channel >= 200), orange = share of saturated orange px (hue
+       *  15-55 deg, sat >= 0.45, value >= 0.5: the orange sheet), dark = share with luma < 80 (night left between the lights), p50 / p90 = median / 90th percentile luma */
+      nightField(r, ms) {
+        if (!ctx) return null; if (ms != null) { const sh = fxState.shake, fl = fxState.flash; fxState.shake = 0; fxState.flash = 0; renderMs = +ms; render(); fxState.shake = sh; fxState.flash = fl; } // no screen shake or flash: the light itself
+        r = r || [EDGE + 2, G.fieldD0 + 2, G.W - EDGE - 2, G.fieldD1 - 2];
+        const kx = canvas.width / G.W, ky = canvas.height / G.H, x0 = Math.max(0, Math.round(r[0] * kx)), y0 = Math.max(0, Math.round(r[1] * ky)), w = Math.max(1, Math.round((r[2] - r[0]) * kx)), h = Math.max(1, Math.round((r[3] - r[1]) * ky));
+        const d = ctx.getImageData(x0, y0, w, h).data, hist = new Uint32Array(256); let n = 0, L = 0, S = 0, wh = 0, or = 0, dk = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          const R0 = d[i], G0 = d[i + 1], B0 = d[i + 2], mx = Math.max(R0, G0, B0), mn = Math.min(R0, G0, B0), y = 0.2126 * R0 + 0.7152 * G0 + 0.0722 * B0, s = mx ? (mx - mn) / mx : 0;
+          n++; L += y; S += s; hist[Math.min(255, y | 0)]++; if (mn >= 200) wh++; if (y < 80) dk++;
+          if (s >= 0.45 && mx >= 128 && R0 === mx) { const hue = 60 * (G0 - B0) / (mx - mn); if (hue >= 15 && hue <= 55) or++; }
+        }
+        const q = (v) => Math.round(v * 1000) / 1000, pct = (f) => { let c = 0; for (let i = 0; i < 256; i++) { c += hist[i]; if (c >= f * n) return i; } return 255; };
+        return { lum: q(L / n), sat: q(S / n), white: q(wh / n), orange: q(or / n), dark: q(dk / n), p50: pct(0.5), p90: pct(0.9), px: n };
+      },
       /** weather 1109: the next sea gust blows at the next step (false: no gusts here) */
       gustNow() { const m = (world.mods || []).find((x) => x.name === 'gusts'); if (!m) return false; m.force(); return true; },
       /** DECISIONS 49: a ball dropped from the sky at (x, y) (it lands, bounces, comes to rest like a shot) */
@@ -38675,6 +38911,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** hold (on=true) / release the fixed-step sim: no game time passes (no pickups, golfers, day clock) while the page
        *  renders and the UI's own timers run on. _test.step still advances it. test_reveal: a fresh game sampled with no clock race */
       hold(on) { testHold = on !== false; return testHold; },
+      /** feel gate: set the render clock (the UI's ms clock, fed by real frames). Each stage starts it at the same reading, so how
+       *  long the page took to boot can't move what the render-clock gates let through (and the random draws behind them) */
+      renderAt(ms) { renderMs = +ms || 0; return renderMs; },
       /** DECISIONS 52: the on-screen till now ({ on, quiet, room, over, n, part, afterSec }); o.input: a player input (as a tap) */
       unattended(o) { if (o && o.input) noteInput('test'); const U = UNATT_(); return { on: UN.on, quiet: UN.quiet, room: UN.on && UN.till ? UN.room : null, over: UN.over, n: UN.n, part: UN.till ? UN.till.part : 0, afterSec: U ? U.afterSec : null }; },
       step(sec) { const n = Math.min(7200, Math.max(1, Math.round((+sec || DT) / DT))); for (let i = 0; i < n; i++) step(DT); return n * DT; },
@@ -38682,6 +38921,24 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
        *  (a few real-time ms of feel) isn't counted. qa/fullrun.py's turbo bots hold the sim and step it themselves, only while
        *  this is true, so they stop where a player's game would */
       simLive() { return !(mode === 'game' && (paused.dialog || paused.modal || paused.user || paused.menu || paused.away || trialLocked())) && !(sideMode && sideMode.paused); },
+      /** feel gate (qa/feel_gate.py): `sec` game-seconds of whole frames at a fixed 1/60 s, with the sim held: the sim (hit-stop
+       *  and blocking pauses as frameBody has them) plus the frame loop's per-frame updates (Gus's peeks, held toasts, banners,
+       *  the first-time registry, critters, the living range, the HUD at 10 Hz), without drawing. Keep in step with frameBody */
+      frames(sec) {
+        const n = Math.min(7200, Math.max(1, Math.round((+sec || DT) / DT))), ms = DT * 1000; let k = 0;
+        for (let i = 0; i < n; i++) {
+          renderMs += ms;
+          if (fxState.hitStop > 0) fxState.hitStop -= DT;
+          else if (!(mode === 'game' && (paused.dialog || paused.modal || paused.user || paused.menu || paused.away || trialLocked()))) { step(DT); k++; }
+          updateTweens(ms); updateParticles(DT); updateFlyers(ms); updateFx(DT);
+          updateDialog(); updatePeek(ms); updatePin(DT); bannerTick(DT); updateChestBtn();
+          try { frTick(ms); } catch (e) { frameError('firsts', e); } toastHeldTick(DT);
+          if (mode === 'game' && !(paused.modal || paused.dialog)) updateCritters(DT);
+          if (mode === 'game' && !(paused.modal || paused.dialog || paused.user || paused.menu)) try { livingTick(DT); } catch (e) { frameError('living', e); }
+          hudTick += DT; if (hudTick > 0.1 && mode === 'game') { checkReveals(hudTick); hudTick = 0; updateHud(); refreshPanels(false); }
+        }
+        return { sec: n * DT, stepped: k * DT, paused: Object.keys(paused).filter((q) => paused[q]).join(',') }; // stepped < sec: a hit-stop or a pause held the sim
+      },
       /** f in [0,1): fraction of the whole day+night cycle (day first). setNight(true) jumps to the start of night. */
       setDayTime(f) { const dn = B.dayNight, cyc = dn.dayLengthSec + dn.nightLengthSec; state.dayT = ((+f || 0) % 1 + 1) % 1 * cyc; bgDirty = true; return { dayT: state.dayT, night: isNight() }; },
       setNight(on) { const dn = B.dayNight; state.dayT = on ? dn.dayLengthSec + 0.01 : 0; bgDirty = true; return isNight(); },
@@ -38875,6 +39132,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     fieldSize() { return { w: G.W, h: G.H, orientation: 'portrait' }; },
     // Desk mode (DECISIONS 38; ui/desk.js owns its layout + menu, desktop/app/main.js its window)
     get desk() { return DESK.on ? Object.assign({ on: true, fps: DESK.fps, hiddenMs: DESK.hiddenMs, sound: !!(state && state.settings.deskSound) }, DESK.cfg) : null; },
+    /** the desktop wrapper (desktop/app/glue.js): the normal window was minimised / hidden (true) or shown again (false) */
+    windowOccluded(b) { const was = WIN.occluded; WIN.occluded = !!b; if (was !== WIN.occluded) { kick(); if (!WIN.occluded) DESK.dirty = true; } return winHidden(); },
+    windowInfo() { return { occluded: WIN.occluded, hidden: winHidden(), skipped: WIN.skipped, raf: !!rafId, timer: !!loTimer }; },
     deskInfo() { return { on: DESK.on, renders: DESK.renders, frames: DESK.frames, skipped: DESK.skipped, hidden: deskHidden(), renderScale, raf: !!rafId, timer: !!loTimer }; },
     deskOccluded(b) { if (!DESK.on) return false; const was = DESK.occluded; DESK.occluded = !!b; if (was !== DESK.occluded) kick(); return DESK.occluded; }, // the wrapper: minimised / hidden / occluded
     deskRedraw() { DESK.dirty = true; },
@@ -40376,8 +40636,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     setTimeout(() => { const s = stats(); if (s && s.mode === 'game' && !s.unlocked && s.rangeIdx > 0) showUnlock(); }, 400);
     // Desk mode (ui/desk.js, DECISIONS 38) has none of these columns, portraits or meters: no 4 Hz tick, no 16 Hz animate
     if (!deskOn()) {
-      setInterval(timed('tick', () => { tick(); if (!document.hidden) followSky(); }), 250);
-      setInterval(timed('animate', animate), 60);
+      // a minimised desktop window (RANGE_RAT.windowInfo().hidden, Steam readiness 2026-11-14): no columns, portraits or
+      // meters to update for nobody; the first tick after the restore catches up
+      const away = () => { try { return !!(R.windowInfo && R.windowInfo().hidden); } catch (e) { return false; } };
+      setInterval(timed('tick', () => { if (away()) return; tick(); if (!document.hidden) followSky(); }), 250);
+      setInterval(timed('animate', () => { if (!away()) animate(); }), 60);
     }
     // backdrop: sample on layout/range/day-night changes only (never on a timer)
     for (const ev of ['prestige', 'screen', 'nightFall', 'dayBreak', 'unlocked']) R.on(ev, () => { setTimeout(sampleBackdrop, 300); setTimeout(sampleBackdrop, 1200); });
@@ -41680,6 +41943,10 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
 .rh-obj .bar i{display:block;height:100%;width:0;background:var(--rr-fill,#f2c641)}
 .rh-obj .bar{position:relative}
 .rh-obj .bar::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to right,transparent 0 calc(100% / var(--parts,1) - 1px),rgba(26,17,12,.9) calc(100% / var(--parts,1) - 1px) calc(100% / var(--parts,1)))} /* the instalments: one segment per part */
+.rh-obj .bar .nq{position:absolute;top:0;bottom:0;pointer-events:none}.rh-obj .bar .nq[hidden],.rh-obj.ready .bar .nq{display:none}
+.rh-obj .bar .nq i{position:absolute;top:25%;bottom:25%;width:1px;transform:translateX(-50%);background:var(--rr-notch,#8a6418)}.rh-obj .bar .nq i:nth-child(1){left:25%}.rh-obj .bar .nq i:nth-child(2){left:50%}.rh-obj .bar .nq i:nth-child(3){left:75%}
+.rh-obj.nq-on .bar{min-width:40px} /* the phone strip's notched part bar: room for 4 quarters (the kicker gives way first, as it already does at Firefly Bays) */
+.rh-obj .bar .nq i.on{background:var(--rr-obj-line,#5a4232)} /* the main goal's quarter notches (feel.partNotches): a mid gold mark ahead of the fill, cut dark into it once reached */
 .rh-obj .n{flex:0 0 auto;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .rh-obj .tm{flex:0 0 auto;color:var(--rr-text2,#d9c79c);white-space:nowrap;font-size:calc(13px*var(--rr-fs,1))}
 .rh-obj.no-k .k,.rh-obj.no-t .tm{display:none}
@@ -41911,7 +42178,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     if (!host || (before ? before.parentNode !== host : !/^(wide|duo)$/.test(lay))) { if (obj && obj.isConnected) obj.remove(); return; }
     if (!obj) {
       obj = document.createElement('div'); obj.className = 'rh-obj'; obj.setAttribute('role', 'button'); obj.tabIndex = 0; obj.dataset.rh = 'goal';
-      obj.innerHTML = `<img alt="" src="${spriteURL('icon_trophy', 2)}"><span class="k"></span><span class="t"></span><span class="bar" aria-hidden="true"><i></i></span><span class="n"></span><span class="tm"></span><span class="cv" hidden></span>`;
+      obj.innerHTML = `<img alt="" src="${spriteURL('icon_trophy', 2)}"><span class="k"></span><span class="t"></span><span class="bar" aria-hidden="true"><i></i><b class="nq" hidden><i></i><i></i><i></i></b></span><span class="n"></span><span class="tm"></span><span class="cv" hidden></span>`;
       obj.addEventListener('pointerdown', (e) => e.stopPropagation());
     }
     if (obj.parentNode !== host || (before && obj.nextSibling !== before)) { if (before) host.insertBefore(obj, before); else host.appendChild(obj); objSig = ''; }
@@ -41931,7 +42198,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     if (rdy) {
       const sig = ['ready', o.label, o.nums, o.carryNote, (W.DIALOG && W.DIALOG.locale)].join('|'); if (sig === objSig) return; objSig = sig;
       { const cv = obj.querySelector('.cv'); const show = !!(o.carryNote && card); cv.hidden = !show; cv.textContent = show ? H('carry.note') : ''; } // DECISIONS 47: in the card (the phone's sell row has its own)
-      obj.classList.remove('no-k', 'no-t', 'wrap', 'none'); obj.querySelector('.bar i').style.width = '100%';
+      obj.classList.remove('no-k', 'no-t', 'wrap', 'none'); obj.querySelector('.bar>i').style.width = '100%';
       const st0 = stats() || {}, last = (st0.paid | 0) + 1 >= Math.max(1, st0.parts | 0 || 1), signs = last && W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.signs && W.RANGE_RAT_TOWN.signs(); // the last part is signed at the estate agent (town V1)
       const rl = signs ? dget('town.goal.signAt', 'Sign at the estate agent') : o.part ? H('goal.payReady', { part: o.part }) : dget('ui.readyToSell', 'Ready to buy!');
       obj.querySelector('.k').textContent = H('goal.kicker'); obj.querySelector('.t').textContent = rl;
@@ -41942,14 +42209,22 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
       return;
     }
     { const cv = obj.querySelector('.cv'); if (cv && !cv.hidden) { cv.hidden = true; cv.textContent = ''; } }
-    const sig = [o.label, o.nums, o.t, o.none, (W.DIALOG && W.DIALOG.locale)].join('|'); // width changes come in through objRO (reading clientWidth here forced a layout every tick)
-    const bar = obj.querySelector('.bar i'), w = (o.p * 100).toFixed(1) + '%'; if (bar.style.width !== w) bar.style.width = w;
+    // the quarter notches of the part being saved for (loop/game.js feel.partNotches): on the phone strip (a 24-30 px bar)
+    // the bar is that part alone, matching its "558T / 925T"; a Goals card keeps the whole price and notches the part's segment
+    const NQ = R.feel && R.feel.partNotches, nOn = !!(NQ && NQ.on) && !o.none && (s.partCost || 0) > 0;
+    const pp = nOn && !card ? clamp(Math.min(s.cash || 0, s.partCost) / s.partCost, 0, 1) : o.p;
+    { const nq = obj.querySelector('.bar .nq'); if (nq) { if (nq.hidden === nOn) nq.hidden = !nOn;
+      if (nOn) { const P = Math.max(1, o.parts || 1), l = card ? ((s.paid | 0) / P * 100).toFixed(2) + '%' : '0%', wd = card ? (100 / P).toFixed(2) + '%' : '100%';
+        if (nq.style.left !== l) nq.style.left = l; if (nq.style.width !== wd) nq.style.width = wd;
+        const hi = s.partNotch | 0; nq.querySelectorAll('i').forEach((t, j) => { const on = j < hi; if (t.classList.contains('on') !== on) t.classList.toggle('on', on); }); } } }
+    const sig = [o.label, o.nums, o.t, o.none, (W.DIALOG && W.DIALOG.locale), nOn && !card].join('|'); // width changes come in through objRO (reading clientWidth here forced a layout every tick)
+    const bar = obj.querySelector('.bar>i'), w = (pp * 100).toFixed(1) + '%'; if (bar.style.width !== w) bar.style.width = w;
     if (sig === objSig) return; objSig = sig;
     obj.classList.toggle('none', !!o.none); obj.classList.toggle('visit', !!o.visit);
     obj.querySelector('.k').textContent = H('goal.kicker');
     obj.querySelector('.t').textContent = o.label;
     obj.querySelector('.n').textContent = o.none ? (o.visit ? H('goal.backTo', { name: o.back }) : '') : obj.classList.contains('card') ? o.numsCard : o.nums;
-    obj.style.setProperty('--parts', String(o.parts || 1));
+    obj.style.setProperty('--parts', String(nOn && !card ? 1 : o.parts || 1)); obj.classList.toggle('nq-on', nOn && !card);
     obj.querySelector('.tm').textContent = o.t ? '· ' + o.t : '';
     obj.setAttribute('aria-label', o.none ? H('goal.kicker') + ': ' + o.label : H('goal.aria', { sell: o.sell, n: fmt(o.run), m: fmt(o.target) }) + (o.t ? ' ' + o.t : ''));
     obj.classList.remove('no-k', 'no-t', 'wrap');
@@ -41963,6 +42238,9 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     const over = () => obj.scrollWidth > obj.clientWidth + 1;
     const key = label + '|' + (W.DIALOG && W.DIALOG.locale) + '|' + objW + '|' + obj.classList.contains('card');
     if (over()) obj.classList.add('no-t');
+    // the card's time shrinks in its own flex slot (.tm min-width 0, nowrap), so the card never measures as over: at
+    // 1280x720 / 1280x800 (Steam Deck) "· about 45 min" ran past the card's right edge (Steam readiness 2026-11-14)
+    { const tm = obj.querySelector('.tm'); if (obj.classList.contains('card') && tm && tm.textContent && tm.scrollWidth > tm.clientWidth + 1) obj.classList.add('no-t'); }
     // QA 2026-11-06 night (Gullhaven, "Buy Gullhaven: the finale · 3.7aa"): the "Main goal" kicker went first. On the finale
     // (and a Grand Tour lap) the label's extra words go before it, then its price tag (on the agent's card and in the ⓘ too)
     if (Array.isArray(short)) for (const sh of short) { if (!over()) break; const t = obj.querySelector('.t'); if (t && sh) t.textContent = sh; }

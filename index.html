@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-14-605f2ed0-20857f00">
+<meta name="rr-pwa" content="2026-11-14-83c0fdff-a236a19b">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-14-605f2ed0">
+<meta name="range-rat-build" content="2026-11-14-83c0fdff">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-605f2ed0", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-83c0fdff", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-605f2ed0", "builtAt": "2026-11-13T23:54:59Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-83c0fdff", "builtAt": "2026-11-14T02:43:37Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -27296,7 +27296,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       toast(name + (bt.durationSec ? ` · ${bt.durationSec}s` : ''));
       sfx('special_ball', { pitch: 7 }); fx.flash(0.25, '#fff2a6');
       if (line && !beatNew) ui_.gusBubble && ui_.gusBubble(line, 'pleased');
-      const p = world.player; if (p) fx.popup(name + '!', p.x, p.y - 28, { big: true, color: '#f2c641' });
+      // the toasts already end in "!" / "." / "！" / "。" ("Open Day! Bays full, prices up!" read "...up!!"): add a "!" only
+      // to a bare name (a beat without a toast line), full-width after CJK text (Ben's text fixes 14 Nov)
+      const bang = /[!?.…！？。](\s*~*\])?\s*$/.test(name) ? '' : /[　-鿿＀-￯]$/.test(name) ? '！' : '!';
+      const p = world.player; if (p) fx.popup(name + bang, p.x, p.y - 28, { big: true, color: '#f2c641' });
     }
     if (beatHas('fillBays') !== !!world.fillBays) { world.fillBays = beatHas('fillBays'); buildGolfers(); }
   }
@@ -38608,6 +38611,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
        *  renders and the UI's own timers run on. _test.step still advances it. test_reveal: a fresh game sampled with no clock race */
       hold(on) { testHold = on !== false; return testHold; },
       step(sec) { const n = Math.min(7200, Math.max(1, Math.round((+sec || DT) / DT))); for (let i = 0; i < n; i++) step(DT); return n * DT; },
+      /** would the frame loop advance the sim right now (no dialog / modal / first-open hold / pause / trial lock)? A hit stop
+       *  (a few real-time ms of feel) isn't counted. qa/fullrun.py's turbo bots hold the sim and step it themselves, only while
+       *  this is true, so they stop where a player's game would */
+      simLive() { return !(mode === 'game' && (paused.dialog || paused.modal || paused.user || paused.menu || paused.away || trialLocked())) && !(sideMode && sideMode.paused); },
       /** f in [0,1): fraction of the whole day+night cycle (day first). setNight(true) jumps to the start of night. */
       setDayTime(f) { const dn = B.dayNight, cyc = dn.dayLengthSec + dn.nightLengthSec; state.dayT = ((+f || 0) % 1 + 1) % 1 * cyc; bgDirty = true; return { dayT: state.dayT, night: isNight() }; },
       setNight(on) { const dn = B.dayNight; state.dayT = on ? dn.dayLengthSec + 0.01 : 0; bgDirty = true; return isNight(); },
@@ -40263,6 +40270,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 
     origOpen = L.openPanel.bind(L); origClose = L.closePanels.bind(L);
     L.openPanel = openPanel;
+    // closePanels closes our phone Journal sheet too (QA marathon 2026-11-13: the Journal's "Go to town" / "Visit" called
+    // closePanels and left the Journal open under the town / over the range just visited)
+    L.closePanels = function () { closeGoalsSheet(); return origClose.apply(L, arguments); };
     L.apply = apply;
     L.name = 'responsive';
     R.externalUnlock = true;

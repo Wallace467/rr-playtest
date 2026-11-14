@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-14-fce89120-16e1355c">
+<meta name="rr-pwa" content="2026-11-14-1f6c12e9-84da5816">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-14-fce89120">
+<meta name="range-rat-build" content="2026-11-14-1f6c12e9">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-fce89120", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-1f6c12e9", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-fce89120", "builtAt": "2026-11-14T11:11:57Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-1f6c12e9", "builtAt": "2026-11-14T16:03:18Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -396,13 +396,17 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     const F = fw.getBoundingClientRect(), vis = visibleField(cv, r), bw = btn.offsetWidth, bh = btn.offsetHeight;
     // persistent things only: avoiding transient pop-ups (banners, toasts) would make the button jump about; .rr-fpsc is the
     // Show FPS readout (top-left of the field: it and this button overlapped on Ben's iPhone, round 4); .rr-wind is the
-    // range counter in the same corner ("In pond: 12/30", "Firefly jar 3/8"): covered on Lily Lagoon / Firefly Bays (device QA S3)
-    const avoid = [...r.querySelectorAll('.rr-hud, .rr-bottom, .rr-fpsc, .rr-wind, button, [role=button]')].filter((e) => e !== btn && !e.closest('[data-rrfb], .rr-banner, .rr-toasts, .rr-toast, .rr-bubble') && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden').map((e) => e.getBoundingClientRect()).filter((b) => b.width && b.height);
+    // range counter in the same corner ("In pond: 12/30", "Firefly jar 3/8"): covered on Lily Lagoon / Firefly Bays (device QA S3);
+    // .rr-reqpill is a golfer's REQUEST card in the field's bottom-left corner, up for as long as the request runs (up to
+    // ~45 s): the pill sat on its text on Ben's iPhone ("Get a tee from the ball house for Kipper Fennel", 14 Nov)
+    const avoid = [...r.querySelectorAll('.rr-hud, .rr-bottom, .rr-fpsc, .rr-wind, .rr-reqpill, button, [role=button]')].filter((e) => e !== btn && !e.closest('[data-rrfb], .rr-banner, .rr-toasts, .rr-toast, .rr-bubble') && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden').map((e) => e.getBoundingClientRect()).filter((b) => b.width && b.height);
     const m = 6, TL = [vis.left + m, vis.top + m], TR = [vis.right - bw - m, vis.top + m], BL = [vis.left + m, vis.bottom - bh - m], BR = [vis.right - bw - m, vis.bottom - bh - m];
     const box = (x, y) => ({ left: x, top: y, right: x + bw, bottom: y + bh });
     // a top corner that is taken (a two-line range counter across a narrow landscape field): just under what's in the way
     const under = ([x, y]) => { let yy = y; for (let k = 0; k < 4; k++) { const hs = avoid.filter((a) => hit(a, box(x, yy))); if (!hs.length) break; yy = Math.max(...hs.map((a) => a.bottom)) + 4; } return [x, yy]; };
-    const cands = [TL, TR, BL, BR, under(TL), under(TR)].filter(([x, y]) => y + bh <= vis.bottom - m + 0.5);
+    // bottom-right before bottom-left: the REQUEST card comes and goes in the bottom-left corner, so a pill parked there
+    // would hop to the other corner (and back) with every request
+    const cands = [TL, TR, BR, BL, under(TL), under(TR)].filter(([x, y]) => y + bh <= vis.bottom - m + 0.5);
     const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
     let pick = null, least = Infinity;
     for (const [x, y] of cands) { const b = box(x, y), o = avoid.reduce((n, a) => n + area(a, b), 0); if (!o) { pick = [x, y]; break; } if (o < least) { least = o; pick = [x, y]; } } // nowhere clear: cover the least
@@ -691,6 +695,8 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     W.addEventListener('resize', () => place());
     // the range counter (.rr-wind) shows / hides as a range loads or fills: move at once, not on the next 1 s tick
     try { const wv = root().querySelector('[data-el=wind]'); if (wv) new MutationObserver(() => place()).observe(wv, { attributes: true, attributeFilter: ['style'] }); } catch (e) { /* ignore */ }
+    // ...and the REQUEST card (shown / hidden by its style, its text swapped as the request moves on): at once as well
+    try { const rq = root().querySelector('[data-el=req]'); if (rq) new MutationObserver(() => place()).observe(rq, { attributes: true, attributeFilter: ['style'], childList: true }); } catch (e) { /* ignore */ }
     setInterval(ensureButton, 1000); // layout switches can move the canvas without resizing anything we observe; cheap
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
@@ -781,6 +787,16 @@ window.BALANCE = {
     { id: 'cart',    name: 'Caged Cart',     cost: 6000, capacity: 26, pickupRadius: 15, speed: 85 },
     { id: 'tractor', name: 'Picker Tractor', cost: 90000, capacity: 44, pickupRadius: 20, speed: 115 }
   ],
+
+  // PREVIEWS (off unless asked for; nothing in play, settings or saves turns them on):
+  // noBoots (Ben 14 Nov 2026: "Let's get rid of quick paws"; loop/game.js NOBOOTS, ?boots=0; design/sim.js --noboots): the
+  // Comfy Boots row ('speed') leaves the shop and a save's levels are refunded. The rat then runs at its gear's pace, so the
+  // gear tiers run faster to make up the throughput the boots gave (the realistic sim player carries Comfy Boots 5-13 at its
+  // g0-g2 gear, x1.3-1.8): each tier at about the old speed x the boots a player had by then, capped near 140 logical px/s
+  // on screen (x feel.moveSpeedMult 1.1), the most that stays easy to steer (Ben: "we move around too fast... hard to control")
+  previews: {
+    noBoots: { gear: { hands: { speed: 52 }, tube: { speed: 80 }, pusher: { speed: 100 }, cart: { speed: 122 }, tractor: { speed: 127 } } }
+  },
 
   // cost(level) = round(baseCost * costGrowth^level * range.costMult), level = current level.
   // price / washer are the two long compounding lines (x1.06 each per level, ~11% dearer each, 270 levels = the old 800 x1.02 top; DECISIONS 33): a buy is
@@ -22763,6 +22779,10 @@ window.DIALOG = {
   const DT = 1 / 60;
   const QS = (() => { try { return new URLSearchParams(W.location.search); } catch (e) { return new URLSearchParams(''); } })();
   const QS_DEBUG = QS.get('debug') === '1';
+  // no Comfy Boots (PREVIEW, off by default; Ben 14 Nov: "Let's get rid of quick paws"): the 'speed' row leaves the shop, the
+  // rat runs at its gear's pace (BALANCE.previews.noBoots retunes the gear tiers), steering eases like calm movement, and a
+  // save's Comfy Boots levels are refunded once (bootsRefund). On only with ?boots=0 or RANGE_RAT._test.noBoots(true)
+  let NOBOOTS = QS.get('boots') === '0';
   const isDebug = () => QS_DEBUG || !!(W.RR_BUILD && W.RR_BUILD.dev); // RR_BUILD: build/build.py --dev, or a playtest build once its dev code is in (read live)
   /** playtest builds (round 4 QA note 5): the whole game, no trial wall. Set by <meta name="range-rat-unlock" content="full">,
    *  which scripts/build_pwa.py adds by default (Ben's phone build) and build/build.py --unlocked writes (never into
@@ -23055,7 +23075,14 @@ window.DIALOG = {
     // + focus-track items, never DLC/supporter items.
     B.cosmeticUniverse = cosmeticUniverseOf(B);
     for (const a of B.achievements) if (a.stat === 'cosmeticsOwned') { a.designTarget = a.target; a.target = Math.max(1, Math.min(a.target, B.cosmeticUniverse.size - 5)); }
+    if (NOBOOTS) applyNoBoots(B);
     return B;
+  }
+  /** BALANCE.previews.noBoots: per-gear overrides ({ gear: { id: { speed, pickupRadius, capacity } }, upgrades: { id: {...} } }) */
+  function applyNoBoots(B) {
+    const P = isObj(B.previews) && isObj(B.previews.noBoots) ? B.previews.noBoots : {};
+    if (isObj(P.gear)) for (const g of B.gear) if (isObj(P.gear[g.id])) Object.assign(g, P.gear[g.id]);
+    if (isObj(P.upgrades)) for (const k in P.upgrades) if (isObj(B.upgrades[k]) && isObj(P.upgrades[k])) B.upgrades[k] = Object.assign({}, B.upgrades[k], P.upgrades[k]);
   }
   /** every cosmetic a player can actually own: non-default shop/achievement items, Work-timer treats (desktop build) + non-default chest-pool items, no DLC */
   function cosmeticUniverseOf(Bx) {
@@ -23101,6 +23128,12 @@ window.DIALOG = {
   const feel = {
     shake: { stun: 4, cageBlock: 2, gearUp: 3, prestige: 5, deposit: 0.8, depositFull: 2, achievement: 1.5, special: 1, decay: 10 },
     hitStopMs: { achievement: 70, swing: 50, stun: 110, cageBlock: 50, gearUp: 220, prestige: 260, special: 30, deposit: 0, depositFull: 45, tip: 40 },
+    // a tip scoop's hit-stop plays at most once every tipHitStopGapMs (render clock; the first tip ball always). Ben 14 Nov
+    // ("when I move around when there's loads of tip balls the game seems to jitter"): late game keeps 20-60 tip balls on
+    // the field, and steering through them scooped 2-16 a second, each freezing the whole sim for 40 ms (the rat, the
+    // golfers, the balls in the air): 1/3 to 2/3 of the frames stood still, in 2-3 frame stutters. The pop, sparkles, coins,
+    // sound and haptic still come with every tip; only the freeze is spaced out. 0 = every tip (the old feel)
+    tipHitStopGapMs: 2000,
     squash: { pickup: 0.16, deposit: 0.3, land: 0.35, buy: 0.22, swing: 0.1, stun: 0.45, robotLevel: 0.5, anticipation: 0.07, followThrough: -0.08, stop: 0.12, turn: 0.1, breath: 0.035, spring: 240, damping: 14 },
     ambientToasts: 2, // a recurring critter toast (gull, moths) shows this many times a visit, then the field and the sound say it (Ben 13 Nov; the sea gust has its own cap, GUST_SAY)
     popup: { rise: 16, ms: 1150, bigMs: 1500, stagger: 70, maxPxPerSec: 36, mergeMs: 1000, momentQuietMs: 2000, chipBudget: 5 }, // field numbers: slow + large (QA #6), stacked '+x' merge into one counter; chipBudget: small chips up at once (Ben 13 Nov)
@@ -23114,6 +23147,18 @@ window.DIALOG = {
     // bring in and the tour groups' doubles earn rolls into one small "+X" by the acorns, a batch every batchMs, instead of
     // a number on the field for each. The rat's own deposits, tips, requests and catches keep their numbers
     incomeTicker: { on: true, batchMs: 4000, holdMs: 700, ease: 0.35 },
+    // declutter looks (Ben 14 Nov, iPhone, late Firefly Bays: "the amount of stuff on screen is intense"). PREVIEWS for Ben to
+    // pick from, all off by default: ?declutter=1 (all) or ?declutter=lane,gus,keepout,payout,dots in the page URL, or
+    // <meta name="range-rat-declutter" content="..."> (build.py --declutter), or live: RANGE_RAT.feel.declutter.<look> = true.
+    //   lane     one message lane: toasts, Gus's peek and the trophy card take turns (one up at a time), never stacked or
+    //            hidden behind the REQUEST card
+    //   gus      a compact Gus peek (small portrait, smaller text): covers about half as much of the field
+    //   keepout  the top-left counter line (range counter, FPS) is a keep-out zone for field numbers and the +X/s chip
+    //   payout   routine payout chips (tips, golden swings, the goal's "+X") at chip size, at most 2 big ones at once,
+    //            and none on the rat's hopper bar
+    //   dots     Firefly Bays without the dotted lines (Ben 14 Nov): no dashed rim round each lantern's pool (in a festival or late
+    //            visit the big pools' rims crossed the field as dotted arcs), and the pool's faint edge fades smoothly
+    declutter: { lane: false, gus: false, keepout: false, payout: false, dots: false },
     // the pickup sound (playtest round 3 note 8): quick pickups climb a pentatonic ladder (step 0..top, a sparkle at 4 and 9),
     // a pause of resetMs drops it back to the bottom; past the top it wanders wander[0..1] (hundreds of pickups never sit on
     // one high note). More than perFrame pickups in one frame are silent, the 2nd plays at crowdVol (a sweep sounds like one)
@@ -23142,6 +23187,9 @@ window.DIALOG = {
     dodge: { scoopMult: 1.8, hitStopMs: 45, btnPx: 64, bufferSec: 0.2, ghostEveryMs: 34, ghostMs: 170, ghostAlpha: 0.55, stretch: 0.28, nudge: 1.6, landSquash: 0.3 },
     reduced: { shake: 0, flash: 0, hitStop: 0.35, particles: 0.4 }
   };
+  { const pick = (v) => { v = String(v || '').trim(); if (!v || v === '0') return; const all = v === '1' || v === 'all', ks = v.split(','); for (const k of Object.keys(feel.declutter)) if (all || ks.includes(k)) feel.declutter[k] = true; };
+    pick(QS.get('declutter')); try { const m = W.document && document.querySelector('meta[name="range-rat-declutter"]'); if (m) pick(m.getAttribute('content')); } catch (e) { /* ignore */ } }
+  const dcOn = (k) => !!(feel.declutter && feel.declutter[k]); // read live: a look can be switched on and off while playing
   const reducedMotion = () => !!(S0().settings && S0().settings.reducedMotion);
   // accessibility: screen shake and flashes can be turned off on their own (reduced motion turns both off too)
   const noShake = () => reducedMotion() || (S0().settings && S0().settings.shake === false);
@@ -23478,6 +23526,20 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (chipEnds.length >= (feel.popup.chipBudget || 1e9) && !(o.big || o.huge)) return false; // big chips (a tip ball, your own deposit) always show, and count
     chipEnds.push(renderMs + (o.big || o.huge ? feel.popup.bigMs : feel.popup.ms)); return true;
   }
+  // declutter look `payout` (preview, feel.declutter.payout). Ben's iPhone, 14 Nov: "+938M", "Tip! +8.1M" twice, "+78.7M",
+  // "+9.7M", "+4.9M" big in the middle of the field. A routine payout (a tip ball, a golden golfer's swing, the goal's "+X"
+  // that its toast also says) worth less than PAYOUT.routineSec of income is a plain chip (chip size, and the chip budget
+  // applies, so it can be skipped while 5 are up: its acorns still count); at most PAYOUT.bigMax big floaters at once (a
+  // third is a plain chip). The first tip ball, a part paid, a full deposit (huge) and your own deposit are unchanged.
+  // ui_.popup also keeps them off the rat's hopper bar
+  const PAYOUT = { routineSec: 20, bigMax: 2 };
+  function payoutTone(o) {
+    if (!(o.big && !o.huge)) return o;
+    const inc = Math.max(1e-9, incomePerSec(30) || 0), routine = isNum(o.value) && o.value < PAYOUT.routineSec * inc;
+    let bigUp = 0; const now = performance.now(); for (const f of popLive) if (f.big && f.e.isConnected && now - f.t0 < f.ms) bigUp++;
+    if (routine || bigUp >= PAYOUT.bigMax) return Object.assign({}, o, { big: false, chip: true, small: true, toned: true });
+    return o;
+  }
   const fx = {
     /** camera nudge: a directional punch (logical px) that springs back. Off in reduced motion. */
     nudge(dx, dy) {
@@ -23548,6 +23610,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       // feel.popup.chipBudget small chips float at once. Past it a new chip is skipped (its acorns still count and the HUD
       // counter rolls them in); one that merges into a chip already up is an update, not a new one. Big chips (what the rat
       // did: a tip ball, a deposit) always show.
+      if (opts.payout && dcOn('payout')) opts = payoutTone(opts);
       if (opts.chip && !chipRoom(opts)) { emit('fx', { kind: 'popup', text: String(text), suppressed: true, budget: true }); return; }
       emit('fx', { kind: 'popup', text: String(text) });
       if (ui_ && ui_.popup) ui_.popup(String(text), x, y, opts);
@@ -23826,6 +23889,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   /** ring of dust puffs (transform smoke) */
   function puffRing(x, y, n, r) { for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; fx.sprite('dust', x + Math.cos(a) * r, y + Math.sin(a) * r * 0.6, { vx: Math.cos(a) * 26, vy: Math.sin(a) * 14 - 6, drag: 3 }); } }
+  let tipStopAt = -1e9; // renderMs of the last tip hit-stop (feel.tipHitStopGapMs)
   const hooks = {
     onSwing(p) {
       // impact: dust kick at the mat + a contact spark; the per-golfer hit-stop is in updateGolfers (feel.hitStopMs.swing)
@@ -23844,9 +23908,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     },
     /** a tip ball scooped (DECISIONS 31): one clear "Tip! +X" pop, a gold sparkle ring, a coin flight and a bump */
     onTipBall(p) {
-      fx.hitstop((feel.hitStopMs.tip || 40) * (p.first ? 1.5 : 1));
+      const gap = feel.tipHitStopGapMs || 0; // a stream of tip scoops would freeze the sim every few frames (Ben 14 Nov: "jitter")
+      if (p.first || !(gap > 0) || renderMs - tipStopAt >= gap || renderMs < tipStopAt) { tipStopAt = renderMs; fx.hitstop((feel.hitStopMs.tip || 40) * (p.first ? 1.5 : 1)); }
       // the first one (retention.firsts) is the bigger moment: a huge pop that isn't hushed, two sparkle rings, more coins
-      fx.popup(tx('fx.tip', 'Tip! +{n}', { n: fmt(p.value) }), p.x, p.y - 22, p.first ? { color: '#f2c641', huge: true } : { chip: true, color: '#f2c641', big: true });
+      fx.popup(tx('fx.tip', 'Tip! +{n}', { n: fmt(p.value) }), p.x, p.y - 22, p.first ? { color: '#f2c641', huge: true } : { chip: true, color: '#f2c641', big: true, value: p.value, payout: 'tip' });
       const rings = p.first ? 2 : 1; for (let r = 0; r < rings; r++) for (let i = 0; i < 8; i++) { const a = (i + r / 2) / 8 * 6.283, d = 1 + r * 0.6; fx.sprite('sparkle', p.x + Math.cos(a) * 9 * d, p.y - 6 + Math.sin(a) * 6 * d); }
       fx.particles('tip', p.x, p.y - 6, p.first ? 24 : 14, { colors: ['#f2c641', '#fff2a6', '#fffaee'], speed: p.first ? 85 : 70, up: 30, g: 90, life: 0.55 });
       fx.coinFly && fx.coinFly(p.x, p.y - 8, p.first ? 6 : 3);
@@ -24410,10 +24475,23 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const tempoAnim = () => Math.min(tempo(), (B.golfers && B.golfers.tempoAnimMax) || 1.8);
   /** the wait between swings is scaled by this so wait + the (faster) swing = swingPeriod() */
   const tempoWaitK = () => { const t = tempo(); if (t === 1) return 1; const w = swingWaitMean(); return Math.max(0.05, swingPeriod() - swingAnimSec() / tempoAnim()) / Math.max(1e-6, w); };
-  const playerSpeed = () => gearDef().speed * (1 + eff('speed')) * (feel.moveSpeedMult || 1); // feel: engine-side speed mult
-  const playerCap = () => Math.round(gearDef().capacity + eff('capacity'));
+  const playerSpeed = () => gearDef().speed * (1 + (NOBOOTS ? 0 : eff('speed'))) * (feel.moveSpeedMult || 1); // feel: engine-side speed mult
+  // calm movement (PREVIEW, off by default; Ben 14 Nov "I think we maybe move around too fast. It's crazy and hard to control"):
+  // late game the rat runs at the tractor's 126 px/s x Quick Paws (up to x3.4), ~430 logical px/s, crossing the 180 px field
+  // in 0.4 s. With MOVECAP.on the run speed is capped at maxPx logical px/s and the surplus k = speed / maxPx goes to the
+  // rat's pickup reach (x k^reach, the magnet with it) and hopper (x k^carry): with both at 1 the collection model's sweep
+  // throughput (design/sim.js --movecap) is unchanged. Steering eases too: the joystick's response is a curve (fine control
+  // near the centre) and a tap target is approached over ~arriveSec of travel (no overshoot). On with ?move=calm or
+  // RANGE_RAT._test.moveCap({ on: true }); nothing in play, settings or saves turns it on
+  const MOVECAP = { on: QS.get('move') === 'calm', maxPx: +QS.get('movemax') || 140, reach: 1, carry: 1, stickExp: 1.6, arriveSec: 0.12 };
+  const calmSteer = () => MOVECAP.on || NOBOOTS; // the joystick curve + tap arrival easing (calm movement, and the no-boots preview)
+  const moveK = () => { if (!MOVECAP.on) return 1; const v = playerSpeed(); return v > MOVECAP.maxPx ? v / MOVECAP.maxPx : 1; };
+  /** the rat's run speed (playerSpeed, the shop's number, unless calm movement caps it) */
+  const ratSpeed = () => playerSpeed() / moveK();
+  const playerCapBase = () => Math.round(gearDef().capacity + eff('capacity'));
+  const playerCap = () => MOVECAP.on ? Math.round((gearDef().capacity + eff('capacity')) * Math.pow(moveK(), MOVECAP.carry)) : playerCapBase();
   const playerRadius = () => gearDef().pickupRadius;
-  const playerReach = (x, y) => playerRadius() * (world.mech && world.mech.playerMult ? world.mech.playerMult(x, y) : 1);
+  const playerReach = (x, y) => playerRadius() * (MOVECAP.on ? Math.pow(moveK(), MOVECAP.reach) : 1) * (world.mech && world.mech.playerMult ? world.mech.playerMult(x, y) : 1);
   const robotCount = () => Math.round(eff('robots'));
   // helper swarm (GDD 4b): stat = (robots base + upgrade bonus) x the active type's multiplier
   const robotStats = () => { const t = swarmDef(); return { v: B.robots.speed * (1 + eff('robotspeed')) * (t.speedMult || 1), cap: Math.max(1, Math.round((B.robots.capacity + eff('robotcap')) * (t.capMult || 1))), r: (B.robots.pickupRadius + eff('robotmagnet')) * (t.reachMult || 1) }; };
@@ -24555,7 +24633,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** is this shop row still held back by the introduction? ('gear' = the Next gear row, 'locked' = the ??? teasers) */
   const introHides = (id) => introOn() && SI_().hides(state.shopIntro, id) && !(id === 'gear' ? state.gear > 0 : id !== 'locked' && lvl(id) > 0);
   const gearShown = () => !introHides('gear');
-  const upVisible = (id) => introHides(id) ? false : ESC_UP_IDS.includes(id) ? escVisible(id) : id === 'bays' && litBays() ? false : (ROBOT_UPS.includes(id) ? robotCount() >= 1 : id === 'tips' ? tipsSeen() : id === 'lights' ? !RM().alwaysNight : id === 'robots' ? !(giftAt() && state.rangeIdx === 0 && !state.tour && !state.giftedBeetle) : !(up(id) && up(id).unlockAt && lvl(id) < 1 && paceNow() < up(id).unlockAt)); // staged rows: visit pace (DECISIONS 37); a row you've bought never hides
+  const upVisible = (id) => (NOBOOTS && id === 'speed') || introHides(id) ? false : ESC_UP_IDS.includes(id) ? escVisible(id) : id === 'bays' && litBays() ? false : (ROBOT_UPS.includes(id) ? robotCount() >= 1 : id === 'tips' ? tipsSeen() : id === 'lights' ? !RM().alwaysNight : id === 'robots' ? !(giftAt() && state.rangeIdx === 0 && !state.tour && !state.giftedBeetle) : !(up(id) && up(id).unlockAt && lvl(id) < 1 && paceNow() < up(id).unlockAt)); // staged rows: visit pace (DECISIONS 37); a row you've bought never hides
   const tipsSeen = () => (state.stats.tipBalls | 0) > 0 || state.rangeIdx > 0 || (state.tour | 0) > 0; // Friendly Wave shows after the first tip
   // ---- the first tip ball and the first chests (Ben, playtest 2026-11-05 evening; BALANCE.retention.firsts, the rule
   // design/sim.js plays): a fresh game's first Mudbank visit holds every tip ball until tipReady() and every trophy chest
@@ -25878,17 +25956,17 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       // relative virtual joystick: drag vector (CSS px) from the touch origin; deadzone, full speed at stickFullPx
       stickMode = true;
       const sx = p.stick.dx, sy = p.stick.dy, sL = Math.hypot(sx, sy);
-      if (sL > M.stickDeadPx) { const m = clamp((sL - M.stickDeadPx) / Math.max(1, M.stickFullPx - M.stickDeadPx), 0, 1); dx = sx / sL * m; dy = sy / sL * m; }
+      if (sL > M.stickDeadPx) { let m = clamp((sL - M.stickDeadPx) / Math.max(1, M.stickFullPx - M.stickDeadPx), 0, 1); if (calmSteer()) m = Math.pow(m, MOVECAP.stickExp); dx = sx / sL * m; dy = sy / sL * m; }
     }
     else if (p.target) {
       // aim at the nearest point the rat can actually stand on: a target inside a wall (the hut roof, the tee, a stale
       // drop-off after the tee row moved down for the deck) used to leave it grinding against the wall forever
       const tq = TQ; tq.x = p.target.x; tq.y = p.target.y; tq.vx = 0; tq.vy = 0; playerBounds(tq);
-      dx = tq.x - p.x; dy = tq.y - p.y; const L = Math.hypot(dx, dy); if (L < 1.2) { dx = 0; dy = 0; } else { const s = Math.min(1, L / M.tapSlowPx); dx = dx / L * s; dy = dy / L * s; } }
+      dx = tq.x - p.x; dy = tq.y - p.y; const L = Math.hypot(dx, dy); if (L < 1.2) { dx = 0; dy = 0; } else { const s = Math.min(1, L / (calmSteer() ? Math.max(M.tapSlowPx, ratSpeed() * MOVECAP.arriveSec) : M.tapSlowPx)); dx = dx / L * s; dy = dy / L * s; } }
     if (p.keys.x || p.keys.y || p.stick || dx || dy) p.idleT = 0; else p.idleT = (p.idleT || 0) + dt; // seconds with no steering (the API's idleSec)
     const L = Math.hypot(dx, dy); if (L > 1) { dx /= L; dy /= L; }
     if (L > 0.2) { p.ldx = dx; p.ldy = dy; } // last intended run direction: a roll from standing still goes this way (tryDodge)
-    const v = playerSpeed() * wadeMult(p); // wading: slower in the pond and the puddles
+    const v = ratSpeed() * wadeMult(p); // wading: slower in the pond and the puddles (ratSpeed: calm movement's cap, a preview)
     // snappy: fast accel; turning is near-instant because velocity is pulled straight to the new heading
     const wantX = dx * v, wantY = dy * v;
     const k = 1 - Math.exp(-((L > 0.01) ? M.accel : M.decel) * dt);
@@ -26305,7 +26383,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const tk = golferTier(g); // members / holidaymakers' bays: pops more often, a size up, in gold (DECISIONS 33: the tier must be visible)
       const kt = 1 / tempo(); // keen golfers swing more often: the same number of chips and barks a minute per bay (DOM work, perf)
       const crowd = Math.min(1, 7 / Math.max(1, world.golfers.length)) * (world.req ? 0.5 : 1); // playtest 2026-11-06: "cluttered with all the numbers"
-      if (g.golden > 0) { fx.popup('+' + fmt(price), g.x, g.y - 24, { big: true, color: '#f2c641', money: true, merge: 'gold' + g.bay, value: price, prefix: '+' }); if (!reducedMotion()) fx.particles('golden', g.x, g.y - 14, 7, { colors: ['#f2c641', '#fff2a6', '#c98a1a'], speed: 45, up: 45, g: 140, life: 0.6 }); } // golden: every swing pops, bigger, with coins
+      if (g.golden > 0) { fx.popup('+' + fmt(price), g.x, g.y - 24, { big: true, color: '#f2c641', money: true, merge: 'gold' + g.bay, value: price, prefix: '+', payout: 'golden' }); if (!reducedMotion()) fx.particles('golden', g.x, g.y - 14, 7, { colors: ['#f2c641', '#fff2a6', '#c98a1a'], speed: 45, up: 45, g: 140, life: 0.6 }); } // golden: every swing pops, bigger, with coins
       else if (Math.random() < (tk ? 0.6 : 0.35) * kt * crowd) fx.popup('+' + fmt(price), g.x, g.y - 22, { small: !tk, chip: true, money: true, merge: 'swing' + g.bay, value: price, prefix: '+', color: tk ? '#f2c641' : '#fffaee' });
       g.barkT -= kt;
       if (g.barkT <= 0) { golferBark(g, isNight() ? 'night' : (Math.random() < 0.35 ? 'goodShot' : 'swing')); g.barkT = rand(10, 24); }
@@ -26583,7 +26661,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         toast(line + ' +' + fmt(reward), { goal: reward });
         const p = world.player || { x: 90, y: 160 };
         fire('onGoalDone', { id: g.id, slot: i, x: p.x, y: p.y - 10, el: ui_.goalEl && ui_.goalEl(i) });
-        const gpop = () => fx.popup('+' + fmt(reward), p.x, p.y - 24, { color: '#a9bd5a', big: true }), gw = firstTipPopUntil - nowMs();
+        const gpop = () => fx.popup('+' + fmt(reward), p.x, p.y - 24, { color: '#a9bd5a', big: true, value: reward, payout: 'goal' }), gw = firstTipPopUntil - nowMs();
         if (gw > 0) setTimeout(gpop, gw); else gpop(); // the first tip ball's "Tip! +X" has the spot first (fresh-eyes QA S2)
         state.goals[i] = newGoal(i);
       }
@@ -26945,6 +27023,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (mode !== 'game' || paused.user || paused.menu || paused.modal || paused.dialog || paused.away || sheet || modal || chestScene || document.hidden) return false;
     if ((bannerBusy || achShowQ.length) && !((prio | 0) >= 3)) return false; // a trophy card (or one waiting its beat after a bonk / tip / chest, feel #14): P2 / P3 lines wait it out; core ones go (Gus is at the bottom; up top his clock stops under the card)
     if (dlg || dialogQ.length || focusQuiet() || uiBusyNow() || (gusFree !== false && ui_.gusBusy && ui_.gusBusy())) return false;
+    if (gusFree !== false && laneOn() && !laneFree('peek')) return false; // declutter lane: a toast or the trophy card is up
     const r = layout.root; if (r && r.querySelector('.rr-sheet.on, .rr-modal, .rl-scrim, .rh-scrim')) return false;
     return true;
   }
@@ -30090,7 +30169,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const pipGear = () => clamp((state.gear | 0) - 1, 0, B.gear.length - 1);
   const pipPlayMult = (playing) => { const A = PIP_(); return (playing == null ? pipYouActive() : playing) && A.playPace != null ? A.playPace : 1; };
   const pipSpeed = (playing) => { const A = PIP_(); return playerSpeed() * A.pace[asstLv('pip', 'pace') - 1] * pipPlayMult(playing); };
-  const pipCap = () => { const A = PIP_(); return Math.max(1, Math.round(playerCap() * A.basket[asstLv('pip', 'basket') - 1])); };
+  const pipCap = () => { const A = PIP_(); return Math.max(1, Math.round(playerCapBase() * A.basket[asstLv('pip', 'basket') - 1])); };
   const pipReach = () => playerRadius() * feel.pickupRadiusMult * feel.magnet.mult; // the rat's reach, magnet included (design/sim.js pipStats)
   /** the hire: like the auto rat (a share of the price at Oakridge, rebuyCost x costMult anywhere else) */
   function pipHireCost() { const A = PIP_(); if (!A) return Infinity; const home = rIdx(A.home) === (state.rangeIdx | 0) && !((state.tour | 0) > 0) && !visiting() && !state.freeRoam; return Math.max(1, Math.round(home ? A.costFrac * sellTarget() : (A.rebuyCost || 8000) * costMult())); }
@@ -30328,20 +30407,37 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   let asstCard = null;
   function openAsstCard(id) {
     if (mode !== 'game' || id !== 'pip' || !asstHired('pip')) return false;
+    if (asstCard && asstCard.drop) asstCard.drop();
     const m = openModal(pipCardHTML(), { cls: 'rr-asstmodal', sheet: true }); m.setAttribute('aria-label', asstName('pip')); asstCard = { m, sig: '' };
-    const bindCard = () => {
-      m.querySelectorAll('[data-buy]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); unlockAudio(); const [, ...rest] = b.dataset.buy.split(':'); if (buyAsst(rest.join(':'), b)) refresh(true); }));
-      m.querySelectorAll('[data-rest]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); setAsstRest('pip', b.dataset.rest === '1'); refresh(true); try { m.querySelector(`[data-rest="${b.dataset.rest}"]`).focus({ preventScroll: true }); } catch (er) { /* ignore */ } }));
-      const x = m.querySelector('[data-x]'); if (x && !x._rrBound) { x._rrBound = true; x.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeModal(); }); } // the ✕ outlives the card's re-renders: bound once
+    // Ben 14 Nov ("Rest or Work doesn't seem to do anything"): the card swapped its whole element for a fresh one whenever a
+    // live part changed, so a press that began on a button ended on another element and the click was lost (a mouse; a
+    // finger's tap survives). It patches itself in place now (morphNode, as the panels do: every button keeps its element,
+    // its handler and focus), and never under a pressed pointer (the change waits for the release)
+    let held = false, pending = false;
+    const release = () => { if (!held) return; held = false; if (pending) { pending = false; setTimeout(() => refresh(true), 0); } };
+    const drop = () => { W.removeEventListener('pointerup', release, true); W.removeEventListener('pointercancel', release, true); if (asstCard && asstCard.m === m) asstCard = null; };
+    m.addEventListener('pointerdown', () => { held = true; }, true);
+    W.addEventListener('pointerup', release, true); W.addEventListener('pointercancel', release, true);
+    const bindCard = () => { // once per element (on1): the elements outlive the refreshes; handlers read the element when clicked
+      m.querySelectorAll('[data-buy]').forEach((b) => on1(b, 'click', (e) => { e.stopPropagation(); unlockAudio(); const [, ...rest] = b.dataset.buy.split(':'); if (buyAsst(rest.join(':'), b)) refresh(true); }));
+      m.querySelectorAll('[data-rest]').forEach((b) => on1(b, 'click', (e) => { e.stopPropagation(); sfx('ui_tap'); setAsstRest('pip', b.dataset.rest === '1'); refresh(true); try { m.querySelector(`[data-rest="${b.dataset.rest}"]`).focus({ preventScroll: true }); } catch (er) { /* ignore */ } }));
+      const x = m.querySelector('[data-x]'); if (x) on1(x, 'click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeModal(); }); // the ✕ (modalCloseX): bound once
     };
     const refresh = (force) => {
-      if (!modal || modal.m !== m) { asstCard = null; return; }
-      const sig = pipCardSig(); if (!force && sig === asstCard.sig) return; asstCard.sig = sig;
+      if (!modal || modal.m !== m) { drop(); return; }
+      const sig = pipCardSig(); if (!force && sig === asstCard.sig) return;
+      if (held && !force) { pending = true; return; } // a finger / button is down on the card: after it lifts
+      asstCard.sig = sig;
       const fk = document.activeElement && m.contains(document.activeElement) ? document.activeElement.dataset.k : null;
-      const tmp = el('div', '', pipCardHTML()); const card = m.querySelector('.rr-asstcard'); if (card && tmp.firstElementChild) card.replaceWith(tmp.firstElementChild);
-      modalCloseX(m); bindCard(); if (fk) { const f = m.querySelector(`[data-k="${fk}"]`); if (f) try { f.focus({ preventScroll: true }); } catch (er) { /* ignore */ } }
+      const tmp = el('div', '', pipCardHTML()), card = m.querySelector('.rr-asstcard'), nw = tmp.firstElementChild;
+      if (card && nw) {
+        const xb = m.querySelector(':scope > .rr-modalx') && nw.querySelector('button[data-x]'); // the ✕ already sits on the modal: the fresh Close row isn't wanted
+        if (xb) { const row = xb.parentNode; xb.remove(); if (row && row !== nw && !row.children.length) row.remove(); }
+        morphNode(card, nw);
+      }
+      modalCloseX(m); bindCard(); if (fk) { const f = m.querySelector(`[data-k="${fk}"]`); if (f && f !== document.activeElement) try { f.focus({ preventScroll: true }); } catch (er) { /* ignore */ } }
     };
-    asstCard.refresh = refresh; asstCard.sig = pipCardSig(); bindCard();
+    asstCard.refresh = refresh; asstCard.drop = drop; asstCard.sig = pipCardSig(); bindCard();
     emit('screen', { screen: 'asstCard', id }); return true;
   }
   /** the card's live parts: affordability of each Buy, the levels, Rest / Work, what he brought in (to the nearest 10) */
@@ -32827,7 +32923,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const flS = fl.map((v, i) => v > 0 && steady('flood' + i)), blS = bl.map((v, i) => v > 0 && steady('bay' + i)), dlS = dl.map((v, i) => v > 0 && steady('deck' + i)), tlS = tl.map((v, i) => v > 0 && steady('terr' + i));
       const hlS = hl === 0 || steady('house');
       const sig = [rid, th.night ? 1 : 0, flS.join(), blS.join(), dlS.join(), tlS.join(), tls.length, hlS ? hl : 'f', lit, posts.join(), dls.length, h ? (h.x | 0) + ',' + (h.y | 0) : '', world.scenery.length,
-        (world.pools || []).map((q) => (q.x | 0) + ':' + (q.r | 0) + (q.pw ? 'p' : '')).join(), game && !isOpen(), G.teeD, RS, caMaskSig(), NLOOK.id].join('|');
+        (world.pools || []).map((q) => (q.x | 0) + ':' + (q.r | 0) + (q.pw ? 'p' : '')).join(), game && !isOpen(), G.teeD, RS, caMaskSig(), NLOOK.id, dcOn('dots') ? 'nd' : ''].join('|');
       const lampHoles = (m, st) => {
         floods.forEach((f, i) => { if (fl[i] && flS[i] === st) { blob(m, 'white', lerp(f.x, f.aim * G.W, 0.75), 168, 40, 118, 0.62 * fl[i]); blob(m, 'white', f.x, f.top + 2, 10, 8, 0.9 * fl[i]); } });
         posts.forEach((x, i) => { if (bl[i] && blS[i] === st) { blob(m, 'white', x + 10, G.teeD - 10, 18, 20, bl[i]); blob(m, 'white', x + 10, G.teeD - 2, 22, 10, 0.9 * bl[i]); } });
@@ -32867,7 +32963,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
             m.globalCompositeOperation = 'source-atop'; for (const pl of world.pools) blob(m, pl.pw ? 'gold' : 'amber', pl.x, pl.y, pl.r * 1.1, pl.r * 1.1, 1);
           }
           m.globalCompositeOperation = 'source-over'; m.lineWidth = 1; // a faint warm rim: inside it, balls glow, beetles see them and they pay more
-          for (const pl of world.pools) { m.strokeStyle = pl.pw ? 'rgba(232,245,154,0.4)' : 'rgba(255,196,112,0.32)'; m.setLineDash([2, 2]); m.beginPath(); m.ellipse(Math.round(pl.x) + 0.5, Math.round(pl.y) + 0.5, pl.r, pl.r, 0, 0, 6.283); m.stroke(); }
+          if (!dcOn('dots')) for (const pl of world.pools) { m.strokeStyle = pl.pw ? 'rgba(232,245,154,0.4)' : 'rgba(255,196,112,0.32)'; m.setLineDash([2, 2]); m.beginPath(); m.ellipse(Math.round(pl.x) + 0.5, Math.round(pl.y) + 0.5, pl.r, pl.r, 0, 0, 6.283); m.stroke(); }
           m.setLineDash([]); m.globalCompositeOperation = 'destination-out';
         }
         if (game && !isOpen()) blob(m, 'white', 105, 48, 10, 8, 0.7);
@@ -33066,10 +33162,13 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       const R = pl.r * 1.15, x0 = Math.max(0, Math.floor(pl.x - R)), x1 = Math.min(W - 1, Math.ceil(pl.x + R)), y0 = Math.max(0, Math.floor(pl.y - R)), y1 = Math.min(H - 1, Math.ceil(pl.y + R)), ir = 1 / pl.r;
       for (let y = y0; y <= y1; y++) { const dy = (y + 0.5 - pl.y) * ir; for (let x = x0; x <= x1; x++) { const dx = (x + 0.5 - pl.x) * ir, v = cfg.fall(Math.sqrt(dx * dx + dy * dy), pl.r), i = y * W + x; if (v > L[i]) { L[i] = v; P[i] = pl.pw ? 1 : 0; } } }
     }
-    const T = cfg.tint, A0 = cfg.cols[0], A1 = cfg.cols[1], B = cfg.bands;
+    // declutter look `dots` (Ben 14 Nov: "I don't think we need the dotted lines on firefly bays"): the faint edge of each pool
+    // (its last band, 0.28 -> 0 just outside the rim) fades smoothly instead of in scattered dither dots; the bands inside keep
+    // their pixel-art steps. (The dashed rim stroke goes too: see the mask)
+    const T = cfg.tint, A0 = cfg.cols[0], A1 = cfg.cols[1], B = cfg.bands, smooth = dcOn('dots');
     for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
       let v = L[i];
-      if (B && v > 0) { let k = 0; while (k < B.length - 2 && v >= B[k + 1]) k++; const f = (v - B[k]) / (B[k + 1] - B[k]); v = f > BAYER4[((y & 3) << 2) | (x & 3)] ? B[k + 1] : B[k]; }
+      if (B && v > 0) { let k = 0; while (k < B.length - 2 && v >= B[k + 1]) k++; if (!(k === 0 && smooth)) { const f = (v - B[k]) / (B[k + 1] - B[k]); v = f > BAYER4[((y & 3) << 2) | (x & 3)] ? B[k + 1] : B[k]; } }
       const aN = cfg.dark * (1 - v), aW = v * cfg.warm, a = Math.min(1, aN + aW), C = P[i] ? A1 : A0, o = i << 2;
       if (a > 0) { md[o] = (T[0] * aN + C[0] * aW) / a; md[o + 1] = (T[1] * aN + C[1] * aW) / a; md[o + 2] = (T[2] * aN + C[2] * aW) / a; } md[o + 3] = Math.round(a * 255);
       wd[o] = C[0]; wd[o + 1] = C[1]; wd[o + 2] = C[2]; wd[o + 3] = Math.round(aW * 255);
@@ -34635,6 +34734,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-peekhost:empty,.rr-toasts:empty{display:none}
 .rr-toasts{position:relative;display:flex;flex-direction:column-reverse;align-items:center;gap:4px;pointer-events:none;margin:0 8px 8px;z-index:6}
 .rr-peekhost+.rr-dialoghost:empty{display:none}
+.rr-toast.rr-toast2{white-space:pre-line} /* declutter lane: two short toasts as one */
+.rr-dc-lane .rr-pdock-bot{bottom:var(--rr-reqh,0px);transition:bottom .2s ease}.rr-reduced.rr-dc-lane .rr-pdock-bot{transition:none}
 .rr-toast{background:var(--rr-toast-bg);border:1px solid var(--rr-toast-line);border-image:var(--rr-fr-chip);border-radius:calc(9px*var(--rr-round));padding:5px 10px;font-size:calc(15px*var(--rr-fs));text-align:center;max-width:100%;pointer-events:auto}
 .rr-banner{position:absolute;left:50%;top:6px;transform:translate(-50%,-30%) scale(.9);opacity:0;visibility:hidden;max-width:94%;transition:transform .35s cubic-bezier(.3,1.5,.6,1),opacity .2s,visibility 0s .35s;display:flex;align-items:center;gap:8px;background:var(--rr-banner-bg);border:2px solid var(--rr-hi-line);border-image:var(--rr-fr-hi);border-radius:calc(10px*var(--rr-round));padding:6px 10px;z-index:8;min-width:70%}
 .rr-banner.on{transform:translate(-50%,0);opacity:1;visibility:visible;transition:transform .35s cubic-bezier(.3,1.5,.6,1),opacity .2s}
@@ -34730,7 +34831,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-awaycoin{position:absolute;width:16px;height:16px;image-rendering:pixelated;pointer-events:none;z-index:60}
 .rr-ledgerset{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
 .rr-ledgerset .rr-btn{flex:1 1 auto;margin:0}
-.rr-ledgerset .rr-btn[aria-pressed=true],.rr-ledgerset .rr-btn[aria-checked=true]{border-color:var(--rr-gold);color:var(--rr-gold)!important;background:#5a3e14}
+.rr-ledgerset .rr-btn[aria-pressed=true],.rr-ledgerset .rr-btn[aria-checked=true]{border-color:var(--rr-gold);color:var(--rr-gold)!important;background:#5a3e14;border-image:var(--rr-fr-btn)}
 .rr-ledgerres{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:calc(14px*var(--rr-fs))}
 .rr-asstcard{text-align:left}
 .rr-assthead{display:flex;align-items:center;gap:10px;margin-bottom:4px}.rr-assthead>div{flex:1 1 auto;min-width:0}
@@ -34739,7 +34840,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-asstcard .rr-asstwho{margin:2px 0 0;font-size:calc(14px*var(--rr-fs));color:var(--rr-text2);font-style:italic}
 .rr-asstcard .rr-asstjob,.rr-asstcard .rr-asstearn{margin:4px 0;font-size:calc(14px*var(--rr-fs))}.rr-asstcard .rr-asstearn{color:var(--rr-gold)}
 .rr-asstset{display:flex;gap:4px;margin:8px 0}.rr-asstset .rr-btn{flex:1 1 0;margin:0;min-height:44px}
-.rr-asstset .rr-btn[aria-checked=true]{border-color:var(--rr-gold);color:var(--rr-gold)!important;background:#5a3e14}
+.rr-asstset .rr-btn[aria-checked=true]{border-color:var(--rr-gold);color:var(--rr-gold)!important;background:#5a3e14;border-image:var(--rr-fr-btn)}
 .rr-asstcard .rr-row{margin:6px 0}.rr-asstcard .rr-buy{min-width:96px;min-height:48px}
 .rr-row.rr-asst .rr-asstlv{font-size:calc(12px*var(--rr-fs));color:var(--rr-text2);font-weight:400}
 .rr-row.rr-asst.locked{opacity:.75}.rr-row.rr-asst.locked .ic{opacity:.7}
@@ -34802,6 +34903,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-peek canvas{width:96px;height:96px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto;background:var(--rr-sheet-tx),var(--rr-sheet-bg);border:3px solid var(--rr-line);border-image:var(--rr-fr-dialog);border-radius:calc(12px*var(--rr-round));box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .rr-peek .rr-bubble{position:relative;transform:none;margin-bottom:46px;font-size:calc(16px*var(--rr-fs));flex:0 1 auto;min-width:0;max-width:320px}
 .rr-pdock-top>.rr-peek .rr-bubble{margin:10px 0 0}.rr-pdock-top>.rr-peek .rr-bubble:after{bottom:auto;top:12px}
+/* declutter look "gus" (preview, feel.declutter.gus): a compact peek, about half the field it covered (Ben, 14 Nov: Gus's
+   festival line over the top third of the phone field). The portrait 52 px (was 96), the name on the line's first row,
+   14 px text; the tail and the slide-in as before */
+.rr-dc-gus .rr-peek{margin-bottom:6px;gap:3px}.rr-dc-gus .rr-pdock-top>.rr-peek{margin-top:2px}
+.rr-dc-gus .rr-peek canvas{width:52px;height:52px;border-width:2px;border-radius:calc(9px*var(--rr-round))}
+.rr-dc-gus .rr-peek .rr-bubble{margin-bottom:8px;padding:3px 7px;font-size:calc(14px*var(--rr-fs));line-height:1.25;max-width:300px}
+.rr-dc-gus .rr-pdock-top>.rr-peek .rr-bubble{margin:4px 0 0}.rr-dc-gus .rr-pdock-top>.rr-peek .rr-bubble:after{top:8px}
+.rr-dc-gus .rr-peek .rr-bubble .rr-who{display:inline;margin-right:5px;font-size:calc(12px*var(--rr-fs))}
 /* typewriter: the whole line is laid out from the first letter (the untyped rest is invisible), so the box never grows
    letter by letter, wraps where it will end up, and a half-typed word never looks cut off */
 .rr-ty-rest{visibility:hidden}
@@ -35248,7 +35357,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const dk = isDark() ? darkCfg() : null, L = dk ? litShareNow() : 1, pDk = dk ? L + (1 - L) * beatVal('playerDarkMult', dk.playerDarkMult) : 1;
     const blind = !!dk && !swarmDef().seeInDark && !(beatVal('robotDarkMult', dk.robotDarkMult) > 0); // beetles find only lit landings (+ glimmers)
     const cw = lvl('crews') > 0 && AUTO_().crews ? AUTO_().crews : null; // crews: shorter deposit trips (balance: robotTrip / playerTrip)
-    if (ratOn) cols.push({ cap: playerCap(), reach: playerRadius() * feel.pickupRadiusMult * feel.magnet.mult * pDk, speed: playerSpeed(), player: true, trip: cw ? cw.playerTrip : 1 });
+    if (ratOn) cols.push({ cap: playerCap(), reach: playerRadius() * (MOVECAP.on ? Math.pow(moveK(), MOVECAP.reach) : 1) * feel.pickupRadiusMult * feel.magnet.mult * pDk, speed: ratSpeed(), player: true, trip: cw ? cw.playerTrip : 1 });
     const n = robotCount(), rs = robotStats();
     for (let i = 0; i < n; i++) cols.push({ cap: rs.cap, reach: rs.r * (feel.magnet.robotMult || feel.magnet.mult), speed: rs.v, trip: cw ? cw.robotTrip : 1 });
     if (!o.idle && asstHired('pip') && !pipResting() && PIP_()) { const A = PIP_(); cols.push({ cap: pipCap(), reach: pipReach() * pDk, speed: pipSpeed(ratOn), trip: cw ? cw.playerTrip : 1, dens: (A.simEye || [])[asstLv('pip', 'eye') - 1] || 1 }); } // Pip (on screen only), as design/sim.js pipFlow
@@ -35403,6 +35512,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const hb = hud && hud.contains(tgt) ? vis(hud) : null, base = Math.max(tr.bottom, hb ? hb.bottom : -1e9);
     c.style.left = (tr.left - rr.left) + 'px'; c.style.top = (base - rr.top) + 'px'; layout.root.appendChild(c);
     c.style.marginTop = (c.offsetHeight / 2 + 3) + 'px'; // the chip is centred on its top (translate -50%): its top edge sits 3 px under the numbers
+    if (dcOn('keepout')) { // declutter look `keepout`: never over the field's top-left counter line; beside it, else under it
+      const ch = c.offsetHeight, cw = c.offsetWidth, L = tr.left - rr.left, T = base - rr.top + 3;
+      let ko = null; for (const e of layout.root.querySelectorAll('[data-el=wind], .rr-fpsc')) { if (!e.getClientRects().length || e.style.display === 'none') continue; const q = e.getBoundingClientRect(); if (!q.width) continue; const k = { l: q.left - rr.left - 3, t: q.top - rr.top - 3, r: q.right - rr.left + 3, b: q.bottom - rr.top + 3 }; ko = ko ? { l: Math.min(ko.l, k.l), t: Math.min(ko.t, k.t), r: Math.max(ko.r, k.r), b: Math.max(ko.b, k.b) } : k; }
+      if (ko && L < ko.r && L + cw > ko.l && T < ko.b && T + ch > ko.t) {
+        const fr = els().stage ? els().stage.getBoundingClientRect() : rr;
+        if (ko.r + 3 + cw <= fr.right - rr.left - 4) c.style.left = (ko.r + 3) + 'px'; else c.style.top = ko.b + 'px'; // (its top edge sits 3 px under that)
+      }
+    }
     emit('fx', { kind: 'popup', text: c.textContent, rateDelta: d });
     try { const a = c.animate(reducedMotion() ? [{ opacity: 1 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }] : [{ transform: 'translate(-6px,-50%) scale(.6)', opacity: 0 }, { transform: 'translate(0,-50%) scale(1.1)', opacity: 1, offset: 0.12 }, { transform: 'translate(0,-50%) scale(1)', opacity: 1, offset: 0.8 }, { transform: 'translate(0,-62%) scale(1)', opacity: 0 }], { duration: 1800, easing: 'ease-out' }); a.onfinish = () => c.remove(); } catch (e) { setTimeout(() => c.remove(), 1800); }
   }
@@ -36004,8 +36121,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       else { const st = reqStep(rq), nm = gf.name, Q = REQ_() || {}, left = clamp(1 - rq.t / (Q.lifeSec || 45), 0, 1);
         const T = st === 'golfer' ? tx('req.pill.carry', 'Take it to {name}', { name: nm }) : st === 'item' ? tx(rq.kind === 'lucky' ? 'req.pill.lucky' : 'req.pill.glove', rq.kind === 'lucky' ? "Find {name}'s lucky ball: follow the arrow" : "Find {name}'s glove: follow the arrow", { name: nm }) : st === 'house' ? tx('req.pill.tee', 'Get a tee from the ball house for {name}', { name: nm }) : tx('req.pill.ball', '{name} wants a ball: pick one up', { name: nm });
         const k = rq.bay + '|' + st + '|' + nm;
-        if (rp._k !== k) { rp._k = k; rp.style.display = 'flex'; rp.innerHTML = `<b>${esc(tx('req.kicker', 'Request'))}</b><span>${esc(T)}</span><i aria-hidden="true"><u></u></i>`; }
-        const u = rp.querySelector('u'); if (u) u.style.width = Math.round(left * 100) + '%'; } } }
+        if (rp._k !== k) { rp._k = k; rp._h = 0; rp.style.display = 'flex'; rp.innerHTML = `<b>${esc(tx('req.kicker', 'Request'))}</b><span>${esc(T)}</span><i aria-hidden="true"><u></u></i>`; }
+        const u = rp.querySelector('u'); if (u) u.style.width = Math.round(left * 100) + '%'; }
+      // declutter lane: the popup dock (toasts, Gus) sits above the REQUEST card while one is up, never half under it
+      const r0 = layout.root, fw = els().fieldwrap, lane = dcOn('lane');
+      if (r0) { r0.classList.toggle('rr-dc-lane', lane); r0.classList.toggle('rr-dc-gus', dcOn('gus')); }
+      if (lane && rp._k && !rp._h) rp._h = rp.offsetHeight; // measured once per card text
+      const rh = lane && rp._k ? rp._h + 8 : 0; if (fw && fw._reqh !== rh) { fw._reqh = rh; fw.style.setProperty('--rr-reqh', rh + 'px'); } } }
     // wind / trap indicator
     const wv = els().wind; const hd = world.mech && world.mech.hud ? world.mech.hud() : null;
     if (hd && mode === 'game') {
@@ -36062,10 +36184,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const wk = e.className + '|' + (o.roll && !reducedMotion() ? 'r' + o.roll.prefix + fmt(o.roll.to) : text) + '|' + layout.scale + '|' + (state && state.settings.textScale) + '|' + (layout.root && layout.root.className); let pz = popW.get(wk);
     if (pz == null) { pz = { w: e.offsetWidth, h: e.offsetHeight }; if (popW.size > 400) popW.clear(); popW.set(wk, pz); }
     const hw = pz.w / 2 / layout.scale + 2;
+    if (o.payout && dcOn('payout')) y = payoutClearOfRat(x, y);
     const p = toPx(clamp(x, Math.min(G.W / 2, hw), Math.max(G.W / 2, G.W - hw)), clamp(y, 18, G.H - 4));
-    const mo = popMotion(o), q = popPlace(p.x, p.y, pz.w, pz.h, mo.rise);
+    const mo = popMotion(o), q = popPlace(p.x, p.y, pz.w, pz.h, mo.rise, popKeepOut(fxl));
     e.style.left = q.x + 'px'; e.style.top = q.y + 'px';
-    const f = { e, x: q.x, y: q.y, w: pz.w, h: pz.h, t0: performance.now(), ms: mo.ms, rise: mo.rise, m: null }; popLive.push(f);
+    const f = { e, x: q.x, y: q.y, w: pz.w, h: pz.h, t0: performance.now(), ms: mo.ms, rise: mo.rise, m: null, big: !!(o.big || o.huge) }; popLive.push(f);
     const m = o.merge && isNum(o.value) ? (popMerge[o.merge] = { e, sum: o.value, t: renderMs, a: null, f }) : null; f.m = m ? o.merge : null;
     popAnim(e, o, m);
   };
@@ -36085,17 +36208,47 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function popKill(f) { const i = popLive.indexOf(f); if (i >= 0) popLive.splice(i, 1); try { f.e.getAnimations().forEach((a) => a.cancel()); } catch (er) { /* ignore */ } f.e.remove(); if (f.m && popMerge[f.m] && popMerge[f.m].e === f.e) delete popMerge[f.m]; }
   /** (x, y) = the floater's bottom-centre in stage px. Returns where it goes: above any live floater it would land on (the older one keeps rising, slower); with no room above, the older
    *  one makes way at once. */
-  function popPlace(x, y, w, h, rise) {
+  function popPlace(x, y, w, h, rise, ko) {
     const now = performance.now(), W2 = w * 0.6 + 2, H2 = h * 1.15 + 2;
     for (let i = popLive.length - 1; i >= 0; i--) if (!popLive[i].e.isConnected || now - popLive[i].t0 > popLive[i].ms) popLive.splice(i, 1);
+    // declutter look `keepout`: ko = the top-left counter line's box (stage px). A floater whose path (its box, risen by
+    // `rise` over its life) would cross it starts low enough to stay under it
+    const inKo = (yy) => !!ko && x + W2 > ko.l && x - W2 < ko.r && yy - H2 - rise < ko.b && yy > ko.t;
+    if (inKo(y)) y = ko.b + H2 + rise + 2;
     for (let n = 0; n < 8; n++) {
       let hit = null, hr = null;
       for (const f of popLive) { const r = popRect(f, now); if (x + W2 > r.l && x - W2 < r.r && y > r.t && y - H2 < r.b) { hit = f; hr = r; break; } }
       if (!hit) break;
       const ny = hr.t - 2 - Math.min(rise * 0.25, 28); // a head start for the older one's rise during this one's pop-in
-      if (ny - H2 > 2) y = ny; else popKill(hit);
+      if (ny - H2 > 2 && !inKo(ny)) y = ny; else popKill(hit);
     }
     return { x, y };
+  }
+  /** declutter look `payout`: a payout floater over the rat starts above its hopper bar (and hat / ball pile), not on it */
+  function payoutClearOfRat(x, y) {
+    const p = world.player; if (!p || Math.abs(x - p.x) > 30 || y > p.y + 4) return y;
+    let top = ratOverhead(p).top - 2;
+    if (pinEl && pinEl.isConnected && +pinEl.style.opacity > 0) { const hw = (pinEl._w || 60) / 2 / layout.scale + 1, ps = pinSpot(p, hw); top = Math.min(top, ps[1] - (pinEl.offsetHeight || 10) / layout.scale - 2); }
+    return Math.min(y, top);
+  }
+  /** declutter look `keepout` (preview, feel.declutter.keepout): the top-left counter line (the range counter "Firefly jar
+   *  0/10 Jar lanterns 10/10" and the Show FPS readout above it) as one box in the fx layer's px, 4 px of air round it; null
+   *  when the look is off or nothing is there. Read at most every 500 ms (render clock): a pop never forces a layout */
+  const KO = { t: -1e9, box: null, key: '' };
+  function popKeepOut(fxl) {
+    if (!dcOn('keepout')) return null;
+    const wv = els().wind, key = (wv ? wv.style.display : '') + '|' + (fpsC && fpsC.isConnected ? 1 : 0); // inline style only: no layout
+    if (renderMs - KO.t < 500 && KO.t <= renderMs && key === KO.key) return KO.box;
+    KO.t = renderMs; KO.box = null; KO.key = key;
+    const r = layout.root; if (!r || !fxl) return null;
+    const F = fxl.getBoundingClientRect(); let b = null;
+    for (const e of r.querySelectorAll('[data-el=wind], .rr-fpsc')) {
+      if (!e.getClientRects().length || e.style.display === 'none') continue;
+      const q = e.getBoundingClientRect(); if (!q.width || !q.height) continue;
+      b = b ? { l: Math.min(b.l, q.left), t: Math.min(b.t, q.top), r: Math.max(b.r, q.right), b: Math.max(b.b, q.bottom) } : { l: q.left, t: q.top, r: q.right, b: q.bottom };
+    }
+    if (b) KO.box = { l: b.l - F.left - 4, t: b.t - F.top - 4, r: b.r - F.left + 4, b: b.b - F.top + 4 };
+    return KO.box;
   }
   function popAnim(e, o, m, again) {
     const { ms, rise } = popMotion(o);
@@ -36171,13 +36324,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function toastHold(text, o) {
     if (o && (o.now || o.silent)) return false;
     const arr = toastPaced();
-    if (!toastHeld.length && !arr && !toastCovered()) return false;
+    if (!toastHeld.length && !arr && !toastCovered() && laneFree(laneToastKind({ o }))) return false;
     if (toastHeld.some((x) => x.text === text)) return true;
     // QA 2026-11-06 night: a card closed and 6-8 goal toasts came out one after another. Goal toasts that are still waiting
     // fold into one ("3 goals done! +X"); a payment's confirmation (o.front) goes ahead of everything that waits
     const g = o && o.goal > 0 ? toastHeld.find((x) => x.o && x.o.goal > 0) : null;
     if (g) { const n = (g.o.n | 0 || 1) + 1, c = g.o.goal + o.goal; g.o = Object.assign({}, g.o, { n, goal: c }); g.text = tx('toast.goalsDone', '{n} goals done! +{c}', { n, c: fmt(c) }); return true; }
-    const x = { text: String(text), o, arr };
+    const x = { text: String(text), o, arr, at: nowMs() };
     if (o && o.front) { const k = toastHeld.findIndex((y) => !(y.o && y.o.front)); toastHeld.splice(k < 0 ? toastHeld.length : k, 0, x); } else toastHeld.push(x);
     if (toastHeld.length > TOAST_HELD_MAX) toastHeld.splice(toastHeld.findIndex((y) => !(y.o && y.o.front)), 1);
     return true;
@@ -36194,6 +36347,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (mode !== 'game') { toastHeld.length = 0; return; }
     if (toastCovered()) { toastHeldT = Math.max(toastHeldT, 0.35); return; }
     if ((toastHeldT -= dt) > 0 || nowMs() < ARR.next) return;
+    if (!laneFree(laneToastKind(toastHeld[0]))) return; // declutter lane: its turn
+    if (laneOn() && laneMerge()) { toastHeldT = TOAST_HELD_GAP; return; }
     const x = toastHeld.shift(), paced = x.arr || arrivalHeld();
     const tl = paced && els().toasts; if (tl && tl.querySelector('.rr-toast')) { toastHeld.unshift(x); return; } // one at a time: any toast still up (an arrival one, or one from before the sale; its time follows its length and a hover holds it: a11y S3)
     toastShow(x.text, x.o); toastHeldT = TOAST_HELD_GAP;
@@ -36202,7 +36357,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function toastShow(text, o) {
     const t = els().toasts; if (!t || (o && o.silent)) return;
     while (t.childElementCount >= 3) t.firstChild.remove();
-    const e = el('div', 'rr-toast'); e.textContent = text; t.appendChild(e);
+    const e = el('div', 'rr-toast'); e.textContent = text; if (String(text).indexOf('\n') >= 0) e.classList.add('rr-toast2'); t.appendChild(e);
     try { e.animate(reducedMotion() ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 200 }); } catch (er) { /* ignore */ } // a11y M3: no slide under Less motion
     // a11y audit S3: time to read it (it was 2.6 s whatever the length: ~230 wpm for a long one), longer with Large text,
     // and it holds while the mouse is over it or a finger is on it
@@ -36210,6 +36365,43 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const fade = () => { if (!e.isConnected) return; try { const a = e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }); a.onfinish = () => e.remove(); } catch (er) { e.remove(); } };
     readHold(e, readMs(text), fade, [['pointerenter', 'pointerleave'], ['pointerdown', 'pointerup', 'pointercancel']]);
   }
+  // ---- one message lane (declutter look `lane`, a preview: feel.declutter.lane). Ben's iPhone, 14 Nov, late Firefly Bays:
+  // Gus's line over the top third of the field, two goal toasts and a "Lantern festival" toast stacked over the middle, one
+  // of them half under the REQUEST card, all at once. With the lane on, toasts, Gus's peek and the trophy card take turns:
+  // one up at a time, the next LANE.gapMs after the last one went, nothing dropped (each waits in its own queue). When
+  // the lane frees, the trophy card goes first, then a payment / goal toast, then Gus and the other toasts in the order they came. A Gus line
+  // that has been read for its minimum (peekMinMs) makes way for a waiting toast; two short toasts waiting together show
+  // as one two-line toast. The blocking dialog box is not queued (it holds the range), but toasts wait for it. The popup
+  // dock sits above the REQUEST card while one is up (.rr-dc-lane, --rr-reqh)
+  const LANE = { gapMs: 250, freeAt: 0, mergeMax: 46 };
+  function laneOn() { return dcOn('lane') && mode === 'game'; }
+  /** a lane message is on screen: a toast, Gus's peek on the field (or one going out), the trophy card, the dialog box */
+  function laneBusy() { const t = els().toasts; return !!((t && t.firstElementChild) || peek || peekOut || bannerBusy || dlg); }
+  /** what waits for the lane, in turn order */
+  const laneToastKind = (x) => (x && x.o && (x.o.front || x.o.goal > 0) ? 'toastFront' : 'toast');
+  function laneWants() { const k = toastHeld.length ? laneToastKind(toastHeld[0]) : null; return { banner: bannerQ.length > 0 && !bannerHeld(), toastFront: k === 'toastFront', peek: peekQ.length > 0, toast: k === 'toast' }; }
+  /** turn order: the trophy card, a payment / goal toast, then Gus and the other toasts in the order they came */
+  function laneOrder() { const t = toastHeld[0], q = peekQ[0]; return t && q && (t.at || 0) < (q.at || 0) ? ['banner', 'toastFront', 'toast', 'peek'] : ['banner', 'toastFront', 'peek', 'toast']; }
+  /** may a `kind` message start now? Always true with the lane off */
+  function laneFree(kind) {
+    if (!laneOn()) return true;
+    const now = nowMs();
+    if (laneBusy()) { LANE.freeAt = now + LANE.gapMs; return false; }
+    if (now < LANE.freeAt) return false;
+    const w = laneWants();
+    for (const k of laneOrder()) { if (k === kind) return true; if (w[k]) return false; }
+    return true;
+  }
+  /** something else waits for the lane (a showing Gus line, once read, makes way) */
+  function laneWaiting() { return laneOn() && (toastHeld.length > 0 || bannerQ.length > 0); }
+  /** two short plain toasts waiting together go up as one two-line toast (true: shown) */
+  function laneMerge() {
+    if (toastHeld.length < 2) return false;
+    const a = toastHeld[0], b = toastHeld[1], plain = (x) => !(x.o && (x.o.front || x.o.silent || x.o.now)) && x.text.indexOf('\n') < 0 && x.text.length <= LANE.mergeMax;
+    if (!plain(a) || !plain(b)) return false;
+    toastHeld.splice(0, 2); toastShow(a.text + '\n' + b.text, a.o); return true;
+  }
+
   // ---- arrival calm (late-game QA 2026-11-06 S5): arriving at a range used to stack the trophy card, three toasts (the
   // sale + stars, Gus's float, the Bug Book), Gus's lines, the YOURS! banner and the New here card at once; at 375x667 the
   // toasts covered the middle of the field. For ARR_MS after the sale and while Gus says his arrival lines, toasts come one
@@ -36274,10 +36466,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       return;
     }
     banFreeT += BAN_HOLD.pollSec;
-    if (!bannerBusy && bannerQ.length && banFreeT >= BAN_HOLD.freeSec) nextBanner();
+    if (!bannerBusy && bannerQ.length && banFreeT >= BAN_HOLD.freeSec && laneFree('banner')) nextBanner();
   }
   function nextBanner() {
     const b = els().banner; if (bannerHeld()) { bannerBusy = false; return; } // waits in the queue: bannerTick() plays it after the sheet / modal
+    if (laneOn()) { bannerBusy = false; if (!laneFree('banner')) return; } // declutter lane: bannerTick() plays it on its turn
     let it = bannerQ.shift(); if (!it || !b) { bannerBusy = false; return; }
     bannerBusy = true;
     // a burst of unlocks (e.g. a big stat jump): show the next one, then fold the rest into one "+N more" card
@@ -36521,8 +36714,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (prio) gusPrioUntil = nowMs() + 6500;
     else if (nowMs() < gusPrioUntil && !first) { const wait = gusPrioUntil - nowMs() + 60; setTimeout(() => ui_.gusBubble(line, mood, 0, keep, null, stale), wait); return; }
     if ((peek && peek.dataset.line === line) || peekQ.some((q) => q.line === line) || (dockLine && dockLine.text === line && dockLine.vis < peekMinMs(line))) return;
-    // Gus is already talking (the dialog box, or a line not read yet): this one waits its turn
-    if (gusTalking() || peekQ.length) {
+    // Gus is already talking (the dialog box, or a line not read yet): this one waits its turn (declutter lane: so it does
+    // while a toast or the trophy card is up)
+    if (gusTalking() || peekQ.length || (!laneFree('peek') && !dockEl())) {
       if (keep) { peekQ.splice(peekQ.filter((q) => q.keep).length, 0, { line, mood, at: nowMs(), keep: true, first, stale }); while (peekQ.filter((q) => q.keep).length > PEEK_KEEP_MAX) peekQ.splice(peekQ.findIndex((q) => q.keep), 1); } // keep lines in order, ahead of chatter
       else { for (let i = peekQ.length - 1; i >= 0; i--) if (!peekQ[i].keep) peekQ.splice(i, 1); peekQ.push({ line, mood, at: nowMs(), keep: false, stale }); } // chatter: only the newest waits (round 4 QA note 10: it never bumps a tutorial line)
       return;
@@ -36552,7 +36746,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
     if (dockLine) { if (!dockLine.el.isConnected || dockLine.el.dataset.said !== dockLine.token) dockLine = null; else if (!gusCov) dockLine.vis += dtMs; }
     if (!peek) {
-      if (peekQ.length && !dlg && !peekOut && !dockTalk && !(dockLine && dockLine.vis < peekMinMs(dockLine.text))) {
+      if (peekQ.length && !dlg && !peekOut && !dockTalk && !(dockLine && dockLine.vis < peekMinMs(dockLine.text)) && (laneFree('peek') || dockEl())) {
         const q = peekQ.shift();
         if ((q.keep || nowMs() - q.at < PEEK_CHATTER_MS) && !(q.stale && q.stale())) gusShow(q.line, q.mood, q.first, q.stale); // stale chatter is dropped; keep lines only once no longer news
       }
@@ -36570,7 +36764,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       else if (now - peekWant.at >= PEEK_DWELL_MS && !peekMoved) { peekMoved = true; peekWant = null; peekPlace(side); }
     }
     if (!gusCov) { peekVis += dtMs; if (!peek.matches(':hover')) peekT -= dtMs; } // R3: the clock stops while it's covered; hold while the mouse is over him
-    if (peekQ.length && peekVis > peekMinMs(peekText)) peekT = Math.min(peekT, 0); // a newer line is waiting: this one has been read
+    if ((peekQ.length || laneWaiting()) && peekVis > peekMinMs(peekText)) peekT = Math.min(peekT, 0); // a newer line (declutter lane: or a toast / trophy card) is waiting: this one has been read
     if (peekT <= 0) { const p = peek; peek = null; peekOut = p; p.classList.remove('on'); setTimeout(() => { peekDrop(p); if (peekOut === p) peekOut = null; }, 330); }
   }
 
@@ -37602,8 +37796,20 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     go();
   }
   const trialLocked = () => !isUnlocked() && state.rangeIdx > 0 && !(state.tour > 0);
+  /** no-boots preview: a save's Comfy Boots levels at this range (levels reset per range) come back as the acorns they cost
+   *  (at this range's prices), once, with a small note; the level goes to 0. Returns the refund */
+  function bootsRefund() {
+    if (!NOBOOTS || !state || !isObj(state.levels)) return 0;
+    const n = state.levels.speed | 0; if (n <= 0) return 0;
+    let c = 0; for (let i = 0; i < n; i++) c += upCost('speed', i);
+    state.levels.speed = 0; state.cash = (+state.cash || 0) + c; state.bootsRefund = { levels: n, acorns: c, at: Date.now() };
+    syncStats(); emit('bootsRefund', { levels: n, acorns: c });
+    try { setTimeout(() => toast(tx('boots.refund', 'Comfy Boots are gone: your gear sets your pace now. {n} acorns back.', { n: fmt(c) })), 1500); } catch (e) { /* ignore */ }
+    return c;
+  }
   function startGame() {
     introStop();
+    bootsRefund();
     if (FULL_GAME) { const was = isUnlocked(); state.playtestUnlock = true; if (!was && state.freePlay) endFreePlay(); } // a playtest build: past Mudbank into every range (only builds like it honour playtestUnlock)
     clearScreen(); dismissDialogs(); creditsIdx = null;
     mode = 'game'; layout.root.classList.remove('rr-root-title'); emit('screen', { screen: 'game' });
@@ -37974,7 +38180,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   }
   function frameBody(t) {
     const now = t || nowMs();
-    let dtReal = lastT ? (now - lastT) / 1000 : DT; lastT = now;
+    let dtReal = lastT ? vsyncSnap((now - lastT) / 1000) : DT; lastT = now;
     const lp = lowPower() || DESK.on || winHidden(); // desk mode / a minimised window run on timers (up to DESK.hiddenMs / WIN.hiddenMs apart): never drop that time
     if (dtReal > (lp ? 2 : 0.25)) dtReal = lp ? 2 : 0.25; // clamp big gaps (tab switch / sleep); >60s away is handled as offline time
     renderMs += dtReal * 1000;
@@ -38009,6 +38215,23 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (fpsEl) { fpsAcc += dtReal; fpsN++; if (fpsAcc > 0.5) { fpsEl.textContent = Math.round(fpsN / fpsAcc) + ' fps' + (lowPower() ? ' (low)' : '') + ' ×' + timeScale; fpsAcc = 0; fpsN = 0; } }
   }
   let hudTick = 0, chestSkipN = 0;
+  // vsync snap (Ben 14 Nov, "jitter" while moving): the sim steps a fixed 1/60 s and the frame isn't interpolated, so a frame's
+  // interval decides how many steps it runs. WebKit hands rAF a timestamp coarsened to 1 ms, so a 60 Hz display reads 17, 17,
+  // 16, 17, 17, 16 ms: when the step accumulator sits near a step boundary that alternates 0 and 2 steps a frame and the moving
+  // rat (and every ball) judders, 0 px then 2 steps (probe with 1 ms timestamps: 35% of frames stood still, in 53 runs in 5 s;
+  // exact timestamps 1%). On a steady ~60 Hz cadence (the mean interval within VS.near of 1/60 s) an interval within VS.tol of
+  // 1, 2 or 3 frames counts as exactly that many; what it rounds off goes to VS.err and is paid back whole once it reaches half
+  // a frame, so the sim clock still keeps real time. Anything else (a 50 / 90 / 120 Hz display, timers, a fake 16 ms test clock:
+  // mean 16.0) runs on the raw interval as before
+  const VS = { ema: 0, err: 0, tol: 0.0015, near: 0.00035, snapped: 0 };
+  function vsyncSnap(dt) {
+    VS.ema = VS.ema ? VS.ema + (Math.min(dt, 0.05) - VS.ema) * 0.05 : dt;
+    if (Math.abs(VS.ema - DT) > VS.near || dt > 3.5 * DT) { VS.err = 0; return dt; }
+    const k = Math.round(dt / DT); if (k < 1 || Math.abs(dt - k * DT) > VS.tol) { VS.err = 0; return dt; }
+    VS.err += dt - k * DT; VS.snapped++;
+    if (Math.abs(VS.err) >= DT / 2) { const e = VS.err; VS.err = 0; return k * DT + e; }
+    return k * DT;
+  }
   function schedule() {
     if (!running || rafId || loTimer) return;
     // desk mode: timers only (no rAF): DESK.fps while it shows, a few batched sim steps every DESK.hiddenMs while hidden
@@ -38718,6 +38941,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     get world() { return world; },
     get mode() { return mode; },
     get B() { return B; },
+    /** the no-boots preview is on (?boots=0): the Comfy Boots row is gone (ui/help.js leaves it out) */
+    noBootsOn() { return NOBOOTS; },
     feel, hooks, fx, tween, Ease, fmt, fmtAs, layout,
     events: EVENTS,
     on, off,
@@ -38824,6 +39049,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         const d = c.getContext('2d').getImageData(x0, y0, w, h).data; let a = 0, m = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { a = Math.max(a, d[i + 3]); m = Math.max(m, d[i], d[i + 1], d[i + 2]); } return { a, rgb: m, night: !!F.night }; },
       /** Firefly Bays' lantern light look (NLOOK, tests only): 'B' (the shipped look) or 'cur' (the old paint, which check
        *  fireflylight shows failing its limits); read it with no id. The night caches rebuild on the next frame */
+      /** the declutter looks (feel.declutter, previews): o = { lane, gus, keepout, payout } (true / false; 'all' / 'none'), returns
+       *  what is on, plus the lane's state (what is up, what waits) */
+      declutter(o) {
+        const D = feel.declutter; if (o === 'all' || o === 'none') { for (const k in D) D[k] = o === 'all'; } else if (isObj(o)) for (const k in o) if (k in D) D[k] = !!o[k];
+        const t = els().toasts;
+        return { looks: Object.assign({}, D), lane: { on: laneOn(), busy: mode === 'game' ? laneBusy() : false, toasts: t ? t.childElementCount : 0, peek: !!peek, peekVis: Math.round(peekVis), peekLeft: Math.round(peekT), peekMin: peek ? peekMinMs(peekText) : null, waiting: laneWaiting(), banner: !!bannerBusy, dialog: !!dlg, held: toastHeld.length, peekQ: peekQ.length, bannerQ: bannerQ.length } };
+      },
       nightLook(id) { if (id != null && NL_CFG[id]) { NLOOK.id = id; bgDirty = true; } return NLOOK.id; },
       /** Ben 2026-11-14 ("the lighting in the fire flies bay looks so bad"): the field as drawn, in logical rect r (default: the
        *  grass inside the fence), after one render at clock ms (null: the last frame drawn). lum = mean luma 0..255, sat = mean
@@ -38979,6 +39211,11 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
        *  Perfect Dodge check does (hitbox + perfect.graceHitPx); and the slow-mo left */
       impactIn() { const p = world.player, r = feel.hit.radius + (perfCfg().graceHitPx || 0); let m = null; if (p) for (const b of world.balls) if (b.aimed && !b.landed && b.st === 'air') { const t = shotImpactIn(b, p, r); if (t != null && (m == null || t < m)) m = t; } return m; },
       slowmo() { return { t: fxState.slowT, k: fxState.slowK, scale: slowScale() }; },
+      /** calm movement (preview, MOVECAP): o merges into the settings ({ on, maxPx, reach, carry, stickExp, arriveSec }); returns them
+       *  plus the shop's run speed, the rat's capped speed (logical px/s), the surplus k, the hopper and the pickup reach (reachPx) now */
+      /** the no-boots preview: on (true / false) rebuilds BALANCE with it and refunds the level now; returns its state */
+      noBoots(on) { if (on != null) { NOBOOTS = !!on; B = buildBalance(W.BALANCE); bootsRefund(); ui_.refresh && ui_.refresh(true); } return { on: NOBOOTS, gear: B.gear.map((g) => ({ id: g.id, speed: g.speed, pickupRadius: g.pickupRadius, capacity: g.capacity })), refund: state && state.bootsRefund || null }; },
+      moveCap(o) { if (o && typeof o === 'object') for (const k of Object.keys(MOVECAP)) if (o[k] != null) MOVECAP[k] = k === 'on' ? !!o[k] : +o[k]; return Object.assign({}, MOVECAP, { speed: playerSpeed(), ratSpeed: ratSpeed(), k: moveK(), cap: playerCap(), capBase: playerCapBase(), reachPx: playerReach(0, 0) }); },
       /** a tip ball resting at (x, y) (default: just ahead of the rat), as if a golfer had just hit it */
       spawnTip(x, y, first) { if (mode !== 'game') return null; const p = world.player, q = clampToField({ x: x != null ? x : p.x + 14, y: y != null ? y : p.y + 10 }, 3); const b = newBall('range', q.x, q.y); b.landed = true; if (state.stock > 0) state.stock--; markTip(b, !!first && !!FI_()); world.balls.push(b); return { x: b.x, y: b.y }; }, // first: the opening's first tip ball (gold, ring, Tip! tag)
       tipValue() { return tipValue(); }, tipChance() { return tipChance(); },
@@ -39161,7 +39398,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     get codeart() { return { on: !!caArt(), bgRes: bgCanvas ? bgCanvas.width / G.W : bgRes(), bakeMs: +CODEART.ms.toFixed(2), bakes: CODEART.n }; }, // the code-art field (?codeart=off: today's); bakeMs: the last field composed (ms)
     setRenderScale(n) { n = Math.max(1, Math.min(8, n | 0)); GFX.baseRS = n; if (n !== renderScale) { renderScale = n; if (canvas) resizeCanvasNow(); } return renderScale; },
     /** graphics quality (perf pass): { pref: 'auto'|'high'|'low', level: 0-3 }. Assign 'auto'|'high'|'low' (a setting) or a level 0-3 (debug/QA: pins it until the setting changes) */
-    get gfx() { return { pref: gfxPref(), level: GFX.level, renderScale, particles: GFX.part, liteNight: GFX.lite, lastP95: GFX.lastP95 == null ? null : +GFX.lastP95.toFixed(2), lastLate: GFX.lastLate, upNeed: GFX.upNeed, displayMs: +HZ.ema.toFixed(2), skipped: HZ.skipped }; }, // displayMs: the rAF interval; skipped: frames dropped on a >105 Hz display (perf, note 9)
+    get gfx() { return { pref: gfxPref(), level: GFX.level, renderScale, particles: GFX.part, liteNight: GFX.lite, lastP95: GFX.lastP95 == null ? null : +GFX.lastP95.toFixed(2), lastLate: GFX.lastLate, upNeed: GFX.upNeed, displayMs: +HZ.ema.toFixed(2), skipped: HZ.skipped, vsyncSnapped: VS.snapped }; }, // displayMs: the rAF interval; skipped: frames dropped on a >105 Hz display (perf, note 9)
     set gfx(v) { if (typeof v === 'number') { GFX.pinned = true; gfxSetLevel(v, 'api'); return; } if (state && ['auto', 'high', 'low'].includes(v)) { state.settings.gfx = v; applyGfx(); saveDeviceSettings(); } },
     resize() { layout.apply(); },
     trialFreePlay() { return trialFreePlay(); },
@@ -39884,6 +40121,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     return [
       `${S} :is(.rr-buy:not(.off):not(.eq),.rr-amt[aria-pressed=true],.rr-toggle[aria-pressed=true],.rr-btn.pri,.rr-shopbtn,.rr-shopbtn.rr-cta>span){color:var(--rr-btn-fg)!important}`,
       `${S} :is(.rr-iconbtn,.rl-iconbtn,.rr-btn:not(.pri):not(.gold),.rr-amt:not([aria-pressed=true]),.rr-toggle:not([aria-pressed=true])){color:var(--rr-icon-fg)!important}`,
+      // Ben 14 Nov (Pip's Rest / Work "doesn't do anything"): a chosen radio / pressed switch on an .rr-btn (Pip's card, Gus's
+      // Ledger) showed it with a gold border + text, which the frame and the rule above hid: it wears the "on" frame
+      // (border-image --rr-fr-btn, in the engine's rule) and the button text colour, as the Buy-amount and Settings toggles do
+      `${S} :is(.rr-asstset .rr-btn[aria-checked=true],.rr-ledgerset .rr-btn[aria-checked=true],.rr-ledgerset .rr-btn[aria-pressed=true]){color:var(--rr-btn-fg)!important}`,
       `${S} .rr-iconbtn.rr-lbl small{color:var(--rr-icon-fg)}`,
       `${S} .rr-buy:not(.off):not(.eq) .sub{color:var(--rr-btn-fg)}`,
       // the shop's Ready pulse / Gus's first-buy glow stay (box-shadows outside the frame); the row "near" cue is its ribbon
@@ -42367,7 +42608,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     const gear = (B().gear || []).filter((g, i) => far || i <= (st.gear | 0) + 1).map((g) => item(nameOf('gear:' + g.id), H('gear.' + g.id))).join(''); // what you've had + the next one
     let inShop = null; try { inShop = new Set((R.getShop() || []).filter((x) => x.kind === 'upgrade').map((x) => x.id)); } catch (e) { inShop = null; }
     const shopMet = (u) => far || !inShop || (lv[u] | 0) > 0 || (rv('shop') && inShop.has(u));
-    const ups = ['speed', 'capacity', 'cage', 'bays', 'price', 'ballstock', 'washer', 'lights', 'pins'].concat(tipsSeen ? ['tips'] : []).filter(shopMet)
+    const ups = ['speed', 'capacity', 'cage', 'bays', 'price', 'ballstock', 'washer', 'lights', 'pins'].concat(tipsSeen ? ['tips'] : []).filter(shopMet).filter((u) => !(u === 'speed' && R.noBootsOn && R.noBootsOn())) // the no-boots preview: no Comfy Boots row
       .map((u) => item(nameOf('upgrade:' + u), H('upgrades.' + u))).join('');
     // beetles and helpers: the beetle track, the Swarm, while you're away, then the helpers each range brings (once open)
     const eo = (st.esc && st.esc.open) || {}, upLine = (u) => item(nameOf('upgrade:' + u), H('upgrades.' + u));

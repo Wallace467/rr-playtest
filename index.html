@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-14-1f6c12e9-84da5816">
+<meta name="rr-pwa" content="2026-11-14-c53df9c9-2c0634ca">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-14-1f6c12e9">
+<meta name="range-rat-build" content="2026-11-14-c53df9c9">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-1f6c12e9", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-c53df9c9", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-1f6c12e9", "builtAt": "2026-11-14T16:03:18Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-c53df9c9", "builtAt": "2026-11-14T17:33:25Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -33109,7 +33109,8 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     }
     // 6) range sides: the outer columns are a calm, uniform "outside the fence" band so the layout's
     //    sampled letterbox extends them cleanly (owner: "the sides of the range look weird")
-    {
+    if (sidesOn('A')) sideBandBlit(g); // side bars preview A: the range's surroundings instead (SIDES)
+    else {
       let c = mix3(rgb3(th.rough), rgb3(th.grassB), 0.35).map((v) => v * 0.9);
       if (k.warm > 0.02 && !alwaysNight()) c = mix3(c, [255, 146, 64], 0.11 * k.warm * (1 - night * 0.6));
       if (night > 0.01) c = mix3(c, NIGHT_TINT, nightMaskA(th) * night);
@@ -33153,6 +33154,140 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const nlCfg = () => NL_CFG[NLOOK.id] || NL_CFG.cur;
   const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
   const NLB = { L: null, P: null, md: null, wd: null };
+  // ---- the side bars (Ben 2026-11-14: "I feel like we need to do something with the bars on the side"). Option B, the bigger
+  // field, is the default on phones (ui/layout.js fitB, DECISIONS 55); A, the dressed sides, the default on the desktop / wide
+  // layout (DECISIONS 56: the layout passes setViewport({ dress: true })). Elsewhere A and C are PREVIEWS, off unless
+  // ?sides=A|C (letters combine) or _test.sides('A').
+  //   A dressed sides: the range's own surroundings (hedgerow + oaks, mud + reeds, lagoon + lily pads, lantern-lit wood, dunes)
+  //     drawn in the field's outer band AND, by ui/layout.js, out into the page letterbox, from one strip per side and light
+  //   (B bigger field, now the default: ui/layout.js fitB)
+  //   C frame (ui/layout.js): the outer band cropped and the field framed in the HUD's wood, so the bars read as cabinet
+  // The strip: art px (2 per logical px, like the code art) in u = px outward from the outer band's inner edge (world x EDGE on
+  // the left, G.W - EDGE on the right), generated once per range + side + tee line (independent of the width shown), then
+  // graded for the light (day / golden hour / night, Firefly Bays' lantern bands) into a canvas cached per light key. A frame
+  // only blits it (A: 2 drawImage in place of the band's 3 fillRects); the page strip is redrawn only when the light key moves.
+  const SIDES = { id: String(QS.get('sides') || '').toUpperCase().replace(/[^AC]/g, ''), art: new Map(), out: new Map(), regrades: 0, ms: 0 };
+  // A is the default where ui/layout.js asks for it (setViewport dress: the desktop / wide layout, DECISIONS 56)
+  const sidesOn = (L) => SIDES.id.indexOf(L) >= 0 || (L === 'A' && !!(extViewport && extViewport.dress && SIDES.id.indexOf('C') < 0));
+  const SIDE_UMAX = 2 * (EDGE + 120); // art px: the widest letterbox drawn (a 1920 px window at x2 is ~ 100 logical px a side)
+  const hexI = (h) => { const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(h), c = m ? [+m[1], +m[2], +m[3]] : rgb3(h); return (c[0] << 16) | (c[1] << 8) | c[2]; }; // shade() gives rgb()
+  function sideArt(rid, side) {
+    const key = rid + '|' + side + '|' + G.fieldD0; let A = SIDES.art.get(key); if (A) return A;
+    const U = SIDE_UMAX, H = G.H * 2, c = new Int32Array(U * H).fill(-1), em = new Uint8Array(U * H), lamps = [];
+    const rnd = mulberry(hashStr('sides|' + rid + '|' + side)), R = (a, b) => a + rnd() * (b - a), th = theme(rid);
+    const put = (u, y, col, e) => { u = Math.round(u); y = Math.round(y); if (u < 0 || y < 0 || u >= U || y >= H) return; c[y * U + u] = typeof col === 'number' ? col : hexI(col); em[y * U + u] = e ? 1 : 0; };
+    const rect = (u, y, w, h, col, e) => { const ci = typeof col === 'number' ? col : hexI(col); for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) put(u + i, y + j, ci, e); };
+    const lump = (cu, cy, rx, ry, ramp, keep) => { // lit from the far side's top (the field's light is top-left: mirrored per side)
+      const ri = ramp.map(hexI), n = ri.length;
+      for (let y = Math.floor(cy - ry - 1); y <= Math.ceil(cy + ry + 1); y++) for (let u = Math.floor(cu - rx - 1); u <= Math.ceil(cu + rx + 1); u++) {
+        const a = (u + 0.5 - cu) / rx, b = (y + 0.5 - cy) / ry; if (a * a + b * b > 1 || (keep && !keep(a, b))) continue;
+        const lit = -(-a * 0.5 + b * 0.85); put(u, y, ri[clamp(Math.round((0.45 + lit * 0.6) * (n - 1)), 0, n - 1)]); } };
+    const Y0 = 2 * HORIZON, YB = 2 * 38, YF = 2 * G.fieldD0, YN = 2 * G.netD;
+    // 1) the band under the backdrop, as buildBackground draws it across the field (river / beach / hedge)
+    if (rid === 'muni') { rect(0, Y0, U, 10, th.water || '#5f7b6a'); for (let u = 0; u < U; u += 14) rect(u + R(0, 8), Y0 + 2 + R(0, 6), 6, 2, shade(th.water || '#5f7b6a', 0.25)); }
+    else if (rid === 'links') { rect(0, Y0, U, 6, th.water || '#6f8c99'); rect(0, Y0 + 6, U, 6, '#e6d6a6'); }
+    // 2) the ground outside the fence + each range's scenery
+    const G0 = { muni: ['#6a5b37', '#7a6a40', '#86764a'], county: ['#3d6a2b', '#46742f', '#4f7e34'], resort: ['#e2d1a0', '#e6d6a6', '#d6c08a'], neon: ['#2a5236', '#2f5a3a', '#36663f'], links: ['#b9a97a', '#c9b98a', '#d6c69a'] }[rid] || ['#3d6a2b', '#46742f', '#4f7e34'];
+    const gy0 = rid === 'muni' || rid === 'links' ? Y0 + 12 : Y0 + 4, gi = G0.map(hexI);
+    for (let y = gy0; y < H; y++) for (let u = 0; u < U; u++) { const r = rnd(); put(u, y, r < 0.12 ? gi[0] : r > 0.9 ? gi[2] : gi[1]); }
+    if (rid !== 'muni' && rid !== 'links') { const hc = rgb3(th.rough), sh = (f) => css3(hc.map((v) => v * f)); for (let u = -4; u < U; u += 12) lump(u + 6, Y0 + 6, 10, 8 + R(0, 8), [sh(0.6), sh(0.75), sh(0.84)], (a, b) => b < 0.6); } // the backdrop hedge (shade(th.rough, -0.25))
+    if (rid === 'county') { // Oakridge: a clipped hedgerow along the fence, oaks beyond, a few wildflowers
+      const turf = ['#24402a', '#2e4d2b', '#456f31', '#5f8a3c'], oak = ['#22401f', '#2f5a29', '#477a34', '#6a9a45'];
+      for (let y = YB; y < H + 8; y += R(6, 9)) lump(R(4, 7), y, R(6, 9), R(5, 7), turf);
+      for (let y = YB + R(0, 30); y < H + 10; y += R(40, 64)) { const u = R(24, 40), r = R(10, 15); rect(u - 2, y + r * 0.4, 4, r, '#4b3226'); rect(u - 1, y + r * 0.4, 1, r, '#7d5636'); lump(u, y, r, r * 0.85, oak); }
+      for (let y = YB + R(0, 40); y < H + 10; y += R(30, 52)) { const u = R(64, U - 8), r = R(11, 17); rect(u - 2, y + r * 0.4, 4, r, '#4b3226'); lump(u, y, r, r * 0.85, oak); }
+      for (let i = 0; i < 90; i++) put(R(14, U), R(YB, H), rnd() < 0.5 ? '#efdfb6' : '#c9473b');
+    } else if (rid === 'muni') { // Mudbank: mud, puddles, reed clumps, the odd tyre and cone
+      for (let i = 0; i < 26; i++) { const u = R(4, U - 4), y = R(YB + 6, H), rx = R(4, 9), ry = R(2, 3.5); lump(u, y, rx + 1, ry + 1, ['#4f4430', '#5a4d33']); lump(u, y, rx, ry, ['#4a5f52', '#5f7b6a', '#5f7b6a', '#86a090']); }
+      for (let y = YB; y < H; y += R(10, 22)) { const u0 = R(0, 18); for (let k = 0; k < 6; k++) { const u = u0 + R(-3, 3), h = R(4, 11), yy = y + R(-2, 2); rect(u, yy - h, 1, h, rnd() < 0.5 ? '#6b7a3a' : '#9aa25a'); if (rnd() < 0.25) rect(u, yy - h - 2, 1, 3, '#5a3a22'); } }
+      for (let y = YB + R(20, 60); y < H; y += R(120, 200)) { const u = R(20, U - 10); lump(u, y, 4, 3, ['#1e1e1e', '#2c2c2c', '#3a3a3a']); lump(u, y, 1.6, 1.2, [G0[1]]); }
+      for (let y = YB + R(60, 140); y < H; y += R(180, 260)) { const u = R(18, U - 8); for (let j = 0; j < 7; j++) rect(u - (j >> 1), y + j, 1 + 2 * (j >> 1), 1, j === 3 ? '#fffaee' : '#e8892c'); rect(u - 4, y + 7, 9, 1, '#2a1c16'); }
+    } else if (rid === 'resort') { // Lily Lagoon: a sand strip, then the lagoon's water with lily pads
+      const wu = 14, wi = [hexI('#3b9a95'), hexI(th.water || '#4cb5ae'), hexI('#5cc4bc')];
+      for (let y = YB + 6; y < H; y++) for (let u = wu; u < U; u++) { const r = rnd(); put(u, y, r < 0.08 ? wi[0] : r > 0.96 ? wi[2] : wi[1]); }
+      for (let y = YB + 6; y < H; y++) { put(wu - 1, y, '#c9b98a'); put(wu, y, '#8fd8d0'); }
+      for (let y = YB + 10; y < H; y += R(5, 9)) rect(R(wu + 3, U), y, R(3, 7), 1, '#8fd8d0');
+      for (let i = 0; i < 40; i++) { const u = R(wu + 5, U - 3), y = R(YB + 12, H), r = R(3, 5.5); lump(u, y, r, r * 0.7, ['#2e4d2b', '#3d6a2b', '#5f9a3e', '#7cbd4e'], (a, b) => !(a > -0.15 && a < 0.15 && b < 0)); if (rnd() < 0.3) { put(u, y - 1, '#e8a193'); put(u + 1, y - 1, '#e8a193'); put(u, y - 2, '#fffaee'); } }
+    } else if (rid === 'neon') { // Firefly Bays: ferns along the fence, a dark wood beyond, lantern posts, fireflies
+      const fern = ['#1a3a2a', '#24523a', '#3a7048', '#579158'], wood = ['#13291f', '#1d3d2b', '#2a5236', '#3a6a44'];
+      for (let y = YB; y < H + 8; y += R(5, 8)) lump(R(3, 8), y, R(5, 8), R(4, 6), fern);
+      for (let y = YB + R(0, 30); y < H + 10; y += R(30, 48)) { const u = R(26, 44), r = R(9, 14); rect(u - 2, y + r * 0.4, 4, r, '#2a1c16'); lump(u, y, r, r * 0.9, wood); }
+      for (let y = YB + R(0, 30); y < H + 10; y += R(36, 56)) { const u = R(52, U - 6), r = R(12, 18); rect(u - 2, y + r * 0.4, 4, r, '#2a1c16'); lump(u, y, r, r * 0.9, wood); }
+      for (let y = YB + R(30, 70); y < H; y += R(120, 150)) { // a lantern post (as the field's): dark post, a lit head
+        const u = R(20, 28); rect(u - 1, y - 22, 3, 24, '#2a1c16'); rect(u, y - 22, 1, 24, '#4b3226'); rect(u - 2, y - 28, 5, 6, '#2a1c16');
+        rect(u - 1, y - 27, 3, 4, '#f2c641', 1); put(u, y - 26, '#fff2a6', 1); lamps.push({ u, y: y - 25 }); }
+      for (let i = 0; i < 70; i++) { const u = R(4, U), y = R(YB, H); put(u, y, rnd() < 0.7 ? '#d4ef6a' : '#fff2a6', 1); }
+    } else if (rid === 'links') { // Gullhaven: dunes and marram grass, an old driftwood post
+      for (let y = YB; y < H + 20; y += R(26, 40)) lump(R(10, U), y, R(14, 26), R(8, 12), ['#a89a70', '#c9b98a', '#d6c69a', '#e6d6a6'], (a, b) => b < 0.5);
+      for (let y = YB; y < H; y += R(6, 12)) { const u0 = R(0, U); for (let k = 0; k < 5; k++) { const h = R(3, 8); rect(u0 + R(-3, 3), y - h, 1, h, rnd() < 0.5 ? '#8fa45e' : '#6f7f45'); } }
+      for (let y = YB + R(40, 100); y < H; y += R(150, 230)) { const u = R(16, U - 6); rect(u - 1, y - 12, 3, 13, '#5f6764'); rect(u, y - 12, 1, 13, '#8a8478'); }
+    }
+    A = { U, H, c, em, lamps }; SIDES.art.set(key, A); return A;
+  }
+  /** the light key the strips are graded for (only moves through dusk / dawn / a range switch) */
+  function sideLightKey() {
+    const k = skyNow(), q = (v, n) => Math.round((v || 0) * n), c = (a) => a.map((v) => v >> 3).join('.');
+    return [rangeId(), G.fieldD0, renderScale, q(visualNight(), 16), q(k.warm, 8), q(k.st, 6), c(k.top), c(k.hz), NLOOK.id, mode].join('|');
+  }
+  /** the graded strip for one side, N logical px wide (N - EDGE of them out in the letterbox), at backing res */
+  function sideStrip(side, N) {
+    N = Math.max(EDGE, Math.min(SIDE_UMAX / 2, Math.ceil(N))); const lk = sideLightKey(), okey = side + '|' + N;
+    let o = SIDES.out.get(okey); if (o && o.key === lk) return o;
+    // through dusk / dawn the key steps every few frames: a new picture at most every 150 ms per strip (the light moves slowly;
+    // 2026-11-14 desktop dusk: ~20 pictures a second without this). A range / screen switch (key's first part) never waits
+    const tNow = nowMs(); if (o && o.key.split('|')[0] === lk.split('|')[0] && o.mode === mode && tNow - o.at < 150 && !/~$/.test(o.key)) { o.stale = true; return o; } // stale: ui/layout.js asks again
+    SIDES.regrades++; const tG = nowMs();
+    const rid = rangeId(), th = theme(rid), A = sideArt(rid, side), U = N * 2, H = A.H, k = skyNow(), night = visualNight();
+    const nl = th.night ? nlCfg() : null, tint = nl && nl.tint || NIGHT_TINT, nA = th.night ? (nl.dark || 0.5) : nightMaskA(th) * night;
+    const warmA = k.warm > 0.02 && !alwaysNight() ? 0.11 * k.warm * (1 - night * 0.6) : 0, gold = nl && nl.cols ? nl.cols[0] : [242, 198, 65];
+    const ac = o && o.ac && o.ac.width === U ? o.ac : makeCanvas(U, H), q = ac.getContext('2d'), img = q.createImageData(U, H), d = img.data;
+    const srnd = mulberry(hashStr('sidestars|' + rid + side));
+    // Firefly Bays look B: each art px's lamplight, banded + ordered-dithered (u-space dither: the same pixels at any width).
+    // It doesn't change with the light key, so it is worked out once per strip art
+    if (nl && nl.fall && A.lamps.length && (!A.Lm || A.LmId !== NLOOK.id)) {
+      const Lm = new Float32Array(A.U * H), bd = nl.bands;
+      for (const lp of A.lamps) for (let y = Math.max(0, lp.y - 30); y < Math.min(H, lp.y + 31); y++) for (let u = Math.max(0, lp.u - 30); u < Math.min(A.U, lp.u + 31); u++) {
+        const f = nl.fall(Math.hypot(u - lp.u, y - lp.y) / 2 / 13, 13), i = y * A.U + u; if (f > Lm[i]) Lm[i] = f; }
+      for (let i = 0; i < Lm.length; i++) { let L = Lm[i]; if (!L) continue; const y = (i / A.U) | 0, u = i - y * A.U;
+        for (let j = 0; j < bd.length - 1; j++) if (L >= bd[j] && L <= bd[j + 1]) { const tt = (L - bd[j]) / (bd[j + 1] - bd[j] || 1); L = tt > BAYER4[((y >> 1) & 3) * 4 + ((u >> 1) & 3)] ? bd[j + 1] : bd[j]; break; }
+        Lm[i] = L; }
+      A.Lm = Lm; A.LmId = NLOOK.id;
+    }
+    const Lm = nl && nl.fall && A.lamps.length ? A.Lm : null;
+    let skyPx = null; // the sky as the canvas drew it last frame, down its outer band (no stars / clouds there): exact match at the seam
+    try { if (N > EDGE && ctx && canvas && canvas.width >= G.W * renderScale) { const sd = ctx.getImageData(Math.round(renderScale), 0, 1, HORIZON * renderScale).data; let ok = true; for (let i = 3; i < sd.length; i += 4) if (sd[i] < 250) { ok = false; break; } if (ok) skyPx = sd; } } catch (e) { skyPx = null; }
+    for (let y = 0; y < H; y++) {
+      const t = Math.pow(clamp((((y >> 1) & ~1) + 1) / (HORIZON + 1), 0, 1), 1.35);
+      let sky = mix3(k.top, k.hz, t); // drawSky's 2 px bands
+      if (skyPx && y < 2 * HORIZON) { const sy = Math.min(HORIZON * renderScale - 1, Math.floor(y / 2 * renderScale)) * 4; sky = [skyPx[sy], skyPx[sy + 1], skyPx[sy + 2]]; }
+      for (let x = 0; x < U; x++) {
+        const u = side === 'L' ? U - 1 - x : x, i = y * A.U + u, o4 = (y * U + x) * 4; let col = A.c[i];
+        let r, g, b;
+        if (col < 0) { if (y >= 2 * HORIZON) { d[o4 + 3] = 0; continue; } r = sky[0]; g = sky[1]; b = sky[2]; }
+        else {
+          r = (col >> 16) & 255; g = (col >> 8) & 255; b = col & 255;
+          if (!A.em[i]) {
+            if (warmA) { r += (255 - r) * warmA; g += (146 - g) * warmA; b += (64 - b) * warmA; }
+            const L = Lm ? Lm[i] : 0;
+            const a = nA * (1 - L); if (a > 0) { r += (tint[0] - r) * a; g += (tint[1] - g) * a; b += (tint[2] - b) * a; }
+            if (L > 0 && nl.warm) { const w = nl.warm * L; r += (gold[0] - r) * w; g += (gold[1] - g) * w; b += (gold[2] - b) * w; }
+          }
+        }
+        d[o4] = r; d[o4 + 1] = g; d[o4 + 2] = b; d[o4 + 3] = 255;
+      }
+    }
+    if (k.st > 0.05) for (let n = 0; n < U * 0.25; n++) { const x = (srnd() * U) | 0, y = (Math.pow(srnd(), 1.5) * (2 * HORIZON - 8)) | 0, a = k.st * (0.45 + srnd() * 0.55), o4 = (y * U + x) * 4; if (d[o4 + 3]) { d[o4] += (255 - d[o4]) * a; d[o4 + 1] += (250 - d[o4 + 1]) * a; d[o4 + 2] += (238 - d[o4 + 2]) * a; } }
+    q.putImageData(img, 0, 0);
+    const RS = renderScale, cv = o && o.cv && o.cv.width === N * RS ? o.cv : makeCanvas(N * RS, G.H * RS), cg = cv.getContext('2d');
+    cg.imageSmoothingEnabled = false; cg.clearRect(0, 0, cv.width, cv.height); cg.drawImage(ac, 0, 0, U, H, 0, 0, N * RS, G.H * RS);
+    o = { key: N > EDGE && !skyPx ? lk + '~' : lk, cv, ac, N, side, at: tNow, mode }; SIDES.out.set(okey, o); SIDES.ms += nowMs() - tG; return o; // '~': no canvas sky to match yet (asked again)
+  }
+  /** A: the field's outer band from the strips (in place of the calm fill): 2 blits, rows y0..netD (left from the tee strip) */
+  function sideBandBlit(g) {
+    const RS = renderScale, Lf = sideStrip('L', EDGE), Rt = sideStrip('R', EDGE), y0 = 39, y1 = G.netD;
+    g.drawImage(Lf.cv, 0, y0 * RS, EDGE * RS, (y1 - y0) * RS, 0, y0, EDGE, y1 - y0);
+    g.drawImage(Rt.cv, 0, G.fieldD0 * RS, EDGE * RS, (y1 - G.fieldD0) * RS, G.W - EDGE, G.fieldD0, EDGE, y1 - G.fieldD0);
+  }
   /** the night mask's base (darkness + the pools' warm light, per logical pixel) into mc, and the lamplight alone into wc */
   function nlPaint(mc, wc, cfg) {
     const W = mc.width, H = mc.height, n = W * H;
@@ -35018,11 +35153,12 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const st = els().stage; st.style.width = (v.cssW || G.W * s) + 'px'; st.style.height = (v.cssH || G.H * s) + 'px';
     canvas.style.width = G.W * s + 'px'; canvas.style.height = G.H * s + 'px';
     canvas.style.marginTop = v.cropY ? -(v.cropY * s) + 'px' : '';
+    canvas.style.marginLeft = v.cropX ? -(v.cropX * s) + 'px' : ''; // side bars preview (B / C): the outer band cropped
     st.style.overflow = 'hidden';
     DESK.dirty = true;
   }
   /** logical px -> CSS px inside the stage (no DOM reads: safe to call every frame) */
-  function toLocal(x, y) { const s = layout.scale || 1, cy = extViewport && extViewport.cropY ? extViewport.cropY : 0; return { x: x * s, y: (y - cy) * s }; }
+  function toLocal(x, y) { const s = layout.scale || 1, cy = extViewport && extViewport.cropY ? extViewport.cropY : 0, cx = extViewport && extViewport.cropX ? extViewport.cropX : 0; return { x: (x - cx) * s, y: (y - cy) * s }; }
   function toScreen(x, y) {
     const s = layout.scale || 1, local = toLocal(x, y);
     let page = null; try { const r = els().stage.getBoundingClientRect(); page = { x: r.left + local.x, y: r.top + local.y }; } catch (e) { /* ignore */ }
@@ -38011,8 +38147,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   let timeScale = 1;
   let testHold = false; // _test.hold(true): the fixed-step sim stops (rendering, the UI and the reveal checks run on); tests only
   let pointerId = null;
+  /** page px -> logical px. The canvas' own box is the whole G.W x G.H field at the field's scale (a crop only clips it inside
+   *  the stage), so map over that. The stage is just the VISIBLE part (phones crop the net's bottom 14 rows, wide / duo the
+   *  top 14 too): mapping over it scaled 306 visible rows to 320 and put a tap up to ~14 logical px below the finger (Ben
+   *  2026-11-14: movement "crazy and hard to control"; found in the side-bars investigation). Agrees with toScreen() */
   function toLogical(cx, cy) {
-    const r = els().stage.getBoundingClientRect();
+    const c = canvas && canvas.getBoundingClientRect();
+    if (c && c.width > 0 && c.height > 0) return { x: (cx - c.left) / c.width * G.W, y: (cy - c.top) / c.height * G.H };
+    const r = els().stage.getBoundingClientRect(); // no canvas box yet: the stage (uncropped at that point)
     return { x: (cx - r.left) / r.width * G.W, y: (cy - r.top) / r.height * G.H };
   }
   function bindInput() {
@@ -39047,8 +39189,6 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** the fog layer's densest and brightest pixel in logical rect r: { a: alpha 0..255, rgb: max channel } (the night set is thinner + dimmer) */
       fogInk(r) { const F = WX.F, c = F.cv; if (!c || !(F.lv > 0)) return null; const k = c.width / G.W, x0 = Math.round(r[0] * k), y0 = Math.round(r[1] * k), w = Math.max(1, Math.round((r[2] - r[0]) * k)), h = Math.max(1, Math.round((r[3] - r[1]) * k));
         const d = c.getContext('2d').getImageData(x0, y0, w, h).data; let a = 0, m = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { a = Math.max(a, d[i + 3]); m = Math.max(m, d[i], d[i + 1], d[i + 2]); } return { a, rgb: m, night: !!F.night }; },
-      /** Firefly Bays' lantern light look (NLOOK, tests only): 'B' (the shipped look) or 'cur' (the old paint, which check
-       *  fireflylight shows failing its limits); read it with no id. The night caches rebuild on the next frame */
       /** the declutter looks (feel.declutter, previews): o = { lane, gus, keepout, payout } (true / false; 'all' / 'none'), returns
        *  what is on, plus the lane's state (what is up, what waits) */
       declutter(o) {
@@ -39056,6 +39196,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         const t = els().toasts;
         return { looks: Object.assign({}, D), lane: { on: laneOn(), busy: mode === 'game' ? laneBusy() : false, toasts: t ? t.childElementCount : 0, peek: !!peek, peekVis: Math.round(peekVis), peekLeft: Math.round(peekT), peekMin: peek ? peekMinMs(peekText) : null, waiting: laneWaiting(), banner: !!bannerBusy, dialog: !!dlg, held: toastHeld.length, peekQ: peekQ.length, bannerQ: bannerQ.length } };
       },
+      /** side bars preview (SIDES, Ben 2026-11-14): read ('' = off) or set the preview letters ('A', 'C', 'AC'; B is the default); the
+       *  layout refits. sideStrip(side 'L'|'R', N logical px): the graded strip ui/layout.js paints into the letterbox (A) */
+      sides(id) { if (id != null) { SIDES.id = String(id).toUpperCase().replace(/[^AC]/g, ''); bgDirty = true; try { if (W.RANGE_RAT_LAYOUT) W.RANGE_RAT_LAYOUT.apply(); } catch (e) { /* ignore */ } } return SIDES.id; },
+      sideStrip(side, N) { const o = sideStrip(side === 'R' ? 'R' : 'L', N); return { cv: o.cv, key: o.key, N: o.N, regrades: SIDES.regrades }; },
+      sideRegrades() { return SIDES.regrades; }, sideMs() { return Math.round(SIDES.ms * 100) / 100; }, // strip pictures made so far (read only: makes none)
+      /** Firefly Bays' lantern light look (NLOOK, tests only): 'B' (the shipped look) or 'cur' (the old paint, which check
+       *  fireflylight shows failing its limits); read it with no id. The night caches rebuild on the next frame */
       nightLook(id) { if (id != null && NL_CFG[id]) { NLOOK.id = id; bgDirty = true; } return NLOOK.id; },
       /** Ben 2026-11-14 ("the lighting in the fire flies bay looks so bad"): the field as drawn, in logical rect r (default: the
        *  grass inside the fence), after one render at clock ms (null: the last frame drawn). lum = mean luma 0..255, sat = mean
@@ -39367,6 +39514,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     dismissDialogs() { noteInput('api'); frDismissed(); dismissDialogs(); return true; }, // (an outside dismiss, like a tap: a first-time line on screen counts as read)
     mountPanel, unmountPanel, setViewport, toScreen, dialogDone,
     fieldSize() { return { w: G.W, h: G.H, orientation: 'portrait' }; },
+    /** the dressed field sides (DECISIONS 56): side 'L' | 'R', N logical px wide (the outer band + N - 8 px out into the
+     *  letterbox), graded for the light now; ui/layout.js paints it beside the field. Cached: a new picture only when the light
+     *  key (dusk / dawn / range / screen) or N moves. { cv, key, N } */
+    sideStrip(side, N) { const o = sideStrip(side === 'R' ? 'R' : 'L', N); return { cv: o.cv, key: o.key + (o.stale && !/~$/.test(o.key) ? '~' : ''), N: o.N }; },
     // Desk mode (DECISIONS 38; ui/desk.js owns its layout + menu, desktop/app/main.js its window)
     get desk() { return DESK.on ? Object.assign({ on: true, fps: DESK.fps, hiddenMs: DESK.hiddenMs, sound: !!(state && state.settings.deskSound) }, DESK.cfg) : null; },
     /** the desktop wrapper (desktop/app/glue.js): the normal window was minimised / hidden (true) or shown again (false) */
@@ -40461,6 +40612,16 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 #rr-root.rl-wide .rr-fieldwrap{grid-area:field;min-height:0;min-width:0;overflow:hidden;border:2px solid var(--rr-line);border-radius:calc(10px*var(--rr-round))}
 #rr-root.rl-wide .rr-fieldwrap{background:#1d140f radial-gradient(circle at 50% 40%,#2a1d15,#1a120d 75%)}
 #rr-root.rl-wide .rr-stage{box-shadow:0 0 0 2px #1a110c,0 0 0 4px #5a4232,0 6px 18px rgba(0,0,0,.45)}
+/* the bigger phone field (DECISIONS 55): when a whole scale bigger than the plain fit fills the width only without it, the
+   small-goal card steps aside (rl-bignb; its goals stay in the Journal). A, the dressed sides: the range's surroundings in
+   the letterbox (.rl-sides, two strips drawn by the engine), the default on the wide layout (DECISIONS 56), a preview
+   elsewhere (?sides=A / RANGE_RAT._test.sides). C (a preview, off by default): the field
+   framed in the HUD's wood, ring widths in field px (--rl-fu = one logical px in CSS px: crisp at any whole scale) */
+.rl-sides{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.rl-sides>div{position:absolute;background-repeat:no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
+#rr-root.rl-sidesC .rr-fieldwrap{background:var(--rr-bar-tx),var(--rr-bar-bg)!important}
+#rr-root.rl-sidesC .rr-stage{box-shadow:0 0 0 var(--rl-fu) #1a110c,0 0 0 calc(var(--rl-fu)*2) var(--rr-bar-line),0 0 0 calc(var(--rl-fu)*3) #1a110c,0 calc(var(--rl-fu)*2) 0 calc(var(--rl-fu)*3) rgba(0,0,0,.35)!important}
+#rr-root.rl-narrow.rl-bignb #rl-nextbar{display:none}
 #rr-root.rl-wide .rr-bottom{display:none}
 #rr-root.rl-wide .rr-hud{grid-area:hud;min-width:0;border:2px solid var(--rr-bar-line);border-radius:calc(10px*var(--rr-round))}
 #rr-root.rl-wide #rl-gusdock:not(:has(.rr-dialog)){display:none}
@@ -40867,7 +41028,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     R.on('locale', () => { cur = null; lastFit = null; for (const c of journals) journals.delete(c); apply(); }); // a11y/i18n pass: rebuild every column in the new language
     W.addEventListener('resize', () => { lastResizeT = performance.now(); apply(); });
     // the field cell can change size without the window changing (Gus row appears, HUD wraps, tabs change)
-    try { let lastWH = ''; new ResizeObserver(() => { const k = E.fieldwrap.clientWidth + 'x' + E.fieldwrap.clientHeight; if (k !== lastWH && !applying) { lastWH = k; apply(); } }).observe(E.fieldwrap); } catch (e) { /* ignore */ }
+    try { let lastWH = ''; new ResizeObserver(() => { const k = E.fieldwrap.clientWidth + 'x' + E.fieldwrap.clientHeight; if (k !== lastWH && !applying) { lastWH = k; apply(); } fitCheckSoon(); }).observe(E.fieldwrap); } catch (e) { /* ignore */ }
 
     root.style.setProperty('--rl-lock', `url(${spriteURL('badge_locked', 3)})`);
     root.style.setProperty('--rl-stockic', `url(${spriteURL('icon_ballstock', 2)})`);
@@ -40980,17 +41141,49 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       const s3 = fit(fw, fh, lw, lh - 28);
       if (s3 > s) { s = s3; cropTop = 14; cropBottom = true; cssW = lw * s / dpr(); cssH = (lh - 28) * s / dpr(); }
     }
+    // the bigger phone field (Ben 2026-11-14, side bars option B, DECISIONS 55): a whole scale, as big as the cell allows with
+    // the calm outer band and the sky's top rows cropped; never smaller than the plain fit above
+    let cropX = 0;
+    const b = lay === 'narrow' ? fitB(fw, fh, lw, lh, s) : null;
+    if (b) { s = b.s; cropX = b.cropX; cropTop = b.cropTop; cropBottom = b.cropBot > 0; cssW = b.cssW; cssH = b.cssH; }
+    if (lay !== 'narrow') root.classList.remove('rl-bignb');
+    // side bars previews (off by default): C crops the outer band for its frame
+    const sid = sidesId();
+    root.classList.toggle('rl-sidesC', sid.indexOf('C') >= 0);
+    if (sid.indexOf('C') >= 0) { cropX = SIDE_EDGE; cssW = (lw - 2 * SIDE_EDGE) * s / dpr(); }
+    if (sid) root.style.setProperty('--rl-fu', (s / dpr()) + 'px');
     fieldS = s;
-    R.setViewport({ cssW, cssH, scale: s / dpr(), cropY: cropTop || undefined });
-    lastFit = { lay, s, cssW, cssH, cropBottom, cropTop, W: Wd, H: Hd, fw, fh, arith };
+    // dressed sides (A): the default on the desktop / wide layout (Ben 2026-11-14, DECISIONS 56), a preview elsewhere; never with C
+    const dress = (lay === 'wide' || sid.indexOf('A') >= 0) && sid.indexOf('C') < 0;
+    R.setViewport({ cssW, cssH, scale: s / dpr(), cropY: cropTop || undefined, cropX: cropX || undefined, dress: dress || undefined });
+    lastFit = { lay, s, cssW, cssH, cropBottom, cropTop, cropX, dress, W: Wd, H: Hd, fw, fh, arith };
+    if (lay === 'narrow') fitCheckSoon();
     if (lay === 'wide') { els.corner.dataset.fitk = ''; }
     // pixels are sampled only outside a resize drag; during a drag the cached bands are re-laid out arithmetically
-    if (!bandCols || performance.now() - lastResizeT > 600) sampleBackdrop(); else paintBackdrop();
+    if (!bandCols || performance.now() - lastResizeT > 600) sampleBackdrop(); else { paintBackdrop(); paintSides(); }
     clearTimeout(settleT); settleT = setTimeout(sampleBackdrop, 300); // pixels only once the resize has settled
     root.classList.toggle('rl-tight', lay === 'narrow' && (Wd < 420 || (large && Wd < 560)));
     // corner fit: synchronous when idle (deterministic first paint), deferred to its own task during a resize drag
     if (lay === 'wide' && performance.now() - lastResizeT > 600) { const st0 = stats(); if (st0) { els.corner.dataset.fitk = fitKey(st0); fitCorner(); } }
     clearTimeout(tickT); tickT = setTimeout(() => { tick(true); remeasure(); }, 0); // content refresh (and the corner fit) in its own task, once per burst
+  }
+
+  // ---- the narrow fit reads the field cell's size as it is at that moment. A fit that ran while the cell was briefly another
+  // size (a row added and removed in the same task, a sheet / bar mid-change) kept that scale with nothing to correct it: the
+  // ResizeObserver only reports sizes it sees at a frame, and lastWH can already hold the size the cell comes back to (seen
+  // 2026-11-14: 375x667 stuck at x2 instead of x2.8 after a range jump). So after every narrow fit, and after the cell's
+  // resizes settle, check once on the next frame and once ~250 ms later that the cell is still the size the fit used; refit
+  // if not (at most 3 refits in a row, so a cell that keeps moving can't loop). No polling: wide / duo have remeasure()
+  let fitChkRaf = 0, fitChkT = 0, fitRefits = 0;
+  function fitCheck() {
+    if (!lastFit || lastFit.lay !== 'narrow' || !root || applying || cur !== 'narrow') return;
+    if (E.fieldwrap.clientWidth === lastFit.fw && E.fieldwrap.clientHeight === lastFit.fh) { fitRefits = 0; return; }
+    if (fitRefits++ < 3) apply();
+  }
+  function fitCheckSoon() {
+    if (fitChkRaf) cancelAnimationFrame(fitChkRaf);
+    fitChkRaf = requestAnimationFrame(() => { fitChkRaf = 0; fitCheck(); });
+    clearTimeout(fitChkT); fitChkT = setTimeout(fitCheck, 250);
   }
 
   // ------------------------------------------------------------------ themed letterbox: extend the field's own bands sideways
@@ -41011,6 +41204,66 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (again) apply();
   }
 
+  // ------------------------------------------------------------------ side bars (Ben 2026-11-14): B the default, A / C previews
+  const SIDE_EDGE = 8; // the engine's calm outer band (game.js EDGE), logical px
+  const sidesId = () => { try { return (R && R._test && R._test.sides) ? R._test.sides() || '' : ''; } catch (e) { return ''; } };
+  let nbH = 0;
+  /** the bigger phone field (side bars option B, DECISIONS 55): the largest whole scale (device px) whose field, less the calm
+   *  outer band (<= 8 px a side, nothing to play there) and if need be the sky's top 14 rows and the net's bottom 14, fits the
+   *  cell. The small-goal card steps aside (its goals stay in the Journal) only when that gives a bigger scale which then fills
+   *  the width edge to edge. null: no whole scale at least as big as the plain fit s0 (a short window, 320 px wide): the plain
+   *  fit stands, as before. The same logical field and touch mapping: no gameplay change */
+  function fitB(fw, fh, lw, lh, s0) {
+    const d = dpr(), hidden = root.classList.contains('rl-bignb'), nb = els.nextbar;
+    if (!hidden && nb && nb.offsetHeight) nbH = nb.offsetHeight;
+    const Wd = Math.floor(fw * d), fhW = hidden ? fh - nbH : fh, fhN = hidden ? fh : fh + nbH;
+    const best = (H) => { const Hd = Math.floor(H * d); for (let s = 16; s >= 1; s--) { if ((lw - 2 * SIDE_EDGE) * s > Wd) continue; for (const [ct, cb] of [[0, 0], [0, 14], [14, 14]]) if ((lh - ct - cb) * s <= Hd) return { s, ct, cb }; } return null; };
+    let r = best(fhW), ng = false; const r2 = nbH > 0 ? best(fhN) : null;
+    if (r2 && (!r || r2.s > r.s) && lw * r2.s >= Wd) { r = r2; ng = true; }
+    if (!r || (!ng && r.s < s0 - 1e-6)) { root.classList.remove('rl-bignb'); return null; }
+    root.classList.toggle('rl-bignb', ng);
+    const visD = Math.min(lw * r.s, Wd), cxD = Math.floor((lw * r.s - visD) / 2);
+    return { s: r.s, cropX: cxD / r.s, cropTop: r.ct, cropBot: r.cb, cssW: visD / d, cssH: (lh - r.ct - r.cb) * r.s / d };
+  }
+  /** A: the engine's per-range strips, one a side, placed on the field's own pixel grid (they run under the canvas' outer
+   *  band, so the seam is hidden) and clipped to the stage's rows. Redrawn only when the strip's light key or the fit moves */
+  // The strips are CSS backgrounds (a PNG blob of the engine's strip), not canvases: the page keeps exactly one canvas in the
+  // field cell, which tests, the desktop wrapper and tools find as "the canvas" (#rr-root canvas). A new picture is encoded
+  // (toBlob, off the main thread) only when a strip's light key or width changes; a refit only moves the boxes.
+  let sidesEl = null, sidesK = '', sidesPicK = ['', ''], sidesSeq = [0, 0], sidesUrl = ['', ''];
+  function paintSides() {
+    const on = !!lastFit && !!lastFit.dress && cur !== 'desk' && !!R.sideStrip;
+    if (!on) { if (sidesEl) sidesEl.style.display = 'none'; sidesK = ''; return; }
+    if (!sidesEl || sidesEl.parentNode !== E.fieldwrap) {
+      sidesEl = document.createElement('div'); sidesEl.className = 'rl-sides'; sidesEl.setAttribute('aria-hidden', 'true');
+      sidesEl.innerHTML = '<div></div><div></div>';
+      E.fieldwrap.insertBefore(sidesEl, E.fieldwrap.firstChild); sidesK = ''; sidesPicK = ['', ''];
+    }
+    sidesEl.style.display = '';
+    const f = R.fieldSize(), d = dpr(), u = lastFit.s / d, cx = lastFit.cropX || 0, cy = lastFit.cropTop || 0;
+    const stL = (lastFit.fw - lastFit.cssW) / 2, stT = (lastFit.fh - lastFit.cssH) / 2;
+    const N = Math.max(SIDE_EDGE, Math.ceil(stL / u + SIDE_EDGE - cx) + 1);
+    const L = R.sideStrip('L', N), Rt = R.sideStrip('R', N);
+    if (!/~$/.test(L.key + Rt.key)) sidesEl.__tries = 0;
+    else if (!sidesEl.__retry && (sidesEl.__tries = (sidesEl.__tries | 0) + 1) <= 10) sidesEl.__retry = setTimeout(() => { sidesEl.__retry = 0; paintSides(); }, 400); // the canvas had no sky to match yet
+    const k = [N, u, stL, stT, cx, cy, lastFit.cssH, L.key, Rt.key].join('|'); if (k === sidesK) return; sidesK = k;
+    const box = sidesEl.children;
+    for (const [i, st, x0] of [[0, L, stL + (SIDE_EDGE - cx - N) * u], [1, Rt, stL + (f.w - SIDE_EDGE - cx) * u]]) {
+      const b = box[i];
+      b.style.left = x0 + 'px'; b.style.top = stT + 'px'; b.style.width = (N * u) + 'px'; b.style.height = lastFit.cssH + 'px';
+      b.style.backgroundSize = (N * u) + 'px ' + (f.h * u) + 'px'; b.style.backgroundPosition = '0 ' + (-cy * u) + 'px';
+      const pk = st.key.replace(/~$/, '') + '|' + st.N; if (pk === sidesPicK[i]) continue; sidesPicK[i] = pk;
+      const seq = ++sidesSeq[i];
+      try {
+        st.cv.toBlob((bl) => {
+          if (!bl || seq !== sidesSeq[i]) return; // a newer picture is on its way
+          const url = URL.createObjectURL(bl), old = sidesUrl[i]; sidesUrl[i] = url; b.style.backgroundImage = 'url(' + url + ')';
+          if (old) setTimeout(() => URL.revokeObjectURL(old), 1000);
+        }, 'image/png');
+      } catch (e) { /* no picture: the mat shows */ }
+    }
+  }
+
   let sampler = null, settleT = 0, bandCols = null, skyKeyAt = null, skyT = 0;
   // The bands are the field's own edge colours, read back from the canvas. Only the two 10 px edge strips are copied and
   // read (20 x 640, not the whole field), and only when the picture's light changes: a layout / screen / range change,
@@ -41023,7 +41276,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   const sampleBackdrop = timed('sample', function () {
     if (!lastFit || !E || !E.canvas) return;
     let key = null; try { key = R.skyKey ? R.skyKey() : null; } catch (e) { key = null; }
-    if (lastFit.lay === 'wide') { skyKeyAt = key; paintBackdrop(); return; } // plain mat: no pixels to sample
+    if (lastFit.lay === 'wide') { skyKeyAt = key; paintBackdrop(); paintSides(); return; } // plain mat: no pixels to sample
     skyKeyAt = null; // until this read succeeds
     const cv0 = E.canvas; if (!cv0.width || !cv0.height) return;
     const rsc = R.renderScale || 1, n = Math.round(cv0.height / rsc), m = Math.round(cv0.width / rsc); // LOGICAL px (backing is x renderScale)
@@ -41045,6 +41298,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       // DAY sky, which painted a pale band beside the night sky in the credits and every evening; round 4, Ben 2026-11-05)
       if (clear > n * 0.2) return; // not drawn yet (cleared by a resize, or the first frame of a new screen): ask again soon
       if (cols.some((c) => c !== '#1c1410')) { bandCols = cols; paintBackdrop(); }
+      paintSides();
       skyKeyAt = key;
     } catch (e) { /* tainted or not ready: keep the default */ }
   });
@@ -41052,7 +41306,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
    *  One read per change, 200 ms later (the canvas may be a frame behind the clock): at most 4 small reads a second, and
    *  only through dusk / dawn (round 4: day-coloured side bands stayed beside the night field until the next resize) */
   function followSky() {
-    if (!lastFit || lastFit.lay === 'wide' || !R.skyKey || skyT) return;
+    if (!lastFit || (lastFit.lay === 'wide' && !lastFit.dress) || !R.skyKey || skyT) return;
     let k = null; try { k = R.skyKey(); } catch (e) { return; }
     if (k !== skyKeyAt) skyT = setTimeout(() => { skyT = 0; sampleBackdrop(); }, 200);
   }

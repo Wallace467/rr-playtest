@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-15-a8684507-a0ac61f4">
+<meta name="rr-pwa" content="2026-11-15-c3b0680c-146542ea">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-15-a8684507">
+<meta name="range-rat-build" content="2026-11-15-c3b0680c">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-15-a8684507", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-15-c3b0680c", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-15-a8684507", "builtAt": "2026-11-15T14:36:07Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-15-c3b0680c", "builtAt": "2026-11-15T16:08:35Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -9089,6 +9089,19 @@ window.DIALOG = {
       range: "Range",
       acorns: "acorns"
     },
+    // save safety (2026-11-15): Settings > Saves > Backups, the corrupt-save toast, the title nudge (?savesafe=1 preview)
+    savesafe: {
+      recovered: "Your save couldn't be read, so the backup from {t} ago carries on.",
+      backups: "Backups",
+      backupsHelp: "Copies of this save, about one an hour of play.",
+      none: "None yet. The first one is kept as you play.",
+      ago: "{t} ago",
+      restoreQ: "Go back to this backup?",
+      restoreWarn: "The save you have now is kept aside on this device.",
+      nudgeTitle: "Keep your save safe",
+      nudgeIos: "Safari can clear a game's saves after a week away. Keep it on your Home Screen: tap Share, then Add to Home Screen.",
+      nudgeWeb: "Browsers can clear saves from sites you don't visit for a while. Keep a save code somewhere safe."
+    },
     profile: {
       newerShort: "Newer version",
       restored: "Backup restored.",
@@ -12391,6 +12404,19 @@ window.DIALOG = {
         imported: "Spielstand in Platz {n} umgezogen!",
         range: "Range",
         acorns: "Eicheln"
+      },
+      // save safety (2026-11-15): Settings > Saves > Backups, the corrupt-save toast, the title nudge (?savesafe=1 preview)
+      savesafe: {
+        recovered: "Dein Spielstand war nicht lesbar. Es geht mit der Sicherung von vor {t} weiter.",
+        backups: "Sicherungen",
+        backupsHelp: "Kopien dieses Spielstands, etwa eine pro Spielstunde.",
+        none: "Noch keine. Die erste entsteht beim Spielen.",
+        ago: "vor {t}",
+        restoreQ: "Zu dieser Sicherung zurück?",
+        restoreWarn: "Dein jetziger Spielstand bleibt auf diesem Gerät beiseitegelegt.",
+        nudgeTitle: "Sichere deinen Spielstand",
+        nudgeIos: "Safari kann Spielstände nach einer Woche ohne Besuch löschen. Leg das Spiel auf den Home-Bildschirm: Teilen, dann „Zum Home-Bildschirm“.",
+        nudgeWeb: "Browser können Spielstände von Seiten löschen, die du länger nicht besuchst. Bewahr einen Spielstand-Code sicher auf."
       },
       profile: {
         newerShort: "Neuere Version",
@@ -15746,6 +15772,19 @@ window.DIALOG = {
         range: "Campo",
         acorns: "bellotas"
       },
+      // save safety (2026-11-15): Settings > Saves > Backups, the corrupt-save toast, the title nudge (?savesafe=1 preview)
+      savesafe: {
+        recovered: "No se pudo leer tu partida, así que sigue la copia de hace {t}.",
+        backups: "Copias de seguridad",
+        backupsHelp: "Copias de esta partida, una por hora de juego más o menos.",
+        none: "Aún no hay. La primera se guarda mientras juegas.",
+        ago: "hace {t}",
+        restoreQ: "¿Volver a esta copia?",
+        restoreWarn: "La partida que tienes ahora se guarda aparte en este dispositivo.",
+        nudgeTitle: "Protege tu partida",
+        nudgeIos: "Safari puede borrar las partidas tras una semana sin visitas. Ponlo en tu pantalla de inicio: Compartir y luego «Añadir a pantalla de inicio».",
+        nudgeWeb: "Los navegadores pueden borrar partidas de sitios que no visitas en un tiempo. Guarda un código de partida en un lugar seguro."
+      },
       profile: {
         newerShort: "Versión más nueva",
         restored: "Copia de seguridad restaurada.",
@@ -19000,6 +19039,19 @@ window.DIALOG = {
         imported: "Save levado para o espaço {n}!",
         range: "Campo",
         acorns: "bolotas"
+      },
+      // save safety (2026-11-15): Settings > Saves > Backups, the corrupt-save toast, the title nudge (?savesafe=1 preview)
+      savesafe: {
+        recovered: "Não deu para ler seu save, então o backup de {t} atrás continua.",
+        backups: "Backups",
+        backupsHelp: "Cópias deste save, mais ou menos uma por hora de jogo.",
+        none: "Nenhum ainda. O primeiro é guardado enquanto você joga.",
+        ago: "{t} atrás",
+        restoreQ: "Voltar para este backup?",
+        restoreWarn: "O save que você tem agora fica guardado à parte neste aparelho.",
+        nudgeTitle: "Proteja seu save",
+        nudgeIos: "O Safari pode apagar saves após uma semana sem visitas. Coloque o jogo na Tela de Início: Compartilhar e depois “Adicionar à Tela de Início”.",
+        nudgeWeb: "Navegadores podem apagar saves de sites que você não visita há um tempo. Guarde um código do save em um lugar seguro."
       },
       profile: {
         newerShort: "Versão mais nova",
@@ -22348,6 +22400,19 @@ window.DIALOG = {
         range: "球场",
         acorns: "橡果"
       },
+      // save safety (2026-11-15): Settings > Saves > Backups, the corrupt-save toast, the title nudge (?savesafe=1 preview)
+      savesafe: {
+        recovered: "你的存档无法读取，已改用{t}前的备份继续。",
+        backups: "备份",
+        backupsHelp: "这个存档的备份，大约每玩一小时一份。",
+        none: "还没有。玩的时候会自动保留第一份。",
+        ago: "{t}前",
+        restoreQ: "回到这个备份？",
+        restoreWarn: "你现在的存档会另外保留在这台设备上。",
+        nudgeTitle: "保护好你的存档",
+        nudgeIos: "七天没打开的话，Safari 可能会清除存档。把游戏添加到主屏幕：点底部的方框箭头按钮，再选“添加到主屏幕”。",
+        nudgeWeb: "浏览器可能会清除很久没打开的网站存档。请把存档码保存在安全的地方。"
+      },
       profile: {
         newerShort: "版本较新",
         restored: "备份已恢复。",
@@ -24213,8 +24278,23 @@ window.DIALOG = {
   }
   const SAVE_KEY = 'rangerat_save_v1', BACKUP_KEY = 'rangerat_save_backup';
   const SAVE_V = 8;
+  /** when this build was made (unix seconds): scripts/build_pwa.py's <meta name="rr-pwa-built"> on the phone build (a test
+   *  or wrapper may pass RANGE_RAT_CONFIG.built). Saves record it as wb, so an older build (a cached phone build, a tab left
+   *  open from yesterday) never saves over a save a newer build wrote: that one is read-only here, like a newer SAVE_V
+   *  (save safety 2026-11-15: an older build clamped the newer one's levels / ranges to its own and dropped fields it
+   *  didn't know). 0 = unstamped (desktop, the plain web build, the dev page): never blocks */
+  const BUILT = (() => {
+    let v = 0;
+    try { const m = W.document && document.querySelector('meta[name="rr-pwa-built"]'); if (m) v = +m.getAttribute('content'); } catch (e) { v = 0; }
+    try { if (!(v > 0) && W.RANGE_RAT_CONFIG && W.RANGE_RAT_CONFIG.built != null) v = +W.RANGE_RAT_CONFIG.built; } catch (e) { v = 0; }
+    return Number.isFinite(v) && v > 0 && v < 1e11 ? Math.floor(v) : 0;
+  })();
   const DT = 1 / 60;
   const QS = (() => { try { return new URLSearchParams(W.location.search); } catch (e) { return new URLSearchParams(''); } })();
+  /** save-safety player-facing parts, ON by default (Ben 2026-11-15 21:01, after the previews; ?savesafe=0 hides them): the new player-facing parts (the corrupt-save
+   *  "loaded a backup" toast, the add-to-home-screen / save-code nudge on the title, Settings > Saves > Backups). The
+   *  invisible parts (rolling backups, the corrupt-load fallback, newer-build guard, import limits) run either way */
+  const SAVESAFE = QS.get('savesafe') !== '0';
   const QS_DEBUG = QS.get('debug') === '1';
   // four mechanics PREVIEWS (design/mechanics_1114.md, §M1114): ?m1114=chute,stars,foreman (or all). Off by default; nothing in
   // play, settings or saves turns them on (RANGE_RAT._test.mechanics1114 does, for tests and stills)
@@ -24898,6 +24978,7 @@ window.DIALOG = {
 .rr-prof.confirm .t{display:flex;flex-direction:column}.rr-prof.confirm .t small{color:var(--rr-text2)}
 .rr-prof .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .rr-quietui .rr-toast,.rr-quietui .rr-banner,.rr-quietui .rr-bubble,.rr-quietui .rr-trophy{visibility:hidden!important}
+.rr-nudge{box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:min(92%,calc(360px*var(--rr-fs)));margin:0;padding:10px 12px;border-radius:12px;border:2px solid var(--rr-gold);background:rgba(42,29,22,.94);text-align:left}.rr-nudge b,.rr-nudge small{display:block;white-space:normal}.rr-nudge small{color:var(--rr-text2);font-size:.9em;line-height:1.35}.rr-nudge .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,calc(130px*var(--rr-fs))),1fr));gap:8px}.rr-nudge .rr-btn{margin:0;min-width:0;width:100%;white-space:normal}
 .rr-prof.newer{flex-direction:column;border-style:dashed;border-color:#8a7a5a;padding-bottom:8px}.rr-prof.bad{flex-direction:column;border-style:dashed;border-color:#c9473b;padding-bottom:8px}.rr-prof.bad .top{display:flex;align-items:stretch}.rr-prof.bad .rr-prof-del{border-radius:0 10px 0 0}.rr-prof.bad .row{padding:0 10px}.rr-prof.newer .rr-prof-main .rat{filter:grayscale(.7) brightness(.85)}.rr-prof.newer .row{padding:0 10px}
 #rr-root .rr-screen .rr-prof .rr-btn,#rr-root .rr-screen .rr-mvslots .rr-btn{min-width:0;width:auto}#rr-root .rr-prof .row .rr-btn{flex:1 1 0}
 a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;text-decoration:none;color:var(--rr-text)!important;vertical-align:middle}
@@ -26629,6 +26710,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (mode === 'game' && world.ready) for (const g of world.golfers) if (g && g.reserved) o.stock = (o.stock | 0) + 1;
     if (mode === 'game' && world.ready && world.pip) o.stock = (o.stock | 0) + (world.pip.hop.range | 0) + (world.pip.hop.glow | 0); // Pip's armful (he starts empty after a load)
     if (mode === 'game' && world.ready) o.stock = (o.stock | 0) + duckBalls(); // the ducklings' balls (late QA 2026-11-09)
+    if (BUILT) o.wb = BUILT; else delete o.wb; // the build that wrote it (BUILT: an older build never saves over it)
     return o;
   }
   function serialize() { return JSON.stringify(snapshot()); }
@@ -26636,10 +26718,84 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   // ---- newer-version saves are read-only: never migrated, never overwritten (export / restore backup only) ----
   /** the version of a stored save: 0 when it can't be read (not JSON, not an object, a bad version: saveVersion) */
   const rawVersion = (raw) => { try { const o = JSON.parse(raw); return isObj(o) ? saveVersion(o) : 0; } catch (e) { return 0; } };
-  const rawNewer = (raw) => !!raw && rawVersion(raw) > SAVE_V;
+  /** written by a newer build of the same save version (BUILT; save safety 2026-11-15) */
+  const wbNewer = (wb) => BUILT > 0 && isNum(wb) && wb > BUILT;
+  /** newer than this build: a higher save version, or a readable save stamped by a later build (wb) */
+  const rawNewer = (raw) => { if (!raw) return false; try { const o = JSON.parse(raw); if (!isObj(o)) return false; const v = saveVersion(o); return v > SAVE_V || (v > 0 && wbNewer(o.wb)); } catch (e) { return false; } };
   const lastWritten = {}; // slot -> the string this tab last wrote/read there (skips the re-parse on autosave)
   function slotNewer(n) { const raw = store.get(slotKey(n)); if (!raw || raw === lastWritten[n]) return false; return rawNewer(raw); }
-  function backupOK(n) { const b = store.get(slotKey(n) + '_backup'); const v = b ? rawVersion(b) : 0; return v > 0 && v <= SAVE_V; }
+  function backupOK(n) { const b = store.get(slotKey(n) + '_backup'); const v = b ? rawVersion(b) : 0; return v > 0 && v <= SAVE_V && !rawNewer(b); }
+  /** JSON.parse for save data (a stored save, a backup, a pasted code: untrusted). No __proto__ / constructor / prototype
+   *  keys at any depth (Object.assign(newState(), save) in sanitize() would set the state's prototype from a "__proto__"
+   *  key), and no Infinity (JSON reads 1e999 as Infinity): dropped from an object, 0 in an array. Very deep nesting throws
+   *  (a RangeError: the caller's catch reads it as unreadable) */
+  const badKey = (k) => k === '__proto__' || k === 'constructor' || k === 'prototype';
+  function parseSave(raw) {
+    return JSON.parse(raw, function (k, v) { if (badKey(k)) return undefined; if (typeof v === 'number' && !Number.isFinite(v)) return Array.isArray(this) ? 0 : undefined; return v; });
+  }
+  /** a stored save's live state (throws when it can't be read): parsed, migrated, range-checked, this device's settings */
+  function stateFromRaw(raw) {
+    const st = sanitize(migrate(parseSave(raw))); st.settings = deviceSettings(); st.profile = Object.assign({ name: '' }, isObj(st.profile) ? st.profile : {});
+    schLegacy(st); // §S DECISIONS 58: a save from before the School keeps its range in progress as it was (backups and codes too)
+    return st;
+  }
+  // ---- rolling backups (save safety 2026-11-15): each slot keeps its last ROLL_N good saves, rr_save_<n>_roll0..2, one
+  //      at most every ROLL_EVERY of wall time, or ROLL_MILESTONE_GAP after a milestone (a part paid, a range bought,
+  //      stars, a lap). Each is a string save() has just written (so one this build reads). A slot that can't be read
+  //      loads the newest one that can (load(): never a fresh game while a good copy is here). This device only: not
+  //      mirrored to the Steam Cloud file (desktop/app/cloud-store.js SAVE_KEY_RE). They're the first thing dropped when
+  //      storage is full (the live save matters more) ----
+  const ROLL_N = 3, ROLL_EVERY = 60 * 60 * 1000, ROLL_MILESTONE_GAP = 10 * 60 * 1000;
+  const rollKey = (n, i) => slotKey(n) + '_roll' + i;
+  const rollMem = {}; // slot -> { ats: [savedAt of each roll key, -1 = empty], at: the newest, sig: the milestone signature at it }
+  const localSet = (k, v) => { try { W.localStorage.setItem(k, v); return true; } catch (e) { return false; } }; // device-only keys (no Steam Cloud mirror)
+  const localDel = (k) => { try { W.localStorage.removeItem(k); } catch (e) { /* ignore */ } };
+  const rawSavedAt = (raw) => { try { const o = JSON.parse(raw); return isObj(o) && isNum(o.savedAt) ? o.savedAt : 0; } catch (e) { return 0; } };
+  /** the slot's rolling backups, newest first: [{ i, raw, at }] */
+  function rollList(n) {
+    const out = []; for (let i = 0; i < ROLL_N; i++) { const raw = store.get(rollKey(n, i)); if (raw) out.push({ i, raw, at: rawSavedAt(raw) }); }
+    return out.sort((a, b) => b.at - a.at);
+  }
+  function rollState(n) {
+    let m = rollMem[n];
+    if (!m) { m = rollMem[n] = { ats: [], at: 0, sig: null }; for (let i = 0; i < ROLL_N; i++) { const raw = store.get(rollKey(n, i)); m.ats[i] = raw ? rawSavedAt(raw) : -1; m.at = Math.max(m.at, m.ats[i]); } }
+    return m;
+  }
+  const milestoneSig = () => (state ? [state.frontier | 0, state.rangeIdx | 0, state.paid | 0, Math.floor(+state.stars || 0), state.tour | 0, state.tourWas | 0, state.creditsSeen ? 1 : 0].join(':') : '');
+  /** after save() wrote str into slot n: a rolling copy when one is due (force: now, e.g. an import) */
+  let rollsOff = false; // storage ran full once this session: no more copies until the next launch (dropRolls)
+  function maybeRoll(n, str, force) {
+    if (rollsOff || typeof str !== 'string') return false;
+    const m = rollState(n), now = Date.now(), sig = milestoneSig();
+    if (m.sig == null) m.sig = sig;
+    if (now < m.at) { m.at = now; return false; } // the clock went back: start the hour again from here (never a burst of copies)
+    if (!force && !(now - m.at >= ROLL_EVERY || (sig !== m.sig && now - m.at >= ROLL_MILESTONE_GAP))) return false;
+    let pick = 0; for (let i = 1; i < ROLL_N; i++) if (m.ats[i] < m.ats[pick]) pick = i; // an empty one, else the oldest
+    if (!localSet(rollKey(n, pick), str)) return false; // storage full: no copy this time (the live save was written)
+    m.ats[pick] = now; m.at = now; m.sig = sig;
+    emit('saveRoll', { slot: n, i: pick, size: str.length });
+    return true;
+  }
+  /** storage full: drop every rolling backup (all slots) so the live save fits. True when there was something to drop */
+  function dropRolls() {
+    let any = false;
+    for (let n = 1; n <= SLOT_N; n++) { for (let i = 0; i < ROLL_N; i++) if (store.get(rollKey(n, i)) != null) { localDel(rollKey(n, i)); any = true; } delete rollMem[n]; }
+    rollsOff = true; if (any) emit('saveRollsDropped', {});
+    return any;
+  }
+  /** the newest rolling backup of slot n this build can read: { state, at, raw } or null */
+  function rollFallback(n) {
+    for (const r of rollList(n)) { if (rawNewer(r.raw)) continue; try { return { state: stateFromRaw(r.raw), at: r.at, raw: r.raw }; } catch (e) { /* the next one */ } }
+    return null;
+  }
+  // a newer build's save in this slot while this (older) build is playing it (another tab, a cached page): stop, never
+  // overwrite it. The title shows its read-only "Made with a newer version" card, and the phone build's update pill comes
+  // up (scripts/build_pwa.py listens for rr-newer-save)
+  let newerSeen = false;
+  function newerSaveSeen() {
+    if (!newerSeen) { newerSeen = true; try { W.dispatchEvent(new Event('rr-newer-save')); } catch (e) { /* ignore */ } }
+    if (mode === 'game' && !unloading) setTimeout(() => { if (mode === 'game' && !unloading && slotNewer(slot)) { emit('saveNewerStop', { slot }); showTitle(); } }, 0);
+  }
   // save failures (save stress test #7): storage full, blocked or missing. save() returned false and nobody heard: everything
   // played was lost at reload. One gentle toast, then at most one every SAVE_FAIL_TOAST_MS while it keeps failing
   const SAVE_FAIL_TOAST_MS = 10 * 60 * 1000;
@@ -26675,14 +26831,18 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (!state) return false;
     try { saveDeviceSettings(); } catch (e) { /* ignore */ }
     if (saveDisabled || !state.started) return false;
-    if (slotNewer(slot)) { emit('saveBlocked', { slot, reason: 'newer' }); return false; }
+    if (slotNewer(slot)) { emit('saveBlocked', { slot, reason: 'newer' }); newerSaveSeen(); return false; }
     if (otherTab || (!inFront() && otherTabWrote(slot))) { // (taken after whatever called save() has finished with the state it holds)
       otherTab = true; setTimeout(adoptOtherTab, 0);
       emit('saveBlocked', { slot, reason: 'otherTab' }); return false;
     }
-    let ok = false;
-    try { store.set(LAST_SLOT_KEY, String(slot)); const str = serialize(); ok = store.set(slotKey(slot), str); if (ok !== false) lastWritten[slot] = str; } catch (e) { ok = false; }
-    if (ok === false) saveFailed('storage'); else saveFails = 0;
+    let ok = false, str = null;
+    try {
+      store.set(LAST_SLOT_KEY, String(slot)); str = serialize(); ok = store.set(slotKey(slot), str);
+      if (ok === false && dropRolls()) ok = store.set(slotKey(slot), str); // storage full: the backups go before the live save does
+      if (ok !== false) lastWritten[slot] = str;
+    } catch (e) { ok = false; }
+    if (ok === false) saveFailed('storage'); else { saveFails = 0; try { maybeRoll(slot, str); } catch (e) { /* a backup never fails a save */ } }
     return ok;
   }
   function load(n) {
@@ -26695,14 +26855,18 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       // pre-upgrade copy, so a later rollback can offer "Restore backup". Written once: a readable backup is never replaced
       const v = isObj(o) ? saveVersion(o) : 0, bk = slotKey(n) + '_backup';
       if (v >= 1 && v < SAVE_V) { const b = store.get(bk); if (!b || !rawVersion(b)) store.set(bk, raw); }
-      const st = sanitize(migrate(o)); st.settings = deviceSettings(); st.profile = Object.assign({ name: '' }, isObj(st.profile) ? st.profile : {});
-      schLegacy(st); // §S DECISIONS 58: a save from before the School keeps its range in progress as it was
+      const st = stateFromRaw(raw);
       lastWritten[n] = raw; return { state: st };
     } catch (e) {
       // save stress test #3: these bytes used to go over _backup, so the good pre-upgrade copy was lost the day the slot went
       // bad. They are kept under _unreadable (the card's Export save code sends them on); _backup is left alone
       const uk = slotKey(n) + '_unreadable'; if (store.get(uk) !== raw) store.set(uk, raw);
       if (raw === store.get(SAVE_KEY)) store.set(BACKUP_KEY, raw); // the legacy single save's backup key (pre-slots)
+      // save safety 2026-11-15: the newest good rolling backup carries on (never a fresh game while one is here). The slot
+      // keeps the bad bytes until the next save writes over them (they stay under _unreadable); lastWritten marks them as
+      // this tab's, so that save isn't taken for another tab's
+      const fb = rollFallback(n);
+      if (fb) { lastWritten[n] = raw; emit('saveRecovered', { slot: n, at: fb.at }); return { state: fb.state, recovered: fb.at }; }
       return { state: null, error: true };
     }
   }
@@ -26717,24 +26881,95 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (n === slot) { saveDisabled = true; try { switchToSlot(n); } finally { saveDisabled = false; } }
     return true;
   }
+  /** Settings > Saves > Backups (SAVESAFE preview): rolling backup i of slot n goes live. The save it replaces is kept under
+   *  _replaced (as an import does). Its clocks move to now: going back never pays offline time again for the hours since */
+  function restoreRoll(n, i) {
+    n = clamp(n | 0, 1, SLOT_N); i = clamp(i | 0, 0, ROLL_N - 1);
+    const raw0 = store.get(rollKey(n, i)); if (!raw0 || rawNewer(raw0)) return false;
+    let raw; try { stateFromRaw(raw0); const o = parseSave(raw0); o.savedAt = o.lastSeenMax = Date.now(); raw = JSON.stringify(o); } catch (e) { return false; }
+    if (n === slot && state && state.started && mode === 'game') save(); // the game being played is what's kept aside
+    const cur = store.get(slotKey(n)), rk = slotKey(n) + '_replaced';
+    if (cur && store.get(rk) !== cur && store.set(rk, cur) === false) { saveFailed('storage', n); return false; }
+    if (store.set(slotKey(n), raw) === false) { saveFailed('storage', n); return false; }
+    lastWritten[n] = raw;
+    emit('saveRestore', { slot: n, roll: i, at: rawSavedAt(raw0) });
+    if (n === slot) { saveDisabled = true; try { switchToSlot(n); } finally { saveDisabled = false; } }
+    return true;
+  }
+  /** Settings > Saves: the live slot's rolling backups, newest first (SAVESAFE preview) */
+  function backupsSetHTML(head) {
+    const T = (k, fb, v) => tx('savesafe.' + k, fb, v);
+    let h = head(T('backups', 'Backups')) + `<div class="ef" style="color:var(--rr-text2);text-align:center">${esc(T('backupsHelp', 'Copies of this save, about one an hour of play.'))}</div>`;
+    const list = rollList(slot).filter((r) => !rawNewer(r.raw));
+    if (!list.length) return h + `<div class="ef" data-k="rollnone" style="text-align:center">${esc(T('none', 'None yet. The first one is kept as you play.'))}</div>`;
+    for (const r of list) {
+      let sum = null; try { sum = rawSummary(r.raw, slot); } catch (e) { continue; }
+      const ago = T('ago', '{t} ago', { t: fmtTime((Date.now() - r.at) / 1000) });
+      h += `<div class="rr-set" data-roll="${r.i}"><span><b>${esc(ago)}</b><small style="display:block;color:var(--rr-text2)">${esc(sum.rangeName)} · ${esc(fmtTime(sum.playSeconds))} · ${esc(tx('hud.cash', '{n} acorns', { n: fmt(sum.cash) }))}</small></span><button class="rr-btn" data-k="roll${r.i}" data-act="rollrestore" data-i="${r.i}" aria-label="${esc(tx('profile.restore', 'Restore backup') + ': ' + ago)}">${esc(tx('profile.restore', 'Restore backup'))}</button></div>`;
+    }
+    return h;
+  }
+  // ---- the save nudge on the title (SAVESAFE preview): a browser tab's saves can be cleared (Safari: after about 7 days
+  //      without a visit, unless the game is on the Home Screen; any browser short of space). Never during play: the
+  //      title only, at most once every NUDGE_EVERY, once there is a save worth keeping (NUDGE_PLAY of play). Not in the
+  //      home-screen app, not on the desktop, not where the browser has already promised to keep the storage (persist())
+  //      except Safari, whose 7-day rule isn't the storage-pressure eviction persist() is about ----
+  const NUDGE_KEY = 'rr_savenudge', NUDGE_EVERY = 3 * 864e5, NUDGE_PLAY = 20 * 60;
+  const iosUA = () => { try { const u = navigator.userAgent || ''; return /iPhone|iPad|iPod/.test(u) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); } catch (e) { return false; } };
+  function nudgeWanted() {
+    if (!SAVESAFE || !webBuild() || homeScreenApp() || DESKTOP_RUN || DECK) return null;
+    if (!iosUA() && PERSIST.granted === true) return null;
+    let last = 0; try { last = +W.localStorage.getItem(NUDGE_KEY) || 0; } catch (e) { last = 0; }
+    if (Date.now() - last < NUDGE_EVERY && Date.now() >= last) return null;
+    let worth = false; for (let n = 1; n <= SLOT_N; n++) { const s = slotSummary(n); if (s && !s.newer && !s.corrupt && s.started && s.playSeconds >= NUDGE_PLAY) worth = true; }
+    return worth ? (iosUA() ? 'ios' : 'web') : null;
+  }
+  function nudgeHTML(kind) {
+    const T = (k, fb) => tx('savesafe.' + k, fb);
+    const body = kind === 'ios' ? T('nudgeIos', "Safari can clear a game's saves after a week away. Keep it on your Home Screen: tap Share, then Add to Home Screen.") : T('nudgeWeb', "Browsers can clear saves from sites you don't visit for a while. Keep a save code somewhere safe.");
+    return `<div class="rr-nudge" role="note" data-nudge="${kind}"><b>${esc(T('nudgeTitle', 'Keep your save safe'))}</b><small>${esc(body)}</small><div class="row"><button class="rr-btn" data-nudge-no>${esc(tx('unlock.later', 'Not now'))}</button><button class="rr-btn pri" data-nudge-code>${esc(tx('profile.exportCode', 'Export save code'))}</button></div></div>`;
+  }
+  /** after the title's profiles are drawn: the nudge when it's due (marked as shown at once: "occasionally", tapped or not) */
+  function titleNudge() {
+    if (!screenEl || mode !== 'title') return;
+    const old = screenEl.querySelector('.rr-nudge'); if (old) return;
+    const kind = nudgeWanted(); if (!kind) return;
+    try { W.localStorage.setItem(NUDGE_KEY, String(Date.now())); } catch (e) { /* shown again next time: fine */ }
+    const box = screenEl.querySelector('[data-profiles]'); if (!box) return;
+    box.insertAdjacentHTML('afterend', nudgeHTML(kind));
+    const nd = screenEl.querySelector('.rr-nudge'); emit('saveNudge', { kind });
+    nd.querySelector('[data-nudge-no]').addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); nd.remove(); });
+    nd.querySelector('[data-nudge-code]').addEventListener('click', (e) => {
+      e.stopPropagation(); sfx('ui_tap'); nd.remove();
+      const m = openModal(`<h2>${esc(tx('profile.exportCode', 'Export save code'))}</h2><div data-mv style="text-align:left"></div><button class="rr-btn" data-x>${esc(ui('close', 'Close'))}</button>`);
+      mountExportUI(m.querySelector('[data-mv]'), slot); m.querySelector('[data-x]').addEventListener('click', () => { closeModal(); renderProfiles(); });
+    });
+  }
   /** the title card's read of a slot. A save is "corrupt" (the Unreadable card) when load() would refuse it: not JSON, or
    *  migrate() / sanitize() throw (save stress test #6: a bad version showed a Play card that then started fresh). The
    *  check runs once per stored string; the card shows the sanitized values (no "★-5K") */
   const sumCache = {};
+  /** a stored save's title-card numbers (throws when load() would refuse it) */
+  function rawSummary(raw, n) {
+    const o = JSON.parse(raw); if (!isObj(o)) throw new Error('bad');
+    const v = saveVersion(o); if (!v) throw new Error('bad version');
+    const newer = v > SAVE_V || wbNewer(o.wb), s = newer ? o : sanitize(migrate(parseSave(raw)));
+    const r = B.ranges[clamp(s.rangeIdx | 0, 0, B.ranges.length - 1)] || B.ranges[0];
+    const eq = (isObj(s.cos) && isObj(s.cos.equipped) && s.cos.equipped) || {}, pr = isObj(s.profile) ? s.profile : {}, st = isObj(s.stats) ? s.stats : {};
+    const num = (x) => (isNum(x) ? x : 0);
+    return { slot: n, newer, v, name: cleanName(pr.name || ''), range: r.id, rangeName: rangeName(r.id), playSeconds: num(st.playSeconds), cash: num(s.cash), allTimeCash: num(s.allTimeCash), stars: num(s.stars), tour: s.tour | 0, started: !!s.started, outfit: eq.outfit, hat: eq.hat, look: pr.look, savedAt: num(s.savedAt), achievements: Object.keys(isObj(s.ach) ? s.ach : {}).length };
+  }
   function slotSummary(n) {
     const raw = store.get(slotKey(n)); if (!raw) return null;
     let c = sumCache[n];
     if (!c || c.raw !== raw) {
       let base;
-      try {
-        const o = JSON.parse(raw); if (!isObj(o)) throw new Error('bad');
-        const v = saveVersion(o); if (!v) throw new Error('bad version');
-        const newer = v > SAVE_V, s = newer ? o : sanitize(migrate(JSON.parse(raw)));
-        const r = B.ranges[clamp(s.rangeIdx | 0, 0, B.ranges.length - 1)] || B.ranges[0];
-        const eq = (isObj(s.cos) && isObj(s.cos.equipped) && s.cos.equipped) || {}, pr = isObj(s.profile) ? s.profile : {}, st = isObj(s.stats) ? s.stats : {};
-        const num = (x) => (isNum(x) ? x : 0);
-        base = { slot: n, newer, v, name: cleanName(pr.name || ''), range: r.id, rangeName: rangeName(r.id), playSeconds: num(st.playSeconds), cash: num(s.cash), allTimeCash: num(s.allTimeCash), stars: num(s.stars), tour: s.tour | 0, started: !!s.started, outfit: eq.outfit, hat: eq.hat, look: pr.look, savedAt: num(s.savedAt), achievements: Object.keys(isObj(s.ach) ? s.ach : {}).length };
-      } catch (e) { base = { slot: n, corrupt: true, name: '' }; }
+      try { base = rawSummary(raw, n); } catch (e) {
+        // unreadable: the newest good rolling backup is what Play loads (load() falls back to it), so the card shows that one
+        base = null;
+        for (const r of rollList(n)) { if (rawNewer(r.raw)) continue; try { base = Object.assign(rawSummary(r.raw, n), { recovered: r.at }); break; } catch (e2) { /* the next one */ } }
+        if (!base) base = { slot: n, corrupt: true, name: '' };
+      }
       c = sumCache[n] = { raw, base };
     }
     return Object.assign({}, c.base, { backup: backupOK(n) });
@@ -26751,6 +26986,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const ld = load(n);
     state = ld.state || newState(); state.settings = settings;
     if (!ld.state) { state.profile = { name: String(newName || '').trim().slice(0, 16), look: ratLookOf(newLook) }; if (ld.error) pendingBackupToast = true; }
+    if (ld.recovered) pendingRecovered = ld.recovered;
     incomeBuckets = []; incomeAcc = 0; world.ready = false; pendingAway = null; pendingLedgerAway = null;
     syncStats();
     if (state.started) { const off = applyOffline(); if (off) { pendingAway = awayRecord(null, off, off.away); if (off.buys) pendingLedgerAway = { n: off.buys, rec: pendingAway }; } const fr = focusResumeAway(); if (fr) pendingFocusCard = fr; }
@@ -26762,6 +26998,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     n = clamp(n | 0, 1, SLOT_N);
     const raw = store.get(slotKey(n)); if (raw) store.set(slotKey(n) + '_deleted', raw); // one-step undo safety net (not exposed)
     store.del(slotKey(n));
+    for (let i = 0; i < ROLL_N; i++) localDel(rollKey(n, i)); delete rollMem[n]; // its rolling backups go with it (a new game here never falls back to them)
     if (n === slot) {
       const settings = state.settings; state = newState(); state.settings = settings; world.ready = false;
       // the remembered slot moves to another profile that still exists, so the title highlights something real
@@ -26777,10 +27014,21 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function crc32(str) { let c = 0xffffffff; for (let i = 0; i < str.length; i++) c = CRC_T[(c ^ str.charCodeAt(i)) & 255] ^ (c >>> 8); return ((c ^ 0xffffffff) >>> 0).toString(16).padStart(8, '0'); }
   function b64urlFromBytes(u8) { let bin = ''; for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function bytesFromB64url(t) { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; const bin = atob(t); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
-  async function zipBytes(u8, inflate) {
+  // save codes are untrusted input (save safety 2026-11-15): a late-game save is ~MEASURED_KB of JSON; nothing near these is a save
+  const CODE_MAX = 6e6, SAVE_JSON_MAX = 4e6; // characters of a pasted code / file; bytes of the JSON inside (inflated)
+  async function zipBytes(u8, inflate, cap) {
     const C = inflate ? W.DecompressionStream : W.CompressionStream; if (typeof C !== 'function') return null;
     const cs = new C('deflate-raw'); const w = cs.writable.getWriter(); w.write(u8).catch(() => {}); w.close().catch(() => {}); // bad deflate data rejects these too: the read below reports it (save stress test #13: unhandled page errors)
-    return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    if (!cap) return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    // inflating: read it in chunks and stop past cap (a few KB of deflate can inflate to gigabytes and take the tab down)
+    const rd = cs.readable.getReader(), parts = []; let total = 0;
+    for (;;) {
+      const r = await rd.read(); if (r.done) break;
+      total += r.value.length; if (total > cap) { rd.cancel().catch(() => {}); throw new Error('too big'); }
+      parts.push(r.value);
+    }
+    const out = new Uint8Array(total); let off = 0; for (const p of parts) { out.set(p, off); off += p.length; }
+    return out;
   }
   /** export copy: balls lying on the field / in beetle baskets go back into stock (circulation kept, code stays short) */
   function exportObject() {
@@ -26816,9 +27064,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const hollowSave = (o) => !isObj(o) || !(typeof o.started === 'boolean' || isObj(o.stats) || isObj(o.levels) || isNum(o.cash));
   /** parse a pasted code (or a legacy base64 export). Resolves {ok, state, preview} or {ok:false, err, message}. */
   async function readSaveCode(str) {
-    const clean = String(str || '').replace(/\s+/g, '');
     const fail = (err) => ({ ok: false, err, message: SAVE_ERR[err]() });
+    if (typeof str === 'string' && str.length > CODE_MAX * 2) return fail('corrupt'); // (before the whitespace pass)
+    const clean = String(str || '').replace(/\s+/g, '');
     if (!clean) return fail('notcode');
+    if (clean.length > CODE_MAX) return fail('corrupt');
     const m = /^RR(\d+)-([zj][A-Za-z0-9_-]+)-([0-9a-fA-F]{8})$/.exec(clean);
     let st = null;
     if (!m) {
@@ -26830,11 +27080,14 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (crc32(m[2]) !== m[3].toLowerCase()) return fail('typo');
       try {
         const raw = bytesFromB64url(m[2].slice(1));
-        const bytes = m[2][0] === 'z' ? await zipBytes(raw, true) : raw;
-        if (!bytes) return fail('corrupt');
-        const o = JSON.parse(new TextDecoder().decode(bytes));
+        const bytes = m[2][0] === 'z' ? await zipBytes(raw, true, SAVE_JSON_MAX) : raw;
+        if (!bytes || bytes.length > SAVE_JSON_MAX) return fail('corrupt');
+        const o = parseSave(new TextDecoder().decode(bytes));
         if (hollowSave(o)) return fail('corrupt');
+        if (wbNewer(o.wb)) return fail('newer'); // a newer build's save: this one would clamp what it doesn't know
         st = sanitize(migrate(o));
+        // what would be saved must be storable: no unknown junk that is huge or too deep to write (JSON.stringify throws)
+        if (JSON.stringify(st).length > SAVE_JSON_MAX) return fail('corrupt');
       } catch (e) { return fail(/newer/.test(String(e && e.message)) ? 'newer' : 'corrupt'); }
     }
     st.started = true; st.savedAt = Date.now(); delete st.settings;
@@ -26850,6 +27103,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     n = clamp(n | 0, 1, SLOT_N); importErr = null;
     if (slotNewer(n)) { importErr = 'readonly'; emit('saveBlocked', { slot: n, reason: 'newer' }); return false; }
     const o = Object.assign({}, st); delete o.settings; delete o.player; o.v = SAVE_V; o.savedAt = Date.now();
+    if (BUILT) o.wb = BUILT; else delete o.wb;
     const str = JSON.stringify(o);
     // the slot it replaces is kept under _replaced (save stress test #10; deleteSlot keeps _deleted). No copy, no import
     const old = store.get(slotKey(n)), rk = slotKey(n) + '_replaced';
@@ -26857,6 +27111,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // storage full or blocked (#7): "Save moved into slot 2!" while nothing was written
     if (store.set(slotKey(n), str) === false) { importErr = 'storage'; saveFailed('storage', n); return false; }
     lastWritten[n] = str;
+    try { maybeRoll(n, str, true); } catch (e) { /* a backup never fails an import */ } // the imported save is a rolling backup at once
     emit('saveImport', { slot: n, range: o.rangeIdx | 0 });
     if (n === slot) { saveDisabled = true; try { switchToSlot(n); } finally { saveDisabled = false; } }
     return true;
@@ -26864,9 +27119,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   function exportSave() { const json = serialize(); try { return btoa(unescape(encodeURIComponent(json))); } catch (e) { return ''; } }
   function importSave(str) {
     try {
+      if (String(str).length > CODE_MAX) return null;
       const json = decodeURIComponent(escape(atob(String(str).trim())));
-      const o = JSON.parse(json); if (hollowSave(o)) return null;
+      const o = parseSave(json); if (hollowSave(o) || wbNewer(o.wb)) return null;
       const s = sanitize(migrate(o));
+      if (JSON.stringify(s).length > SAVE_JSON_MAX) return null;
       s.started = true; s.savedAt = Date.now();
       return s;
     } catch (e) { return null; }
@@ -38097,6 +38354,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         h += head(tx('profile.profile', 'Profile')) + `<div class="rr-set"><span>${esc(tpl(tx('profile.playingAs', 'Playing as {name}'), { name: profileName(state.profile, slot) }))}</span><button class="rr-btn" data-k="switchprof" data-act="profiles">${esc(tx('profile.switch', 'Switch profile'))}</button></div>`;
         if (!DECK) h += head(tx('save.move', 'Move your save')) + `<div style="display:flex;flex-wrap:wrap;justify-content:center"><button class="rr-btn" data-k="exp" data-act="export">${esc(tx('save.export', 'Export'))}</button><button class="rr-btn" data-k="imp" data-act="import">${esc(tx('save.import', 'Import'))}</button></div>`;
         if (inst.state.io) h += `<div class="rr-mv" data-mv="${inst.state.io}"></div>`;
+        if (SAVESAFE) h += backupsSetHTML(head); // rolling backups: on by default (Ben 2026-11-15), ?savesafe=0 hides
         h += head(S('more', 'More')) + `<div style="display:flex;flex-wrap:wrap;justify-content:center"><button class="rr-btn" data-k="title" data-act="title">${esc(S('titleScreen', 'Title screen'))}</button><button class="rr-btn" data-k="newg" data-act="newgame">${esc(ui('newGame', 'New game'))}</button></div>`;
         }
         // About tab: promises, trophy chests, credits, Grand Tour, version (+ Debug last)
@@ -38153,6 +38411,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           else if (a === 'focusOpen') focusSettingAct(a, b); // the Work timer panel, back to Settings when closed (leaveSettingsFor)
           else if (a && a.startsWith('focus')) { focusSettingAct(a, b); inst.update(true); }
           else if (a === 'title') { closeSheet(); save(); showTitle(); }
+          else if (a === 'rollrestore') { const i = +b.dataset.i; confirmModal(tx('savesafe.restoreQ', 'Go back to this backup?'), tx('savesafe.restoreWarn', 'The save you have now is kept aside on this device.'), tx('profile.restore', 'Restore backup'), () => { if (!restoreRoll(slot, i)) { sfx('ui_deny'); return; } sfx('upgrade', { pitch: 2 }); if (mode === 'game') { closeSheet(); startGame(); } else { closeModal(); renderProfiles(); } toast(tx('profile.restored', 'Backup restored.')); }); }
           else if (a === 'desk') { closeSheet(); enterDesk(); }
           else if (a === 'fullscreen') { try { W.RR_DESKTOP.toggleFullscreen(); } catch (e) { /* no wrapper */ } setTimeout(() => { try { inst.update(true); const f = inst.el.querySelector('[data-k=set-fullscreen]'); if (f) f.focus({ preventScroll: true }); } catch (e) { /* closed */ } }, 300); }
           else if (a === 'newgame') { confirmModal(tx('title.newGameQ', 'New game?'), tx('title.wipeExport', 'This wipes your progress here. Export your save first.'), tx('title.wipeIt', 'Wipe it'), () => { closeSheet(); hardReset(); }); }
@@ -40061,6 +40320,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       else if (t === 'quit') { try { save(); W.RR_DESKTOP.desk.quit(); } catch (er) { /* the wrapper saves on close too */ } } // the window's close: save + flush, then quit
     }));
     renderProfiles();
+    if (!intro) titleNudge(); // SAVESAFE preview: add to Home Screen / keep a save code, now and then (never during play)
   }
   /** the title screen's Settings (a modal; in the game, Settings is a sheet) */
   function openTitleSettings() { const m = openModal(`<h2 data-i18n="ui.settings">${esc(ui('settings', 'Settings'))}</h2><div data-s style="text-align:left"></div><button class="rr-btn" data-x data-i18n="ui.close">${esc(ui('close', 'Close'))}</button>`); m.classList.add('rr-modal-settings'); const inst = mountPanel('settings', m.querySelector('[data-s]')); m.querySelector('[data-x]').addEventListener('click', () => { inst.destroy(); closeModal(); }); return m; }
@@ -40196,6 +40456,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (pendingFocusCard) setTimeout(() => { if (awayCardOpen || pendingAway) return; const fr = pendingFocusCard; pendingFocusCard = null; if (fr) showFocusCard(fr); }, 900); // a block that ended while the game was closed: one jar, in the welcome-back flow (after the away card's Collect)
     applyAudioSettings();
     if (pendingBackupToast) { pendingBackupToast = false; toast(tx('toast.backup', 'Old save unreadable. A backup was kept; starting fresh.')); }
+    if (pendingRecovered) { const at = pendingRecovered; pendingRecovered = 0; if (SAVESAFE) toast(tx('savesafe.recovered', "Your save couldn't be read, so the backup from {t} ago carries on.", { t: fmtTime((Date.now() - at) / 1000) })); }
     save();
   }
 
@@ -41232,6 +41493,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 
   // ===================================================================== §N API / BOOT
   let pendingBackupToast = false;
+  let pendingRecovered = 0; // load() fell back to a rolling backup saved at this time (the toast: SAVESAFE preview)
   // ---- UI skins (DECISIONS 50): data-rr-skin on #rr-root picks a token set in ui/skins.js. The equipped panel style, or
   // the base (Clubhouse) with Settings › Display › Plain panels. No ui/skins.js = no attribute = the plain token values.
   // skinOverride: tests only ('plain' = no skin at all, the pre-skin look the token layer must reproduce exactly).
@@ -41859,12 +42121,12 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     save, exportSave,
     /** web saves (Ben 2026-11-07): { asked, skip ('' | 'desktop' | 'firefox' | 'unsupported'), granted, web, homeScreen } */
     get storagePersist() { return Object.assign({ web: webBuild(), homeScreen: homeScreenApp() }, PERSIST); },
-    importSave(str) { if (/^\s*RR\d+-/.test(String(str || ''))) return readSaveCode(str).then((r) => { if (!r.ok || !importIntoSlot(slot, r.state)) return false; if (mode === 'game') startGame(); return true; }); const s = importSave(str); if (!s) return false; loadState(s, true); return true; },
+    importSave(str) { if (/^\s*RR\d+-/.test(String(str || ''))) return readSaveCode(str).then((r) => { if (!r.ok || !importIntoSlot(slot, r.state)) return false; if (mode === 'game') startGame(); return true; }); const s = importSave(str); if (!s || !importIntoSlot(slot, s)) return false; startGame(); return true; }, // (the legacy form too goes through importIntoSlot: _replaced kept, storage failure told)
     // save slots / profiles + save codes (owner request). Async where compression is involved.
     get slot() { return slot; },
     slots() { const out = []; for (let n = 1; n <= SLOT_N; n++) out.push(slotSummary(n) || { slot: n, empty: true }); return out; },
     restoreBackup(n) { const ok = restoreBackup(n); if (mode === 'title') renderProfiles(); return ok; },
-    exportSlotCode(n) { n = clamp(n | 0, 1, SLOT_N); const raw = store.get(slotKey(n)); if (!raw) return Promise.resolve(''); return rawNewer(raw) || slotSummary(n).corrupt ? makeSaveCodeRaw(raw) : (n === slot ? makeSaveCode() : makeSaveCodeRaw(raw)); },
+    exportSlotCode(n) { n = clamp(n | 0, 1, SLOT_N); const raw = store.get(slotKey(n)); if (!raw) return Promise.resolve(''); const sum = slotSummary(n); if (sum.recovered && n !== slot) { const fb = rollFallback(n); if (fb) return makeSaveCodeRaw(fb.raw); } return rawNewer(raw) || sum.corrupt ? makeSaveCodeRaw(raw) : (n === slot ? makeSaveCode() : makeSaveCodeRaw(raw)); },
     switchProfile(n, name) { const ok = switchToSlot(n, name); if (mode === 'title') renderProfiles(); return ok; },
     deleteProfile(n) { deleteSlot(n); if (mode === 'title') renderProfiles(); return true; },
     exportCode() { return makeSaveCode(); },
@@ -41893,8 +42155,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     migrateLegacy();
     slot = clamp((+store.get(LAST_SLOT_KEY)) || 1, 1, SLOT_N);
     const ld = load(slot);
-    if (ld.state) { state = ld.state; }
+    if (ld.state) { state = ld.state; if (ld.recovered) pendingRecovered = ld.recovered; }
     else { state = newState(); state.settings = deviceSettings(); if (ld.error) pendingBackupToast = true; }
+    if (ld.newer) newerSaveSeen(); // the last slot was saved by a newer build: the phone build's update pill
     syncStats();
     askPersist(); // web saves: ask the browser to keep them (not Electron, not Firefox)
     if (state.started) { const off = applyOffline(); if (off) { pendingAway = awayRecord(null, off, off.away); if (off.buys) pendingLedgerAway = { n: off.buys, rec: pendingAway }; } const fr = focusResumeAway(); if (fr) pendingFocusCard = fr; }
@@ -45064,8 +45327,14 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
   const gusPic = () => spriteURL(W.SPRITES && W.SPRITES.sprites && W.SPRITES.sprites.gus_portrait ? 'gus_portrait' : 'gus', W.SPRITES && W.SPRITES.sprites && W.SPRITES.sprites.gus_portrait ? 1 : 2);
   const hasArrive = (id) => !!dget('help.arrive.' + id + '.what', '');
   function willExplain(id) { return !!R && !!R.state && hasArrive(id) && !hs().arrived[id]; }
+  // TEST-ONLY quiet mode: window.RR_QA_QUIET (set before load by tests/lib/harness.py h.page(quiet_cards=True); no URL,
+  // setting or save reaches it). A "New here" card (arrival or intro) never opens: it counts as read at once, the same
+  // flags, save and events as a player pressing OK, so tests stop racing the card queue. Tests OF the cards don't set it
+  const qaQuiet = () => { try { return !!W.RR_QA_QUIET; } catch (e) { return false; } };
   function showArrival(id) {
-    if (!hasArrive(id) || layers.length) return false;
+    if (!hasArrive(id)) return false;
+    if (qaQuiet()) { hs().arrived[id] = 1; saveSoon(); try { R.emit && R.emit('helpArrival', { range: id, quiet: true }); } catch (e) { /* ignore */ } return true; }
+    if (layers.length) return false;
     const o = objective(), pic = ARRIVE_PIC[id];
     const html = `<div class="rh-card"><div class="hd"><img class="gus" alt="" src="${gusPic()}"><div><div class="kick">${esc(H('ui.newHere'))} · ${esc(dget('text.dialog.gus', 'Gus'))}</div><h2 id="rh-arr-h">${esc(H('arrive.' + id + '.title'))}</h2></div></div>
       <div class="bd" id="rh-arr-b">${o.arrive && !o.none ? `<p class="goal">${esc(o.arrive)}</p>` : ''}${pic ? img(pic, 4, 'pic') : ''}<p>${esc(H('arrive.' + id + '.what'))}</p><p>${esc(H('arrive.' + id + '.how'))}</p></div>
@@ -45094,13 +45363,15 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     h.pending = h.pending.filter((k) => typeof k === 'string' && !(h.intros && h.intros[k]));
     for (const k of h.pending) if (!introQ.includes(k) && dget('help.intro.' + k + '.what', '')) introQ.push(k);
   }
+  function introRead(key) { const h = hs(); if (!h.intros) h.intros = {}; h.intros[key] = 1; if (Array.isArray(h.pending)) h.pending = h.pending.filter((k) => k !== key); saveSoon(); try { R.emit && R.emit('helpIntroDone', { key }); } catch (e) { /* ignore */ } }
   function showIntro(key) {
+    if (qaQuiet()) { try { R.emit && R.emit('helpIntro', { key, quiet: true }); } catch (e) { /* ignore */ } introRead(key); return true; }
     if (layers.length) return false;
     const pic = INTRO_PIC[key];
     const html = `<div class="rh-card"><div class="hd"><img class="gus" alt="" src="${gusPic()}"><div><div class="kick">${esc(H('ui.newHere'))} · ${esc(dget('text.dialog.gus', 'Gus'))}</div><h2 id="rh-in-h">${esc(H('intro.' + key + '.title'))}</h2></div></div>
       <div class="bd" id="rh-in-b">${pic ? img(pic, 3, 'pic') : ''}<p>${esc(H('intro.' + key + '.what'))}</p><p>${esc(H('intro.' + key + '.how'))}</p></div>
       <div class="acts"><button type="button" data-ok><b class="rr-glyph gA rh-padonly" aria-hidden="true">A</b>${esc(H('ui.ok'))}</button></div></div>`;
-    const L = openLayer(html, { label: 'rh-in-h', desc: 'rh-in-b', onClose: () => { const h = hs(); if (!h.intros) h.intros = {}; h.intros[key] = 1; if (Array.isArray(h.pending)) h.pending = h.pending.filter((k) => k !== key); saveSoon(); try { R.emit && R.emit('helpIntroDone', { key }); } catch (e) { /* ignore */ } } });
+    const L = openLayer(html, { label: 'rh-in-h', desc: 'rh-in-b', onClose: () => introRead(key) });
     L.box.querySelector('[data-ok]').addEventListener('click', (e) => { e.stopPropagation(); tap(); closeLayer(L, 'ok'); });
     try { R.emit && R.emit('helpIntro', { key }); } catch (e) { /* ignore */ }
     return true;

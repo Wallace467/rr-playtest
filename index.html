@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-14-c53df9c9-2c0634ca">
+<meta name="rr-pwa" content="2026-11-15-5042d3dd-96dc6dfa">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-14-c53df9c9">
+<meta name="range-rat-build" content="2026-11-15-5042d3dd">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-14-c53df9c9", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-15-5042d3dd", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-14-c53df9c9", "builtAt": "2026-11-14T17:33:25Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-15-5042d3dd", "builtAt": "2026-11-15T10:36:25Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -40612,10 +40612,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 #rr-root.rl-wide .rr-fieldwrap{grid-area:field;min-height:0;min-width:0;overflow:hidden;border:2px solid var(--rr-line);border-radius:calc(10px*var(--rr-round))}
 #rr-root.rl-wide .rr-fieldwrap{background:#1d140f radial-gradient(circle at 50% 40%,#2a1d15,#1a120d 75%)}
 #rr-root.rl-wide .rr-stage{box-shadow:0 0 0 2px #1a110c,0 0 0 4px #5a4232,0 6px 18px rgba(0,0,0,.45)}
-/* the bigger phone field (DECISIONS 55): when a whole scale bigger than the plain fit fills the width only without it, the
-   small-goal card steps aside (rl-bignb; its goals stay in the Journal). A, the dressed sides: the range's surroundings in
-   the letterbox (.rl-sides, two strips drawn by the engine), the default on the wide layout (DECISIONS 56), a preview
-   elsewhere (?sides=A / RANGE_RAT._test.sides). C (a preview, off by default): the field
+/* the bigger phone field (DECISIONS 55): when a bigger whole scale fits only without it, the small-goal card steps aside
+   (rl-bignb; its goals stay in the Journal). A, the dressed sides: the range's surroundings in the letterbox (.rl-sides, two
+   strips drawn by the engine), the default on the wide layout (DECISIONS 56) and in a phone field's side gaps (DECISIONS 55
+   "phones: dressed gaps"), a preview elsewhere (?sides=A / RANGE_RAT._test.sides). C (a preview, off by default): the field
    framed in the HUD's wood, ring widths in field px (--rl-fu = one logical px in CSS px: crisp at any whole scale) */
 .rl-sides{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 .rl-sides>div{position:absolute;background-repeat:no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
@@ -41153,8 +41153,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (sid.indexOf('C') >= 0) { cropX = SIDE_EDGE; cssW = (lw - 2 * SIDE_EDGE) * s / dpr(); }
     if (sid) root.style.setProperty('--rl-fu', (s / dpr()) + 'px');
     fieldS = s;
-    // dressed sides (A): the default on the desktop / wide layout (Ben 2026-11-14, DECISIONS 56), a preview elsewhere; never with C
-    const dress = (lay === 'wide' || sid.indexOf('A') >= 0) && sid.indexOf('C') < 0;
+    // dressed sides (A): the default on the desktop / wide layout (Ben 2026-11-14, DECISIONS 56) and in whatever side gap the
+    // phone field leaves (2026-11-15, DECISIONS 55 "phones: dressed gaps": no plain dark bars on phones), a preview elsewhere;
+    // never with C. Duo and Desk mode unchanged
+    const dress = (lay === 'wide' || (lay === 'narrow' && cssW < fw - 0.5) || sid.indexOf('A') >= 0) && sid.indexOf('C') < 0;
     R.setViewport({ cssW, cssH, scale: s / dpr(), cropY: cropTop || undefined, cropX: cropX || undefined, dress: dress || undefined });
     lastFit = { lay, s, cssW, cssH, cropBottom, cropTop, cropX, dress, W: Wd, H: Hd, fw, fh, arith };
     if (lay === 'narrow') fitCheckSoon();
@@ -41210,17 +41212,23 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   let nbH = 0;
   /** the bigger phone field (side bars option B, DECISIONS 55): the largest whole scale (device px) whose field, less the calm
    *  outer band (<= 8 px a side, nothing to play there) and if need be the sky's top 14 rows and the net's bottom 14, fits the
-   *  cell. The small-goal card steps aside (its goals stay in the Journal) only when that gives a bigger scale which then fills
-   *  the width edge to edge. null: no whole scale at least as big as the plain fit s0 (a short window, 320 px wide): the plain
-   *  fit stands, as before. The same logical field and touch mapping: no gameplay change */
+   *  cell. The small-goal card steps aside (its goals stay in the Journal) when that gives a bigger whole scale than both the
+   *  card-shown one and the plain fit s0, edge to edge or not (2026-11-15: on a real iPhone the status bar and home indicator
+   *  take ~95 pt, so x6 with the card aside, not the edge-to-edge x7 of the inset-free emulator, is what beats the plain
+   *  x5.65; the side gap only shrinks with a bigger scale). null: no whole scale at least as big as s0 (a short window, 320
+   *  px wide): the plain fit stands, as before. The same logical field and touch mapping: no gameplay change */
   function fitB(fw, fh, lw, lh, s0) {
     const d = dpr(), hidden = root.classList.contains('rl-bignb'), nb = els.nextbar;
     if (!hidden && nb && nb.offsetHeight) nbH = nb.offsetHeight;
     const Wd = Math.floor(fw * d), fhW = hidden ? fh - nbH : fh, fhN = hidden ? fh : fh + nbH;
     const best = (H) => { const Hd = Math.floor(H * d); for (let s = 16; s >= 1; s--) { if ((lw - 2 * SIDE_EDGE) * s > Wd) continue; for (const [ct, cb] of [[0, 0], [0, 14], [14, 14]]) if ((lh - ct - cb) * s <= Hd) return { s, ct, cb }; } return null; };
     let r = best(fhW), ng = false; const r2 = nbH > 0 ? best(fhN) : null;
-    if (r2 && (!r || r2.s > r.s) && lw * r2.s >= Wd) { r = r2; ng = true; }
-    if (!r || (!ng && r.s < s0 - 1e-6)) { root.classList.remove('rl-bignb'); return null; }
+    // the plain fit WITH the card shown (s0 is for the cell as it is: with the card already aside it is the bigger cell's, and
+    // comparing against that would bring the card back, then send it aside again on the refit)
+    const sW = hidden ? Math.max(fit(fw, fhW, lw, lh), fit(fw, fhW, lw, lh - 14)) : s0;
+    const gap = (q) => Math.max(0, Wd - lw * q); // device px of letterbox left beside the field at scale q (both sides)
+    if (r2 && r2.s > sW + 1e-6 && (!r || r2.s > r.s) && gap(r2.s) <= gap(Math.max(sW, r ? r.s : 0))) { r = r2; ng = true; }
+    if (!r || (!ng && r.s < sW - 1e-6)) { root.classList.remove('rl-bignb'); return null; }
     root.classList.toggle('rl-bignb', ng);
     const visD = Math.min(lw * r.s, Wd), cxD = Math.floor((lw * r.s - visD) / 2);
     return { s: r.s, cropX: cxD / r.s, cropTop: r.ct, cropBot: r.cb, cssW: visD / d, cssH: (lh - r.ct - r.cb) * r.s / d };

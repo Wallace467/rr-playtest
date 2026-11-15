@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-15-c3b0680c-146542ea">
+<meta name="rr-pwa" content="2026-11-15-df084ae8-3377245e">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-15-c3b0680c">
+<meta name="range-rat-build" content="2026-11-15-df084ae8">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-15-c3b0680c", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-15-df084ae8", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-15-c3b0680c", "builtAt": "2026-11-15T16:08:35Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-15-df084ae8", "builtAt": "2026-11-15T22:23:44Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -818,6 +818,57 @@ window.BALANCE = {
         county: { hands: { speed: 46 }, tube: { speed: 62 }, pusher: { speed: 74 }, cart: { speed: 98 }, tractor: { speed: 120 } }
       },
       moveCap: 140
+    },
+    // gullEnd (Ben 15 Nov 2026, "Build": the spec qa/gullhaven + scratch SPEC.md, its recommended answers; loop/game.js §GL,
+    // ?gullend=1; design/sim.js new Sim({ gullEnd: true }) / --gullend): the Gullhaven Light. Gullhaven's price is paid in six
+    // STAGES that restore the old lighthouse on the skyline (they replace the four parts; same total, so stars are unchanged).
+    // stages[k].share of the price (the last takes the rounding); a stage can be funded only from stages[k].at of the visit
+    // (BALANCE.pace.at, the beats' clock). Each paid stage but the last adds `perk` to Gullhaven income; stage 6 lights the lamp
+    // and rolls the credits. Stages chestFrom..6 give the part chest and the School lesson (4, today's count). Away pay's till
+    // is max(the next stage, tillFloor x the price). rows: three endless Gullhaven rows that open with their stage, never
+    // cap: cost(n) = baseFrac x price x growth^n; total after n levels = g x h x ln(1 + n/h) (kind 'income': a share of
+    // Gullhaven income; 'raid' / 'surge': seconds of income added to that moment's reward). moments: three active moments
+    // (phase 3) from their stage on, rewards in seconds of income; simP is the catch rate the sim plays them at (expected income)
+    gullEnd: {
+      range: 'links',
+      stages: [
+        { id: 'nests', share: 0.02, at: 0.40 },
+        { id: 'stair', share: 0.06, at: 0.50 },
+        { id: 'glaze', share: 0.15, at: 0.60 },
+        { id: 'bands', share: 0.24, at: 0.70 },
+        { id: 'lens',  share: 0.26, at: 0.80 },
+        { id: 'light', share: 0.27, at: 0.88 }
+      ],
+      perk: 0.03,
+      chestFrom: 3,
+      tillFloor: 0.25,
+      rows: {
+        whistle: { stage: 1, baseFrac: 0.0004, growth: 1.18, g: 1.5,   h: 8, kind: 'raid' },
+        tolls:   { stage: 2, baseFrac: 0.0004, growth: 1.18, g: 0.015, h: 8, kind: 'income' },
+        nets:    { stage: 3, baseFrac: 0.0006, growth: 1.18, g: 1.5,   h: 8, kind: 'surge' }
+      },
+      moments: {
+        gapSec: 45,
+        raid:    { stage: 1, everySec: [240, 360], gulls: 4, gullsLow: 3, circleSec: 10, rewardSec: 12, simP: 0.7 },
+        captain: { stage: 2, everySec: [300, 420], windowSec: 60, rewardSec: 25, simP: 0.6 },
+        surge:   { stage: 3, everySec: [420, 540], warnSec: 5, waveSec: 2, glass: 5, glassSec: 3, tideSec: 25, pushPx: 20, share: 0.35, simP: 0.7 }
+      },
+      // stage 5 (the lens): at night the beam lights the balls it sweeps over (+litBonus, like a lantern pool)
+      beam: { stage: 5, litBonus: 0.5 },
+      // the sim's player saving for an open stage: the shop sees the acorns above it plus sideFrac of what's saved
+      sim: { sideFrac: 0.1 },
+      // the arithmetic the engine (loop/game.js §GL), the sim and tests/unit/gullend.test.js share. P = Gullhaven's price
+      /** stage k (0-based): its share of the price, rounded; the last takes the rounding */
+      stageCost(k, P) { const S = this.stages, n = S.length; if (k >= n - 1) { let s = 0; for (let i = 0; i < n - 1; i++) s += Math.round(S[i].share * P); return Math.max(0, Math.round(P) - s); } return Math.round(S[Math.max(0, k)].share * P); },
+      /** acorns the first k stages took */
+      paidFor(k, P) { let s = 0; for (let i = 0; i < k; i++) s += this.stageCost(i, P); return s; },
+      /** a save with `parts` of the four paid (each round(P / n4)) as stages: the highest stage those acorns cover; back = the rest, to the wallet */
+      fromParts(parts, P, n4) { const paid = Math.round(P / n4) * parts; let st = 0; while (st < this.stages.length - 1 && this.paidFor(st + 1, P) <= paid) st++; return { stage: st, paidAc: this.paidFor(st, P), back: paid - this.paidFor(st, P) }; },
+      /** the reverse (the preview switched off): whole parts the stages' acorns cover; back = the rest */
+      toParts(stage, P, n4) { const paid = this.paidFor(stage, P), sh = Math.round(P / n4), k = Math.max(0, Math.min(n4 - 1, Math.floor(paid / Math.max(1, sh)))); return { parts: k, back: paid - sh * k }; },
+      /** an endless row's total after n levels: g x h x ln(1 + n / h); its cost at level n: baseFrac x P x growth^n */
+      rowTotal(r, n) { return r.g * r.h * Math.log(1 + Math.max(0, n || 0) / r.h); },
+      rowCost(r, n, P) { return Math.round(r.baseFrac * P * Math.pow(r.growth, Math.max(0, n || 0))); }
     }
   },
 
@@ -3326,6 +3377,33 @@ window.SPRITES = {
       bell(t + 0.12, mtof(b), 0.3, lp, 0.5); bell(t + 0.22, mtof(b + 7), 0.34, lp, 0.7);
       return 0.95;
     },
+    // ---- the Gullhaven Light (PREVIEW, ?gullend=1; loop/game.js §GL) ----
+    // a stage built: three hammer knocks on timber, then a bright little bell (the crew's done)
+    light_stage: function (t, out) {
+      for (var i = 0; i < 3; i++) wood(t + i * 0.13, 1400 + i * 120, 0.34, out);
+      bell(t + 0.42, mtof(keyBase() + 24), 0.28, filt('lowpass', 5600, 0.5, out), 0.8);
+      return 1.2;
+    },
+    // the crate arrives at the light: a single heavier knock and a rattle of boards
+    light_hammer: function (t, out) {
+      wood(t, 900, 0.4, out); wood(t + 0.09, 1250, 0.25, out);
+      var g = gainEnv(t + 0.02, 0.004, 0.08, 0.14, out); noise(t + 0.02, 0.16, filt('bandpass', 700, 1.1, g));
+      return 0.4;
+    },
+    // a ship's bell: two low strikes ("ding-ding"), long ring (the surge warning, the lamp lighting)
+    ship_bell: function (t, out) {
+      var b = keyBase() + 7, lp = filt('lowpass', 3800, 0.5, out);
+      bell(t, mtof(b), 0.34, lp, 1.6); bell(t + 0.42, mtof(b), 0.3, lp, 1.8); bell(t + 0.42, mtof(b + 12), 0.08, lp, 1.0);
+      return 2.2;
+    },
+    // the surge's wave: a big band-passed noise swell rolling up and breaking (low rumble under it)
+    wave_whoosh: function (t, out) {
+      var g = gainEnv(t, 0.6, 0.22, 1.2, out, 0.2), bp = filt('bandpass', 300, 0.6, g);
+      bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(1400, t + 0.7); bp.frequency.exponentialRampToValueAtTime(500, t + 2.0);
+      noise(t, 2.1, bp);
+      var g2 = gainEnv(t + 0.55, 0.08, 0.1, 0.8, out); noise(t + 0.55, 1.0, filt('highpass', 2400, 0.6, g2));
+      return 2.2;
+    },
     // a member asks for something: a small two-note hand-bell "ding-ding" (polite, not urgent)
     request_ask: function (t, out) {
       var b = keyBase() + 19, lp = filt('lowpass', 5200, 0.6, out);
@@ -4639,6 +4717,7 @@ window.SPRITES = {
     equip: { gap: 0.08, cap: 2 }, talk: { gap: 0.05, cap: 3 },
     gust: { gap: 1.0, cap: 1 }, splash: { gap: 0.1, cap: 3 }, fish_out: { gap: 0.12, cap: 2 }, rake: { gap: 0.2, cap: 2 },
     step_leaves: { gap: 0.12, cap: 2 }, step_water: { gap: 0.12, cap: 2 }, step_sand: { gap: 0.12, cap: 2 },
+    light_stage: { gap: 1, cap: 1 }, light_hammer: { gap: 0.3, cap: 1 }, ship_bell: { gap: 1, cap: 1 }, wave_whoosh: { gap: 1, cap: 1 },
     gull_steal: { gap: 0.5, cap: 1 }, hedge_rustle: { gap: 0.08, cap: 3 }, lantern_on: { gap: 0.25, cap: 2 },
     helper_chirp: { gap: 0.3, cap: 2 },
     firework_launch: { gap: 0.06, cap: 4 }, firework_burst: { gap: 0.05, cap: 5 }, confetti_pop: { gap: 0.08, cap: 3 },
@@ -10937,6 +11016,104 @@ window.DIALOG = {
 })(window.DIALOG);
 /* ---- end of the School block ---- */
 
+/* ---- the Gullhaven Light (PREVIEW, ?gullend=1; loop/game.js §GL, approved by Ben 15 Nov 2026): Gullhaven's price as six stages
+ * that restore the old lighthouse, three endless rows, three moments. Every locale file carries the same block at its end. ---- */
+(function (D) {
+  if (!D) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D, {
+  "text": {
+    "light": {
+      "stage": {
+        "nests": "Clear the nests",
+        "stair": "Mend the stair and door",
+        "glaze": "Glaze the lamp room",
+        "bands": "Paint the bands",
+        "lens": "Fit the lens",
+        "light": "Light the Light"
+      },
+      "opens": {
+        "1": "Gull raids, and the Gull Whistle",
+        "2": "The Captain's ball, and Harbour Tolls",
+        "3": "Storm surges, and Tide Nets",
+        "4": "Golfers wave a flag at the light",
+        "5": "At night the beam lights the balls it sweeps",
+        "6": "The lamp is lit: the credits"
+      },
+      "done": {
+        "nests": "the nests are cleared",
+        "stair": "the stair's mended",
+        "glaze": "the lamp room is glazed",
+        "bands": "the bands are painted",
+        "lens": "the lens is in"
+      },
+      "toast": "Stage {n} done: {what}.",
+      "lit": "The Light is lit! Gullhaven is yours.",
+      "build": "Build stage {n}/{m}",
+      "lightIt": "Light the Light",
+      "saveFor": "Save for stage {n}: {name}",
+      "noCap": "no cap",
+      "rows": {
+        "whistle": "Gull Whistle",
+        "tolls": "Harbour Tolls",
+        "nets": "Tide Nets"
+      },
+      "row": {
+        "tolls": "Gullhaven income +{a}% (next +{d}%)",
+        "tollsWhy": "Gullhaven pays {b}% more, not {a}%",
+        "whistle": "Raid bonus +{a} s of income (next +{d} s)",
+        "whistleWhy": "A seen-off raid pays {b} s more, not {a} s",
+        "nets": "Sea glass +{a} s of income a surge (next +{d} s)",
+        "netsWhy": "Each surge leaves {b} s more, not {a} s"
+      },
+      "toBar": "+{n} s toward the Light",
+      "raid": {
+        "start": "Gull raid! Shoo them off the balls.",
+        "shoo": "Shoo! {n}/{m}",
+        "won": "Raid seen off! +{n}"
+      },
+      "captain": {
+        "ask": "Captain here! Bring my ball home, would you?",
+        "done": "Aye, thank you! +{n}",
+        "gone": "The Captain shrugs: next time."
+      },
+      "surge": {
+        "warn": "Storm surge coming!",
+        "glass": "Sea glass! +{n}"
+      }
+    }
+  },
+  "help": {
+    "light": {
+      "goal": "Restore the Light {n}/{m}",
+      "part": "stage {n}/{m}",
+      "waitShort": "opens soon",
+      "explain": "The old lighthouse on the point has been dark for years. Restore it in {m} stages: the last lights the lamp, and Gullhaven is yours.",
+      "explainNext": "Next: stage {n}, {name}.",
+      "explainWait": "It opens a little further into your visit.",
+      "lightIt": "Light the Light!",
+      "buildReady": "Build stage {n}/{m}!",
+      "howTitle": "The Gullhaven Light",
+      "howMoments": "Raids, the Captain, surges"
+    },
+    "page": {
+      "light": "Gullhaven's price is the old lighthouse: restore it in six stages. Each stage adds 3% to Gullhaven's income and opens something new.",
+      "lightMoments": "Gull raids, the Captain's ball and storm surges pay seconds of your income. They're yours to do: Pip and the beetles leave them be."
+    }
+  },
+  "firsts": {
+    "light": "That old light's been dark for years.",
+    "light2": "Fix it up, stage by stage, and the place is yours.",
+    "lightStage": "The crew's on it. Watch the lighthouse change.",
+    "raid": "Gulls! Run at them and they drop the balls.",
+    "captain": "The Captain wants his ball. The one with the pennant!",
+    "surge": "Storm surge! Grab the sea glass before the tide does."
+  }
+});
+})(window.DIALOG);
+/* ---- end of the Gullhaven Light block ---- */
+
 /* ---- locales (accessibility & localisation pass) ----
  * The tables above are English and are also the fallback for every other locale.
  * Locale files in dialog/locales/<code>.js register DIALOG.locales[code] with the SAME nested keys
@@ -14326,6 +14503,103 @@ window.DIALOG = {
 })(window.DIALOG);
 /* ---- end of the School block ---- */
 
+/* ---- the Gullhaven Light (PREVIEW, ?gullend=1): dialog/dialog.js has the notes ---- */
+(function (D) {
+  if (!D || !D.locales || !D.locales["de"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["de"], {
+  "text": {
+    "light": {
+      "stage": {
+        "nests": "Nester räumen",
+        "stair": "Treppe und Tür flicken",
+        "glaze": "Laternenraum verglasen",
+        "bands": "Streifen malen",
+        "lens": "Linse einsetzen",
+        "light": "Das Licht anzünden"
+      },
+      "opens": {
+        "1": "Möwenüberfälle und die Möwenpfeife",
+        "2": "Der Ball des Kapitäns und die Hafenzölle",
+        "3": "Sturmfluten und die Gezeitennetze",
+        "4": "Golfer winken dem Licht mit Fähnchen",
+        "5": "Nachts beleuchtet der Strahl die Bälle",
+        "6": "Die Lampe brennt: der Abspann"
+      },
+      "done": {
+        "nests": "die Nester sind weg",
+        "stair": "die Treppe ist geflickt",
+        "glaze": "der Laternenraum ist verglast",
+        "bands": "die Streifen sind gemalt",
+        "lens": "die Linse sitzt"
+      },
+      "toast": "Etappe {n} fertig: {what}.",
+      "lit": "Das Licht brennt! Gullhaven gehört dir.",
+      "build": "Etappe {n}/{m} bauen",
+      "lightIt": "Das Licht anzünden",
+      "saveFor": "Spar für Etappe {n}: {name}",
+      "noCap": "ohne Grenze",
+      "rows": {
+        "whistle": "Möwenpfeife",
+        "tolls": "Hafenzölle",
+        "nets": "Gezeitennetze"
+      },
+      "row": {
+        "tolls": "Gullhaven-Einnahmen +{a}% (nächste +{d}%)",
+        "tollsWhy": "Gullhaven zahlt {b}% mehr statt {a}%",
+        "whistle": "Überfall-Bonus +{a} s Einnahmen (nächste +{d} s)",
+        "whistleWhy": "Ein verjagter Überfall zahlt {b} s mehr statt {a} s",
+        "nets": "Seeglas +{a} s Einnahmen pro Flut (nächste +{d} s)",
+        "netsWhy": "Jede Flut lässt {b} s mehr da statt {a} s"
+      },
+      "toBar": "+{n} s fürs Licht",
+      "raid": {
+        "start": "Möwenüberfall! Verjag sie von den Bällen.",
+        "shoo": "Husch! {n}/{m}",
+        "won": "Überfall abgewehrt! +{n}"
+      },
+      "captain": {
+        "ask": "Kapitän hier! Bringst du meinen Ball heim?",
+        "done": "Danke, Freund! +{n}",
+        "gone": "Der Kapitän zuckt die Achseln: nächstes Mal."
+      },
+      "surge": {
+        "warn": "Sturmflut kommt!",
+        "glass": "Seeglas! +{n}"
+      }
+    }
+  },
+  "help": {
+    "light": {
+      "goal": "Rette das Licht {n}/{m}",
+      "part": "Etappe {n}/{m}",
+      "waitShort": "öffnet bald",
+      "explain": "Der alte Leuchtturm an der Spitze ist seit Jahren dunkel. Richte ihn in {m} Etappen her: Die letzte zündet die Lampe an, und Gullhaven gehört dir.",
+      "explainNext": "Als Nächstes: Etappe {n}, {name}.",
+      "explainWait": "Sie öffnet etwas später in deinem Besuch.",
+      "lightIt": "Das Licht anzünden!",
+      "buildReady": "Etappe {n}/{m} bauen!",
+      "howTitle": "Das Licht von Gullhaven",
+      "howMoments": "Überfälle, Kapitän, Sturmfluten"
+    },
+    "page": {
+      "light": "Gullhavens Preis ist der alte Leuchtturm: Richte ihn in sechs Etappen her. Jede Etappe gibt Gullhaven 3 % mehr Einnahmen und öffnet etwas Neues.",
+      "lightMoments": "Möwenüberfälle, der Ball des Kapitäns und Sturmfluten zahlen Sekunden deiner Einnahmen. Die sind deine Sache: Pip und die Käfer lassen sie dir."
+    }
+  },
+  "firsts": {
+    "light": "Das alte Licht ist seit Jahren dunkel.",
+    "light2": "Richte es Etappe für Etappe her, dann gehört alles dir.",
+    "lightStage": "Der Trupp ist dran. Schau, wie sich der Turm ändert.",
+    "raid": "Möwen! Lauf auf sie zu, dann lassen sie die Bälle los.",
+    "captain": "Der Kapitän will seinen Ball. Den mit dem Wimpel!",
+    "surge": "Sturmflut! Schnapp dir das Seeglas vor der Ebbe."
+  }
+});
+})(window.DIALOG);
+/* ---- end of the Gullhaven Light block ---- */
+
 </script>
 <script>/* ---- dialog/locales/es.js ---- */
 /* Range Rat — dialog/locales/es.js — Spanish (Español, neutral international)
@@ -17609,6 +17883,103 @@ window.DIALOG = {
 })(window.DIALOG);
 /* ---- end of the School block ---- */
 
+/* ---- the Gullhaven Light (PREVIEW, ?gullend=1): dialog/dialog.js has the notes ---- */
+(function (D) {
+  if (!D || !D.locales || !D.locales["es"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["es"], {
+  "text": {
+    "light": {
+      "stage": {
+        "nests": "Quitar los nidos",
+        "stair": "Arreglar escalera y puerta",
+        "glaze": "Acristalar la linterna",
+        "bands": "Pintar las franjas",
+        "lens": "Poner la lente",
+        "light": "Encender el faro"
+      },
+      "opens": {
+        "1": "Asaltos de gaviotas y el Silbato",
+        "2": "La bola del Capitán y los Peajes del puerto",
+        "3": "Mareas de tormenta y las Redes de marea",
+        "4": "Los golfistas saludan al faro con banderas",
+        "5": "De noche el haz ilumina las bolas",
+        "6": "La lámpara arde: los créditos"
+      },
+      "done": {
+        "nests": "los nidos ya no están",
+        "stair": "la escalera está arreglada",
+        "glaze": "la linterna tiene cristales",
+        "bands": "las franjas están pintadas",
+        "lens": "la lente está puesta"
+      },
+      "toast": "Etapa {n} hecha: {what}.",
+      "lit": "¡El faro está encendido! Puertogaviota es tuyo.",
+      "build": "Construir etapa {n}/{m}",
+      "lightIt": "Encender el faro",
+      "saveFor": "Ahorra para la etapa {n}: {name}",
+      "noCap": "sin tope",
+      "rows": {
+        "whistle": "Silbato de gaviotas",
+        "tolls": "Peajes del puerto",
+        "nets": "Redes de marea"
+      },
+      "row": {
+        "tolls": "Ingresos de Puertogaviota +{a}% (siguiente +{d}%)",
+        "tollsWhy": "Puertogaviota paga {b}% más, no {a}%",
+        "whistle": "Premio por asalto +{a} s de ingresos (siguiente +{d} s)",
+        "whistleWhy": "Un asalto espantado paga {b} s más, no {a} s",
+        "nets": "Vidrio de mar +{a} s de ingresos por marea (siguiente +{d} s)",
+        "netsWhy": "Cada marea deja {b} s más, no {a} s"
+      },
+      "toBar": "+{n} s para el faro",
+      "raid": {
+        "start": "¡Asalto de gaviotas! Espántalas de las bolas.",
+        "shoo": "¡Fuera! {n}/{m}",
+        "won": "¡Asalto espantado! +{n}"
+      },
+      "captain": {
+        "ask": "¡Aquí el Capitán! ¿Me traes mi bola?",
+        "done": "¡Gracias, marinero! +{n}",
+        "gone": "El Capitán se encoge de hombros: otra vez será."
+      },
+      "surge": {
+        "warn": "¡Viene una marea de tormenta!",
+        "glass": "¡Vidrio de mar! +{n}"
+      }
+    }
+  },
+  "help": {
+    "light": {
+      "goal": "Restaura el faro {n}/{m}",
+      "part": "etapa {n}/{m}",
+      "waitShort": "abre pronto",
+      "explain": "El viejo faro de la punta lleva años apagado. Restáuralo en {m} etapas: la última enciende la lámpara y Puertogaviota es tuyo.",
+      "explainNext": "Siguiente: etapa {n}, {name}.",
+      "explainWait": "Se abre un poco más adelante en tu visita.",
+      "lightIt": "¡Encender el faro!",
+      "buildReady": "¡Construir etapa {n}/{m}!",
+      "howTitle": "El faro de Gullhaven",
+      "howMoments": "Gaviotas, el Capitán, mareas"
+    },
+    "page": {
+      "light": "El precio de Puertogaviota es el viejo faro: restáuralo en seis etapas. Cada etapa suma un 3 % a sus ingresos y abre algo nuevo.",
+      "lightMoments": "Los asaltos de gaviotas, la bola del Capitán y las mareas de tormenta pagan segundos de tus ingresos. Son cosa tuya: Pip y los escarabajos no los tocan."
+    }
+  },
+  "firsts": {
+    "light": "Ese viejo faro lleva años apagado.",
+    "light2": "Arréglalo etapa a etapa y el sitio es tuyo.",
+    "lightStage": "La cuadrilla está en ello. Mira cómo cambia el faro.",
+    "raid": "¡Gaviotas! Corre hacia ellas y sueltan las bolas.",
+    "captain": "El Capitán quiere su bola. ¡La del banderín!",
+    "surge": "¡Marea de tormenta! Coge el vidrio antes que la marea."
+  }
+});
+})(window.DIALOG);
+/* ---- end of the Gullhaven Light block ---- */
+
 </script>
 <script>/* ---- dialog/locales/pt-BR.js ---- */
 /* Range Rat — dialog/locales/pt-BR.js — Brazilian Portuguese (Português do Brasil)
@@ -20882,6 +21253,103 @@ window.DIALOG = {
 });
 })(window.DIALOG);
 /* ---- end of the School block ---- */
+
+/* ---- the Gullhaven Light (PREVIEW, ?gullend=1): dialog/dialog.js has the notes ---- */
+(function (D) {
+  if (!D || !D.locales || !D.locales["pt-BR"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["pt-BR"], {
+  "text": {
+    "light": {
+      "stage": {
+        "nests": "Tirar os ninhos",
+        "stair": "Consertar escada e porta",
+        "glaze": "Envidraçar a lanterna",
+        "bands": "Pintar as faixas",
+        "lens": "Instalar a lente",
+        "light": "Acender o farol"
+      },
+      "opens": {
+        "1": "Ataques de gaivotas e o Apito",
+        "2": "A bola do Capitão e os Pedágios do porto",
+        "3": "Ressacas de tempestade e as Redes de maré",
+        "4": "Os golfistas acenam bandeiras para o farol",
+        "5": "À noite o facho ilumina as bolas",
+        "6": "A lâmpada acende: os créditos"
+      },
+      "done": {
+        "nests": "os ninhos foram tirados",
+        "stair": "a escada está consertada",
+        "glaze": "a lanterna tem vidros",
+        "bands": "as faixas estão pintadas",
+        "lens": "a lente está no lugar"
+      },
+      "toast": "Etapa {n} pronta: {what}.",
+      "lit": "O farol está aceso! Porto Gaivota é seu.",
+      "build": "Construir etapa {n}/{m}",
+      "lightIt": "Acender o farol",
+      "saveFor": "Junte para a etapa {n}: {name}",
+      "noCap": "sem limite",
+      "rows": {
+        "whistle": "Apito de gaivota",
+        "tolls": "Pedágios do porto",
+        "nets": "Redes de maré"
+      },
+      "row": {
+        "tolls": "Renda de Porto Gaivota +{a}% (próximo +{d}%)",
+        "tollsWhy": "Porto Gaivota paga {b}% a mais, não {a}%",
+        "whistle": "Prêmio do ataque +{a} s de renda (próximo +{d} s)",
+        "whistleWhy": "Um ataque espantado paga {b} s a mais, não {a} s",
+        "nets": "Vidro do mar +{a} s de renda por ressaca (próximo +{d} s)",
+        "netsWhy": "Cada ressaca deixa {b} s a mais, não {a} s"
+      },
+      "toBar": "+{n} s para o farol",
+      "raid": {
+        "start": "Ataque de gaivotas! Espante-as das bolas.",
+        "shoo": "Xô! {n}/{m}",
+        "won": "Ataque espantado! +{n}"
+      },
+      "captain": {
+        "ask": "Aqui é o Capitão! Traz minha bola pra casa?",
+        "done": "Valeu, marujo! +{n}",
+        "gone": "O Capitão dá de ombros: fica pra próxima."
+      },
+      "surge": {
+        "warn": "Vem aí uma ressaca!",
+        "glass": "Vidro do mar! +{n}"
+      }
+    }
+  },
+  "help": {
+    "light": {
+      "goal": "Restaure o farol {n}/{m}",
+      "part": "etapa {n}/{m}",
+      "waitShort": "abre logo",
+      "explain": "O velho farol da ponta está apagado há anos. Restaure-o em {m} etapas: a última acende a lâmpada, e Porto Gaivota é seu.",
+      "explainNext": "Próxima: etapa {n}, {name}.",
+      "explainWait": "Ela abre um pouco mais adiante na sua visita.",
+      "lightIt": "Acender o farol!",
+      "buildReady": "Construir etapa {n}/{m}!",
+      "howTitle": "O farol de Gullhaven",
+      "howMoments": "Gaivotas, o Capitão, ressacas"
+    },
+    "page": {
+      "light": "O preço de Porto Gaivota é o velho farol: restaure-o em seis etapas. Cada etapa soma 3% à renda dele e abre algo novo.",
+      "lightMoments": "Ataques de gaivotas, a bola do Capitão e as ressacas pagam segundos da sua renda. São com você: o Pip e os besouros deixam pra lá."
+    }
+  },
+  "firsts": {
+    "light": "Aquele farol velho está apagado há anos.",
+    "light2": "Conserte etapa por etapa, e o lugar é seu.",
+    "lightStage": "A equipe está nisso. Veja o farol mudar.",
+    "raid": "Gaivotas! Corra até elas e elas soltam as bolas.",
+    "captain": "O Capitão quer a bola dele. A da bandeirinha!",
+    "surge": "Ressaca! Pegue o vidro do mar antes da maré."
+  }
+});
+})(window.DIALOG);
+/* ---- end of the Gullhaven Light block ---- */
 
 </script>
 <script>/* ---- dialog/locales/qps.js ---- */
@@ -24241,6 +24709,103 @@ window.DIALOG = {
 })(window.DIALOG);
 /* ---- end of the School block ---- */
 
+/* ---- the Gullhaven Light (PREVIEW, ?gullend=1): dialog/dialog.js has the notes ---- */
+(function (D) {
+  if (!D || !D.locales || !D.locales["zh-CN"]) return;
+  const isO = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const merge = (dst, src) => { for (const k of Object.keys(src)) { if (isO(src[k]) && isO(dst[k])) merge(dst[k], src[k]); else dst[k] = src[k]; } return dst; };
+  merge(D.locales["zh-CN"], {
+  "text": {
+    "light": {
+      "stage": {
+        "nests": "清走鸟巢",
+        "stair": "修好门窗",
+        "glaze": "灯房装上新窗",
+        "bands": "刷上红白条纹",
+        "lens": "装上镜片",
+        "light": "点亮灯台"
+      },
+      "opens": {
+        "1": "海鸥来了，还有海鸥哨",
+        "2": "船长的球，还有港口费",
+        "3": "风暴大浪，还有捞网",
+        "4": "球手们向灯台挥旗",
+        "5": "夜里光束照亮扫过的球",
+        "6": "灯亮了：片尾字幕"
+      },
+      "done": {
+        "nests": "鸟巢清走了",
+        "stair": "门窗修好了",
+        "glaze": "灯房装好新窗了",
+        "bands": "条纹刷好了",
+        "lens": "镜片装好了"
+      },
+      "toast": "第 {n} 段完成：{what}。",
+      "lit": "灯台亮了！鸥港归你了。",
+      "build": "修建第 {n}/{m} 段",
+      "lightIt": "点亮灯台",
+      "saveFor": "为第 {n} 段攒钱：{name}",
+      "noCap": "无上限",
+      "rows": {
+        "whistle": "海鸥哨",
+        "tolls": "港口费",
+        "nets": "捞网"
+      },
+      "row": {
+        "tolls": "鸥港收入 +{a}%（下一级 +{d}%）",
+        "tollsWhy": "鸥港多付 {b}%，而不是 {a}%",
+        "whistle": "赶走海鸥奖励 +{a} 秒收入（下一级 +{d} 秒）",
+        "whistleWhy": "赶走一次海鸥多付 {b} 秒，而不是 {a} 秒",
+        "nets": "海宝石 +{a} 秒收入一次（下一级 +{d} 秒）",
+        "netsWhy": "每次大浪多留 {b} 秒，而不是 {a} 秒"
+      },
+      "toBar": "+{n} 秒，离灯台更近",
+      "raid": {
+        "start": "海鸥来了！把它们从球边赶走。",
+        "shoo": "去去去！{n}/{m}",
+        "won": "海鸥赶走了！+{n}"
+      },
+      "captain": {
+        "ask": "我是船长！帮我把球带回来好吗？",
+        "done": "谢谢你，水手！+{n}",
+        "gone": "船长摆摆手：下次吧。"
+      },
+      "surge": {
+        "warn": "风暴大浪要来了！",
+        "glass": "海宝石！+{n}"
+      }
+    }
+  },
+  "help": {
+    "light": {
+      "goal": "修好灯台 {n}/{m}",
+      "part": "第 {n}/{m} 段",
+      "waitShort": "即将开放",
+      "explain": "海角上的老灯台已经暗了很多年。分 {m} 段修好它：最后一段点亮灯，鸥港就归你了。",
+      "explainNext": "下一步：第 {n} 段，{name}。",
+      "explainWait": "要在这次再晚一点才开放。",
+      "lightIt": "点亮灯台！",
+      "buildReady": "修建第 {n}/{m} 段！",
+      "howTitle": "鸥港的灯台",
+      "howMoments": "海鸥、船长、大浪"
+    },
+    "page": {
+      "light": "鸥港的价格就是那座老灯台：分六段修好它。每段让鸥港收入多 3%，还会开放新东西。",
+      "lightMoments": "海鸥、船长的球和风暴大浪会付你几秒的收入。这些要你自己来：皮普和甲虫不会管。"
+    }
+  },
+  "firsts": {
+    "light": "那座老灯台已经暗了好多年了。",
+    "light2": "一段一段修好它，这里就归你了。",
+    "lightStage": "工人们在干活了。看灯台变样子。",
+    "raid": "海鸥！冲过去，它们就会丢下球。",
+    "captain": "船长要他的球。带小旗的那个！",
+    "surge": "风暴大浪！在海浪带走前捡起海宝石。"
+  }
+});
+})(window.DIALOG);
+/* ---- end of the Gullhaven Light block ---- */
+
 </script>
 <script>/* ---- loop/game.js ---- */
 /* Range Rat — loop/game.js
@@ -24302,6 +24867,8 @@ window.DIALOG = {
   // true, every build). ?school=0 turns it off for this page (Ben compares), ?school=1 forces it on (a balance with enabled false);
   // RANGE_RAT._test.school(on) for tests and stills. SCHOOL.on: true / false from the URL or a test, null = BALANCE.school.enabled
   const SCHOOL = { on: QS.get('school') === '0' ? false : QS.get('school') === '1' ? true : null };
+  // the Gullhaven Light (§GL, PREVIEW, Ben 15 Nov 2026): ?gullend=1 (or RANGE_RAT._test.gullEnd(true)); BALANCE.previews.gullEnd. Off by default
+  const GULLEND = { on: QS.get('gullend') === '1' };
   const M1114 = (() => { const o = { chute: false, stars: false, foreman: false }; for (const k of String(QS.get('m1114') || '').split(',')) { if (k === 'all') o.chute = o.stars = o.foreman = true; else if (k in o) o[k] = true; } return o; })();
   // no Comfy Boots (PREVIEW, off by default; Ben 14 Nov: "Let's get rid of quick paws"): the 'speed' row leaves the shop, the
   // rat runs at its gear's pace (BALANCE.previews.noBoots retunes the gear tiers), steering eases like calm movement, and a
@@ -26028,7 +26595,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (!(p < 999.5)) return '×' + (r < 99.95 ? r1(r) : r < 999.5 ? String(Math.round(r)) : fmt(r));
     return '+' + (p < 9.95 ? r1(Math.max(0, p)) : String(Math.round(p))) + '%';
   }
-  const valueMult = () => (range().valueMult || 1) * portfolioMult() * visitPayMult(); // every payout: the range, your portfolio, a visit
+  const valueMult = () => { const v = (range().valueMult || 1) * portfolioMult() * visitPayMult(); return GULLEND.on ? v * glIncK() : v; }; // every payout: the range, your portfolio, a visit (§GL: the Light's stages and Harbour Tolls)
   const isNight = () => alwaysNight() || state.dayT >= B.dayNight.dayLengthSec;
   // lights are auto-owned wherever it's always night: Firefly Bays, and every range on a Grand Tour 'night' lap (that lap
   // used to close each range for good, as its lights reset with the run: owner "you end up at Fireflies with no golfers")
@@ -26171,6 +26738,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (id === 'bays') return tx('shop.baysOf', '{n} of {m} bays', { n: bayCount(), m: maxBaysNow() });
     if (id === 'tb1' || id === 'tb2') return tx('shop.tierOf', '{n} of {m} bays upgraded', { n: lvl(id), m: up(id).maxLevel | 0 });
     if (id === 'deck') return tx('shop.deckPill', '+{n} bays', { n: (DECK_() || {}).bays || 6 });
+    if (GULLEND.on && GL_ROWS.includes(id)) return tpl(ui('level', 'Lv {n}'), { n: lvl(id) }) + ' · ' + tx('light.noCap', 'no cap'); // §GL: the endless rows
     return tpl(ui('level', 'Lv {n}'), { n: lvl(id) }) + (lvTxt || '');
   }
   const upMaxed = (id) => lvl(id) >= schMaxLv(id, up(id).maxLevel) || (id === 'bays' && bayCount() >= maxBaysNow());
@@ -26210,7 +26778,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** is this shop row still held back by the introduction? ('gear' = the Next gear row, 'locked' = the ??? teasers) */
   const introHides = (id) => introOn() && SI_().hides(state.shopIntro, id) && !(id === 'gear' ? state.gear > 0 : id !== 'locked' && lvl(id) > 0);
   const gearShown = () => !introHides('gear');
-  const upVisible = (id) => (id === 'speed' && !bootsSold()) || introHides(id) ? false : ESC_UP_IDS.includes(id) ? escVisible(id) : id === 'bays' && litBays() ? false : (ROBOT_UPS.includes(id) ? robotCount() >= 1 : id === 'tips' ? tipsSeen() : id === 'lights' ? !RM().alwaysNight : id === 'robots' ? !(giftAt() && state.rangeIdx === 0 && !state.tour && !state.giftedBeetle) : !(up(id) && up(id).unlockAt && lvl(id) < 1 && paceNow() < up(id).unlockAt)); // staged rows: visit pace (DECISIONS 37); a row you've bought never hides
+  const upVisible = (id) => GULLEND.on && GL_ROWS.includes(id) ? glRowOpen(id) : (id === 'speed' && !bootsSold()) || introHides(id) ? false : ESC_UP_IDS.includes(id) ? escVisible(id) : id === 'bays' && litBays() ? false : (ROBOT_UPS.includes(id) ? robotCount() >= 1 : id === 'tips' ? tipsSeen() : id === 'lights' ? !RM().alwaysNight : id === 'robots' ? !(giftAt() && state.rangeIdx === 0 && !state.tour && !state.giftedBeetle) : !(up(id) && up(id).unlockAt && lvl(id) < 1 && paceNow() < up(id).unlockAt)); // staged rows: visit pace (DECISIONS 37); a row you've bought never hides
   const tipsSeen = () => (state.stats.tipBalls | 0) > 0 || state.rangeIdx > 0 || (state.tour | 0) > 0; // Friendly Wave shows after the first tip
   // ---- the first tip ball and the first chests (Ben, playtest 2026-11-05 evening; BALANCE.retention.firsts, the rule
   // design/sim.js plays): a fresh game's first Mudbank visit holds every tip ball until tipReady() and every trophy chest
@@ -26228,9 +26796,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   // ---- the Escalation Plan (DECISIONS 32): buy the range in instalments, owned ranges, portfolio, visits ----
   const ESC = () => Object.assign({ instalments: 1, portfolioPerRange: 0, visitPayMult: 1, saveRule: false }, B.escalation || {});
-  const parts = () => Math.max(1, ESC().instalments | 0);
+  const parts0 = () => Math.max(1, ESC().instalments | 0);
+  const parts = () => (GULLEND.on && glFront() ? glN() : parts0()); // §GL: the Light's six stages while buying Gullhaven
   /** part k (0-based) of the price: equal shares, the last one takes the rounding */
-  function partCost(k) { const P = sellTarget(), n = parts(), sh = Math.round(P / n); return k >= n - 1 ? Math.max(0, Math.round(P) - sh * (n - 1)) : sh; }
+  function partCost(k) { if (GULLEND.on && glFront()) return glStageCost(k, glPrice()); const P = sellTarget(), n = parts(), sh = Math.round(P / n); return k >= n - 1 ? Math.max(0, Math.round(P) - sh * (n - 1)) : sh; }
   const nextPartCost = () => partCost(state.paid | 0);
   function paidSoFar() { let t = 0; for (let k = 0; k < (state.paid | 0); k++) t += partCost(k); return t; }
   const priceLeft = () => Math.max(0, Math.round(sellTarget()) - paidSoFar());
@@ -26257,7 +26826,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     return visitK.k;
   }
   /** the next instalment can be paid now (free play / visits have no price) */
-  const prestigeAvailable = () => !state.freePlay && !state.freeRoam && !visiting() && (state.paid | 0) < parts() && canAfford(nextPartCost());
+  const prestigeAvailable = () => !state.freePlay && !state.freeRoam && !visiting() && (state.paid | 0) < parts() && canAfford(nextPartCost()) && (!GULLEND.on || glGateOk()); // §GL: a stage waits for its gate
   /** stars come from the prices paid (ESCALATION_SIM fix 4), not all-time acorns: buying this range adds what's left of its price */
   function starsForSale() {
     let n = 0; try { n = Math.floor(B.prestige.reputationFor((state.paidTotal || 0) + priceLeft())) - state.stars; } catch (e) { n = 0; }
@@ -26278,7 +26847,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const sold = (state.stats && state.stats.rangesSold) || {};
     return (state.tour | 0) > 0 || !!state.creditsSeen || (i | 0) <= (state.frontier | 0) || (i | 0) <= (state.rangeIdx | 0) || isOwned(r.id) || (sold[r.id] | 0) > 0;
   }
-  function upName(id) { if (SCH_IDS.includes(id)) return tx('school.rows.' + id, (up(id) && up(id).name) || titleCase(id)); return dstr('upgrades.' + id + '.name', (up(id) && up(id).name) || titleCase(id)); } // §S: the School's rows
+  function upName(id) { if (GULLEND.on && GL_ROWS.includes(id)) return tx('light.rows.' + id, up(id).name); if (SCH_IDS.includes(id)) return tx('school.rows.' + id, (up(id) && up(id).name) || titleCase(id)); return dstr('upgrades.' + id + '.name', (up(id) && up(id).name) || titleCase(id)); } // §S: the School's rows
   const tierName = (id) => dstr('tiers.' + id + '.name', titleCase(id));
   function gearName(i) { const g = gearDef(i); return dstr('gear.' + g.id + '.name', g.name || titleCase(g.id)); }
   function cosName(slot, id) { return dstr('cosmetics.' + slot + '.' + id + '.name', (COS_FALLBACK_NAMES[slot] && COS_FALLBACK_NAMES[slot][id]) || titleCase(id)); }
@@ -26309,6 +26878,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const C = tx('units.colon', ': '), arrow = (label, f, fm, fine) => { const va = f(); if (L >= maxL) return `${label}${C}${fm(va)}`; const [a, b] = pairText(va, at(f), fm, fine); return `${label}${C}${a} → ${b}`; };
     const r1 = (v) => (v < 100 ? String(v < 10 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).replace('.', NUM.dec) : fmt(v)); // enough precision that now != next
     const E = (k, fb, vars) => tx('shop.effect.' + k, fb, vars);
+    if (GULLEND.on && glRowText(id)) return glRowText(id, to - L, at, r1, false); // §GL
     if (schRowText(id)) return schRowText(id, to - L, at, r1); // §S
     switch (id) {
       case 'speed': return arrow(E('speed', 'Run speed'), () => playerSpeed(), (v) => String(Math.round(v)));
@@ -26375,6 +26945,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const pc = (a, b) => Math.max(1, Math.round((b / Math.max(1e-9, a) - 1) * 100)); // "{p}% faster"
     const ab = (k, fb, f, fm, fine) => { const [a, b] = pairText(f(), at(f), fm, fine === undefined ? (v, d) => fmtFine(v, d) : fine); return W(k, fb, { a, b }); };
     const e = u.effectPerLevel || 0, step = (v) => r1(Math.round(v * 1000) / 1000);
+    if (GULLEND.on && glRowText(id)) return glRowText(id, m, at, r1, true); // §GL the Light's endless rows
     if (schRowText(id)) return schRowText(id, m, at, r1); // §S the School's rows (the Washer under the tree, the Polish, the late buys)
     switch (id) {
       case 'speed': return W('speed', 'Run {p}% faster: quicker trips', { p: pc(playerSpeed(), at(playerSpeed)) });
@@ -26544,7 +27115,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (o.visitT !== undefined) o.visitT = numIn(o.visitT, 0, BIG, 0);
     // swarm {} broke getShop() (no owned); an owned array already works
     if (o.swarm !== undefined && (!isObj(o.swarm) || typeof o.swarm.type !== 'string' || !(isObj(o.swarm.owned) || Array.isArray(o.swarm.owned)))) o.swarm = SWARM0();
-    if (has('paid')) o.paid = clamp(isNum(o.paid) ? o.paid | 0 : 0, 0, Math.max(0, (((B.escalation || {}).instalments | 0) || 1) - 1));
+    if (has('paid')) o.paid = clamp(isNum(o.paid) ? o.paid | 0 : 0, 0, Math.max(0, Math.max((((B.escalation || {}).instalments | 0) || 1), GULLEND.on && GLC_() ? glN() : 0) - 1)); // §GL: up to stage 5 (state.light has the truth)
     if (o.prestigeReadyFired !== undefined) o.prestigeReadyFired = !!o.prestigeReadyFired;
     if (o.jarsHung !== undefined) o.jarsHung = intIn(o.jarsHung, 0, 999, 0);
     return o;
@@ -26674,6 +27245,8 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     o.freeRoam = !!s.freeRoam;
     if (!tourOn() && ((o.tour | 0) > 0 || (o.freePlay && o.creditsSeen))) { o.freeRoam = true; o.tourWas = Math.max(o.tourWas | 0, o.tour | 0); o.tour = 0; o.freePlay = null; o.potterTour = null; o.creditsSeen = true; }
     if (o.freeRoam) o.frontier = o.rangeIdx;
+    if (GULLEND.on || isObj(o.light)) glConvert(o, GULLEND.on); // §GL: parts -> stages (on) or back (off)
+    if (o.moments != null && !isObj(o.moments)) delete o.moments; // §GL: the moments' tallies (glMoState checks each field)
     return o;
   }
   // ---- save slots / profiles (owner request): one key per slot, settings per device ----
@@ -27802,6 +28375,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     lastPickT = gameT; // someone is collecting (Gus doesn't nag "stock empty" over it)
     state.stats.ballsCollected++;
     if (b.lit) litPickup(robot, b); // Firefly Bays: a ball in the lantern light pays a bonus (GDD "Firefly Bays")
+    else if (GULLEND.on && b.glLit) glLitPickup(robot, b); // §GL stage 5: the beam lit it
     if (b.lucky) luckyPickup(robot, b); // Oakridge's fairy ring (DECISIONS 49): a lucky ball pays ringCashMult x a swing
     if (robot) { robot.hop[b.type] = (robot.hop[b.type] | 0) + 1; robot.hopN++; if (!(W.document && W.document.hidden) && !tipsHeld() && Math.random() < tipChance()) tipsDue = Math.min(5, tipsDue + 1); return; } // beetles' balls earn tips too (only the rat scoops them)
     state.hopper[b.type] = (state.hopper[b.type] | 0) + 1;
@@ -29185,7 +29759,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   let lastBark = -99;
   function golferBark(g, cat, force) {
-    if (!force && (gameT - lastBark < 5 || world.req)) return; // a request is up: no chatter over it (playtest 2026-11-06)
+    if (!force && (gameT - lastBark < 5 || world.req || (GULLEND.on && glMoCap()))) return; // a request (§GL: or the Captain's ask) is up: no chatter over it (playtest 2026-11-06)
     const line = dline('golferBarks.' + cat, null); if (!line) return;
     lastBark = gameT;
     ui_.bark && ui_.bark(g, line);
@@ -29199,12 +29773,12 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   // Traps (hedge / pond / bunker) share one zone system: trapped balls are cleared by the rat
   // standing in/at the zone (clearRate balls/s) or auto-returned to stock by automation upgrades.
   const RM = () => (B.rangeMechanics && B.rangeMechanics[rangeId()]) || {};
-  const mechUps = () => (RM().upgrades && isObj(RM().upgrades) ? RM().upgrades : {});
+  const mechUps = () => { const u = RM().upgrades && isObj(RM().upgrades) ? RM().upgrades : {}; return GULLEND.on && state && GLC_() && rangeId() === GLC_().range ? glMechUps(u) : u; }; // §GL: the Light's endless rows in Gullhaven's section
   const allUpIds = () => { const a = Object.keys(B.upgrades).concat(Object.keys(mechUps()).filter((k) => !B.upgrades[k]), B.escalation ? ESC_UP_IDS : []); return schoolOn() ? schOrder(a) : a; };
   /** §S: Foreman's Polish and the route's late buy sit right after the Ball Washer */
   function schOrder(a) { const x = a.filter((id) => !SCH_IDS.includes(id)), i = x.indexOf('washer'); x.splice(i < 0 ? x.length : i + 1, 0, ...SCH_IDS.filter((id) => a.includes(id))); return x; }
   const MECH_ICON = { tips: 'ball_tip', windbreak: 'icon_cage', hedgetrim: 'icon_speed', hedgehogs: 'icon_robots', fishnet: 'icon_capacity', frogdivers: 'icon_robots', lanternpost: 'icon_lights', lanternwick: 'icon_lights', rake: 'icon_capacity', marram: 'icon_cage', sandmoles: 'icon_robots', crews: 'icon_robots', conveyor: 'icon_ballstock', chute: 'icon_ballstock', tb1: 'icon_bays', tb2: 'icon_bays', tearoom: 'icon_kettle', noticeboard: 'icon_price', deck: 'icon_bays', ledger: 'icon_goals', shifts: 'icon_night', autorat: 'icon_speed', pins: 'icon_bays' };
-  const upIcon = (id) => (hasSprite('icon_' + id) ? 'icon_' + id : MECH_ICON[id] || 'icon_gear');
+  const upIcon = (id) => (GULLEND.on && GL_ROWS.includes(id) ? 'gl_' + id : hasSprite('icon_' + id) ? 'icon_' + id : MECH_ICON[id] || 'icon_gear'); // §GL: the rows' own icons
   // portrait design coords (x 0..180, y 58..306) -> current geometry
   const fromPortrait = (x, y) => G.toXY(clamp(x / 180, 0, 1), shotD(y));
   function lapModifier() { const T = B.tour; if (!T || !(state.tour > 0) || !Array.isArray(T.modifiers) || !T.modifiers.length) return null; return T.modifiers[(state.tour - 1) % T.modifiers.length]; }
@@ -31719,9 +32293,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** lessons earned so far: banked (Mudbank's parts) + 1 a range arrived at from Oakridge + 1 a part paid there. Derived from
    *  progress (main run), so an old save gets its lessons at once and free roam / visits add none */
   function schEarned() {
-    if (!schOpen()) return 0; const S = SC_(), n = parts(), done = (state.tour | 0) > 0 || !!state.freeRoam || !!state.creditsSeen;
+    if (!schOpen()) return 0; const S = SC_(), n = parts0(), done = (state.tour | 0) > 0 || !!state.freeRoam || !!state.creditsSeen;
     const f = done ? B.ranges.length - 1 : clamp(state.frontier | 0, 0, B.ranges.length - 1); if (f < 1) return 0;
-    return (S.banked | 0) + f + n * (f - 1) + (done ? n : Math.min(n, schFrontPaid()));
+    const fp = GULLEND.on && glFront() ? Math.max(0, schFrontPaid() - ((GLC_().chestFrom || 1) - 1)) : schFrontPaid(); // §GL: stages chestFrom..6 bring a lesson (four, as the parts did)
+    return (S.banked | 0) + f + n * (f - 1) + (done ? n : Math.min(n, fp));
   }
   /** what lesson n costs now: its points, +offNode off your route (a branch's root is never off-route) */
   function schCost(n) { if (!n) return Infinity; const r = schRoute(); return n.pts + (n.tier > 1 && n.br !== r ? (SC_().offNode | 0) : 0); }
@@ -31867,7 +32442,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     else if (e < s.seen) s.seen = e;
   }
   // The Bell (a part paid, not the last: that one moves you on); Sweeper (the balls the rat digs, fishes or rakes out)
-  on('instalment', () => { if (schHas('k4')) schBell(); });
+  on('instalment', (e) => { if (schHas('k4') && !(e && e.light && e.part < (GLC_().chestFrom || 1))) schBell(); }); // §GL: the bell rings for the stages that bring a lesson
   for (const ev of ['dug', 'fished', 'raked']) on(ev, (e) => { if (e && e.by === 'player' && schHas('h3')) world.ratDug = (world.ratDug | 0) + 1; });
   on('rangeBought', () => { if (state && isObj(state.school)) state.school.loads = 0; });
   /** the sheet's view (ui/town.js): everything it shows, worked out here */
@@ -31918,9 +32493,540 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   schIdsSync();
 
 
+  // ===================================================================== §GL THE GULLHAVEN LIGHT (PREVIEW, ?gullend=1)
+  // Ben 15 Nov 2026 ("Build", the spec's recommended answers): Gullhaven's price is paid in six STAGES that restore the old
+  // lighthouse on the skyline (they replace the four parts, same total: stars unchanged). BALANCE.previews.gullEnd holds every
+  // number; design/sim.js new Sim({ gullEnd: true }) plays the same rules. state.light = { v: 1, paidAc, stage } is the truth
+  // while it's on (state.paid follows it); glConvert turns a save's parts into stages and back. Off: nothing here runs, and a
+  // save without state.light plays exactly as before. Each stage but the last adds perk to Gullhaven income and opens
+  // something: a shop row (endless: never caps, each level dearer and worth less) and (phase 3) a moment on the field. Stage
+  // 6 lights the lamp and rolls the credits. Stages chestFrom..6 bring the part chest and the School lesson (today's four).
+  const GLC_ = () => (isObj(B.previews) && isObj(B.previews.gullEnd) ? B.previews.gullEnd : null);
+  const GL_ROWS = ['whistle', 'tolls', 'nets'];
+  const glOn = () => GULLEND.on && !!GLC_();
+  const glIdx = () => B.ranges.findIndex((r) => r.id === GLC_().range);
+  const glN = () => GLC_().stages.length;
+  const glPrice = () => { const r = B.ranges[glIdx()] || {}; return r.price || r.prestigeAt || 0; };
+  /** the Light is how the range you're buying is bought: the preview on, the main run, buying Gullhaven */
+  function glFront() {
+    if (!GULLEND.on || !state || !GLC_()) return false;
+    if (state.freeRoam || state.freePlay || (state.tour | 0) > 0) return false;
+    const f = B.ranges[state.frontier | 0]; return !!f && f.id === GLC_().range && !isOwned(f.id);
+  }
+  /** ...and you're there (not on a visit to a range you own) */
+  const glHere = () => glFront() && (state.rangeIdx | 0) === (state.frontier | 0);
+  /** stage k (0-based) of price P: its share, the last takes the rounding (design/sim.js partCost) */
+  const glStageCost = (k, P) => GLC_().stageCost(clamp(k | 0, 0, glN() - 1), P); // BALANCE.previews.gullEnd.stageCost (the sim's too)
+  const glCum = (k, P) => GLC_().paidFor(k, P);
+  /** stages done (0..6) where you are: 6 once Gullhaven is yours (Free roam, the credits); 0 off Gullhaven */
+  function glStage() {
+    if (!GULLEND.on || !state || !GLC_() || rangeId() !== GLC_().range) return 0;
+    if (state.freeRoam || state.creditsSeen || (state.tour | 0) > 0 || isOwned(GLC_().range)) return glN();
+    return glHere() ? clamp(state.paid | 0, 0, glN()) : 0;
+  }
+  const glDef = (k) => GLC_().stages[clamp(k, 0, glN() - 1)];
+  /** the next stage can be funded: its pace gate (BALANCE.pace.at, the beats' clock) has passed. Off: always true */
+  function glGateOk() { if (!glHere()) return true; const k = state.paid | 0; return k >= glN() || paceNow() >= glDef(k).at; }
+  /** Gullhaven income x(1 + perk x stages done, not the last) x(1 + Harbour Tolls); 1 anywhere else (and with the preview off) */
+  function glIncK() {
+    if (!GULLEND.on || !state || !GLC_() || rangeId() !== GLC_().range) return 1;
+    const C = GLC_(), st = Math.min(glStage(), glN() - 1); if (!(st > 0)) return 1;
+    return (1 + (C.perk || 0) * st) * (1 + glRowTotal('tolls'));
+  }
+  /** an endless row's total after its levels: g x h x ln(1 + n / h) (design/sim.js glTotal) */
+  function glRowTotal(id, n) { const r = (GLC_().rows || {})[id]; if (!r) return 0; return GLC_().rowTotal(r, n == null ? lvl(id) : n); }
+  /** state.light: the stages paid, and the acorns they took. Made fresh where it's missing */
+  function glState() { if (!isObj(state.light)) state.light = { v: 1, paidAc: 0, stage: 0 }; return state.light; }
+  /** a save between the two ways of paying for Gullhaven (on: parts -> stages; off: stages -> parts). Nothing is lost and
+   *  nothing gained: acorns paid that the new way can't place go back to the wallet (and out of paidTotal, so the stars at
+   *  the end are the same). o: a sanitized save or the live state. Only the main run, buying Gullhaven, is touched */
+  function glConvert(o, on) {
+    const C = GLC_(); if (!C || !isObj(o)) return false;
+    const i = B.ranges.findIndex((r) => r.id === C.range); if (i < 0) return false;
+    const owned = isObj(o.sites) && isObj(o.sites[C.range]) && !!o.sites[C.range].owned;
+    const main = !o.freeRoam && !o.freePlay && !((o.tour | 0) > 0) && (o.frontier | 0) === i && !owned && !o.creditsSeen;
+    const L = isObj(o.light) ? o.light : null;
+    const live = (o.rangeIdx | 0) === i, sn = !live && isObj(o.sites) && isObj(o.sites[C.range]) && isObj(o.sites[C.range].snap) ? o.sites[C.range].snap : null;
+    const getP = () => (live ? o.paid | 0 : sn ? sn.paid | 0 : 0), setP = (v) => { if (live) o.paid = v; else if (sn) sn.paid = v; };
+    const P = (B.ranges[i].price || B.ranges[i].prestigeAt || 0), n4 = Math.max(1, ((B.escalation || {}).instalments | 0) || 1), sh = Math.round(P / n4), N = C.stages.length;
+    const back = (v) => { if (v > 0) { o.cash = (+o.cash || 0) + v; o.paidTotal = Math.max(0, (+o.paidTotal || 0) - v); } };
+    if (on) {
+      if (!main) return false;
+      if (L && L.v === 1) { L.stage = clamp(L.stage | 0, 0, N - 1); setP(L.stage); return false; } // the truth (sanitize clamps paid to the four parts)
+      const f = C.fromParts(clamp(getP(), 0, n4 - 1), P, n4);
+      back(f.back); setP(f.stage); o.light = { v: 1, paidAc: f.paidAc, stage: f.stage };
+      return true;
+    }
+    if (!L) return false;
+    if (main) { const t = C.toParts(clamp(L.stage | 0, 0, N - 1), P, n4); back(t.back); setP(t.parts); }
+    delete o.light; return true;
+  }
+  /** _test / dev: switch the preview on or off for this page (the save converts both ways); returns glView() */
+  function glTest(on) {
+    if (on != null) {
+      GULLEND.on = !!on;
+      if (state) { glConvert(state, GULLEND.on); glPaidSync(); }
+      glIdsSync(); steadyCache.dirty = true; gusPickState.dirty = true; bgDirty = true; AMB.winKey = '';
+      if (mode === 'game' && world.ready && state && rangeId() === (GLC_() || {}).range) { const m = world.mech; if (m && m.glMod !== GULLEND.on) { resetWorld(false); } }
+      ui_.refresh && ui_.refresh(true); emit('light', { phase: 'toggle', on: GULLEND.on });
+    }
+    return glView();
+  }
+  /** state.paid follows state.light while you're at Gullhaven (a load clamps paid to the four parts) */
+  function glPaidSync() { if (!glHere()) return; const L = glState(); L.stage = clamp(L.stage | 0, 0, glN() - 1); state.paid = L.stage; }
+  /** what the goal card, the ⓘ and the tests read */
+  function glView() {
+    if (!glOn() || !state) return null;
+    const C = GLC_(), here = glHere(), st = glStage(), P = glPrice(), k = here ? state.paid | 0 : st;
+    return {
+      on: true, here, stage: st, of: glN(), shown: glShown(), price: P, paidAc: here ? glCum(k, P) : st >= glN() ? P : 0,
+      next: here && k < glN() ? { k: k + 1, id: glDef(k).id, cost: glStageCost(k, P), at: glDef(k).at, open: glGateOk() } : null,
+      pace: here ? paceNow() : null, incK: glIncK(),
+      stages: C.stages.map((s, i) => ({ k: i + 1, id: s.id, at: s.at, share: s.share, cost: glStageCost(i, P), done: i < st, name: glStageName(s.id), opens: glOpensText(i + 1) })),
+      rows: GL_ROWS.map((id) => ({ id, open: glRowOpen(id), lv: lvl(id), total: glRowTotal(id), cost: glRowOpen(id) ? upCost(id) : null })),
+      moments: isObj(state.moments) ? JSON.parse(JSON.stringify(state.moments)) : null
+    };
+  }
+  const glStageName = (id) => tx('light.stage.' + id, ({ nests: 'Clear the nests', stair: 'Mend the stair and door', glaze: 'Glaze the lamp room', bands: 'Paint the bands', lens: 'Fit the lens', light: 'Light the Light' })[id] || id);
+  /** what stage k (1-based) opens, in words (the ⓘ list, the stage toast) */
+  function glOpensText(k) {
+    const T = { 1: ['light.opens.1', 'Gull raids, and the Gull Whistle'], 2: ['light.opens.2', "The Captain's ball, and Harbour Tolls"], 3: ['light.opens.3', 'Storm surges, and Tide Nets'], 4: ['light.opens.4', 'Golfers wave a flag at the light'], 5: ['light.opens.5', 'At night the beam lights the balls it sweeps'], 6: ['light.opens.6', 'The lamp is lit: the credits'] }[k];
+    return T ? tx(T[0], T[1]) : '';
+  }
+
+  // ---- the three endless rows (phase 2): in the Gullhaven section, opened by their stage, never capped ----
+  /** a row is in the shop: the preview on, at Gullhaven, its stage paid (Free roam: all of them) */
+  function glRowOpen(id) { const r = GLC_() && (GLC_().rows || {})[id]; return !!r && GULLEND.on && !!state && rangeId() === GLC_().range && glStage() >= r.stage; }
+  /** the upgrade defs: cost(n) = baseFrac x the price x growth^n (upCost multiplies costMult back in) */
+  const glUpMemo = { k: '', v: null };
+  function glMechUps(base) {
+    const C = GLC_(), key = glPrice() + ':' + costMult() + ':' + (base === glUpMemo.base);
+    if (glUpMemo.v && glUpMemo.k === key && glUpMemo.base === base) return glUpMemo.v;
+    const o = Object.assign({}, base), cm = costMult() || 1;
+    for (const id of GL_ROWS) { const r = C.rows[id]; o[id] = { name: ({ whistle: 'Gull Whistle', tolls: 'Harbour Tolls', nets: 'Tide Nets' })[id], maxLevel: 1e9, baseCost: r.baseFrac * glPrice() / cm, costGrowth: r.growth, effectPerLevel: 0, desc: '', gl: true }; }
+    glUpMemo.k = key; glUpMemo.base = base; glUpMemo.v = o; return o;
+  }
+  function glIdsSync() { /* the rows ride in mechUps() (the Gullhaven section); nothing to register */ }
+  /** the shop's effect / why lines for the rows: "Lv 14 · no cap", what the next level adds */
+  function glRowText(id, m, at, r1, why) {
+    if (!GL_ROWS.includes(id) || !glOn() || !glRowOpen(id)) return null;
+    if (m == null) return true;
+    const a = glRowTotal(id), b = glRowTotal(id, lvl(id) + Math.max(1, m)), d = b - a, W = (k, fb, v) => tx('light.row.' + k, fb, v);
+    const pc = (v) => r1(Math.round(v * 1000) / 10), sec = (v) => r1(Math.round(v * 10) / 10);
+    if (id === 'tolls') return why ? W('tollsWhy', 'Gullhaven pays {b}% more, not {a}%', { a: pc(a), b: pc(b) }) : W('tolls', 'Gullhaven income +{a}% (next +{d}%)', { a: pc(a), d: pc(d) });
+    if (id === 'whistle') return why ? W('whistleWhy', 'A seen-off raid pays {b} s more, not {a} s', { a: sec(a), b: sec(b) }) : W('whistle', 'Raid bonus +{a} s of income (next +{d} s)', { a: sec(a), d: sec(d) });
+    return why ? W('netsWhy', 'Each surge leaves {b} s more, not {a} s', { a: sec(a), b: sec(b) }) : W('nets', 'Sea glass +{a} s of income a surge (next +{d} s)', { a: sec(a), d: sec(d) });
+  }
+
+  // ---- paying a stage (the Build button) ----
+  /** sellRange for the Light: a stage, its moment on the field and its toast; stage 6 buys Gullhaven (buyComplete) */
+  function glPay(fromUi) {
+    if (mode !== 'game' || !(prestigeAvailable() || (GLF.force && canAfford(nextPartCost()) && (state.paid | 0) < glN()))) { sfx('ui_deny'); return false; }
+    const C = GLC_(), n = glN(), k = state.paid | 0, cost = nextPartCost(), L = glState();
+    state.cash -= cost; state.paidTotal = (state.paidTotal || 0) + cost; state.prestigeReadyFired = false;
+    L.paidAc = (+L.paidAc || 0) + cost;
+    const pc = k + 1 >= (C.chestFrom || 1) ? grantPartChest(k + 1, n) : null; // stages chestFrom..6: a chest each (today's four)
+    if (k < n - 1) {
+      state.paid = k + 1; L.stage = k + 1;
+      emit('instalment', { range: rangeId(), part: k + 1, of: n, cost, light: true });
+      emit('light', { phase: 'stage', stage: k + 1, of: n, cost });
+      sfx('instalment'); sfx(sfxHas('light_stage') ? 'light_stage' : 'request_done', { volume: 0.7 });
+      const p = world.player || { x: 90, y: 160 }; fire('onInstalment', { x: world.house.x, y: world.house.y - 10, part: k + 1, of: n, player: p });
+      glCrate(k + 1);
+      const what = tx('light.done.' + glDef(k).id, ({ nests: 'the nests are cleared', stair: "the stair's mended", glaze: 'the lamp room is glazed', bands: 'the bands are painted', lens: 'the lens is in' })[glDef(k).id] || '');
+      toast(tx('light.toast', 'Stage {n} done: {what}.', { n: k + 1, what }) + ' ' + glOpensText(k + 1) + (pc && chestState().inv.includes(pc) ? ' ' + tpl(tx('chest.plus', '+ {tier} chest'), { tier: chestTierName(pc.tier) }) : ''), { front: true });
+      steadyCache.dirty = true; gusPickState.dirty = true; glUpMemo.v = null;
+      checkAchievements(); save(); ui_.refresh && ui_.refresh(true);
+      return true;
+    }
+    L.stage = n; GLF.pending = true; // stage 6: the lamp (buyComplete plays glFinale before the credits)
+    return buyComplete(fromUi);
+  }
+
+  // ---- the lighthouse (code art over the skyline's own, at its spot) ----
+  const GLX = 43, GLB = 31; // the tower's centre column and its bottom row (logical px): top left, between the ball house and the deck's stand (DECK_X0), clear of the deck all visit
+  /** the stage the lighthouse shows: the crate procession changes it when it arrives */
+  const GLS = { shown: -1, crate: null };
+  function glShown() { const st = glStage(); if (GLS.shown < 0 || GLS.shown > st || !GLS.crate) GLS.shown = st; return GLS.shown; }
+  /** draw the lighthouse at stage s: x = its centre column, b = its bottom row. Day colours (the night tint darkens the
+   *  background as everything else). 13 px wide with the scaffold, 25 tall */
+  function glDrawLighthouse(g, s, x, b) {
+    const P = (c, px, py, w, h) => { g.fillStyle = c; g.fillRect(x + px, b + py, w || 1, h || 1); };
+    const ink = '#2a1c16', white = s >= 1 ? '#efe7d2' : '#b7ae9c', shade = s >= 1 ? '#cbc1aa' : '#958c7b', red = '#c9473b', redD = '#8c2434';
+    // the rock it stands on
+    P('#4b4a52', -5, -2, 11, 3); P('#6c6a73', -4, -2, 4, 1); P('#6c6a73', 2, -1, 3, 1); P(ink, -5, 0, 11, 1);
+    // the tower: 7 wide at the bottom (rows -16..-3), 5 wide above (rows -17..-21 lamp gallery below)
+    P(ink, -4, -16, 1, 14); P(ink, 4, -16, 1, 14); P(white, -3, -16, 6, 14); P(shade, 2, -16, 1, 14);
+    P(ink, -3, -21, 1, 5); P(ink, 3, -21, 1, 5); P(white, -2, -21, 4, 5); P(shade, 1, -21, 1, 5); P(ink, -4, -17, 9, 1);
+    if (s >= 4) { // the red and white bands
+      for (const y of [-20, -14, -8]) { P(red, y < -16 ? -2 : -3, y, y < -16 ? 4 : 6, 2); P(redD, y < -16 ? 1 : 2, y, 1, 2); }
+    }
+    if (s < 1) { // derelict: cracks and stains, a boarded door, a dark lamp room, gulls' nests
+      P('#5c564b', -2, -12, 1, 3); P('#5c564b', -1, -10, 1, 2); P('#5c564b', 1, -19, 1, 2); P('#7a705f', 0, -6, 2, 1); P('#7a705f', -3, -14, 1, 2);
+    }
+    // the door and the stair's windows
+    if (s >= 2) { P(redD, -1, -5, 3, 4); P('#5a1a24', -1, -5, 3, 1); P('#f2c641', 1, -3, 1, 1); P(ink, -2, -6, 5, 1); P('#7a705f', -2, -1, 5, 1); }
+    else { P('#5a4232', -1, -5, 3, 4); P('#8a6a48', -1, -4, 3, 1); P('#8a6a48', -1, -2, 3, 1); }
+    for (const y of [-12, -18]) P(s >= 2 ? '#3b5566' : '#2a2a2e', 0, y, 1, 2);
+    // the gallery (a rail round the lamp room)
+    P(ink, -4, -22, 9, 1); P(ink, -4, -24, 1, 2); P(ink, 4, -24, 1, 2); P(ink, -2, -24, 1, 2); P(ink, 2, -24, 1, 2);
+    // the lamp room (rows -27..-23): frame + glass
+    P(ink, -2, -27, 1, 4); P(ink, 2, -27, 1, 4);
+    if (s < 3) { P('#1e2230', -1, -27, 3, 4); P('#3a3f52', -1, -26, 1, 1); if (s < 1) P('#4d5468', 1, -24, 1, 1); } // empty, a broken pane
+    else { P(s >= 6 ? '#fff2a6' : '#9fd3e0', -1, -27, 3, 4); P('#fffaee', -1, -27, 1, 1); } // glazed: a glint
+    if (s >= 5) { P(s >= 6 ? '#fffaee' : '#f2c641', 0, -26, 1, 2); P(s >= 6 ? '#f2c641' : '#b98a2c', 1, -25, 1, 1); } // the brass lens
+    // the cap
+    P(ink, -2, -28, 5, 1); P(redD, -1, -29, 3, 1); P(ink, 0, -30, 1, 1);
+    if (s < 1) { // nests: twigs on the gallery and the cap, a gull sitting on top
+      P('#7d5f2e', -5, -24, 3, 2); P('#5a4232', -4, -23, 2, 1); P('#7d5f2e', 1, -31, 3, 1); P('#5a4232', 2, -30, 2, 1);
+      P('#fffaee', -6, -26, 2, 2); P('#a6968b', -5, -25, 1, 1); P('#f2a541', -7, -26, 1, 1);
+    }
+    if (s >= 1 && s <= 3) { // the scaffold: two poles and their boards
+      const W = '#8a6a48', Wd = '#5a4232';
+      P(W, -6, -27, 1, 27); P(W, 6, -27, 1, 27);
+      for (const y of [-25, -19, -13, -7]) { P(Wd, -6, y, 3, 1); P(Wd, 4, y, 3, 1); }
+      P(W, -5, -22, 1, 1); P(W, -4, -21, 1, 1); P(W, 5, -16, 1, 1); P(W, 4, -15, 1, 1); // braces
+    }
+  }
+  /** buildBackground: clear the skyline sprite's own lighthouse and draw the Light's at the stage shown */
+  function glBackground(g) {
+    if (!GULLEND.on || !GLC_() || rangeId() !== GLC_().range) return;
+    g.clearRect(169, 6, 3, 22); // the sprite's thin lighthouse (cols 170-171, behind the deck's stand most of the visit): ours stands on the point, top left
+    glDrawLighthouse(g, glShown(), GLX, GLB);
+  }
+  /** the beam's lamp: the Light's lamp room (the skyline's own is gone); null while the lamp is dark */
+  function glBeam() { const s = glShown(); return s >= ((GLC_().beam && GLC_().beam.stage) || 5) ? { x: GLX, y: GLB - 25 } : null; }
+  /** a small picture of stage s for the ⓘ list (data URL, cached) */
+  const GL_ICON = {};
+  function glIcon(s) {
+    s = clamp(s | 0, 0, 6); if (GL_ICON[s]) return GL_ICON[s];
+    try { const c = makeCanvas(15, 36), g = c.getContext('2d'); glDrawLighthouse(g, s, 7, 34); GL_ICON[s] = c.toDataURL(); } catch (e) { GL_ICON[s] = ''; }
+    return GL_ICON[s];
+  }
+
+  // ---- the stage moment: three beetles in the Foreman's hard hats carry a crate up to the light ----
+  function glCrate(stage) {
+    const h = world.house; if (!h) { GLS.shown = stage; bgDirty = true; return; }
+    GLS.crate = { stage, t: 0, dur: RM_() ? 0.6 : 3.2, x0: h.x + 6, y0: h.y + 2, x1: GLX - 4, y1: G.fieldD0 - 2 };
+  }
+  function glCrateTick(dt) {
+    const c = GLS.crate; if (!c) return;
+    c.t += dt;
+    if (c.t >= c.dur && !c.done) {
+      c.done = true; GLS.shown = c.stage; bgDirty = true;
+      sfx(sfxHas('light_hammer') ? 'light_hammer' : 'chest_shake', { volume: 0.6 });
+      if (!RM_()) for (let i = 0; i < 3; i++) fx.sprite('sparkle', GLX + rand(-6, 6), GLB - rand(4, 26));
+      fx.particles('part', GLX, GLB - 14, 14, { colors: ['#f2c641', '#fff2a6', '#fffaee'], speed: 40, up: 30, g: 60, life: 0.8 });
+      if (!frSaid('lightStage')) firstNow('lightStage');
+    }
+    if (c.t >= c.dur + 0.6) GLS.crate = null;
+  }
+  /** draw the crate and its three beetles (depth-sorted with the field props) */
+  function glProps(list, g) {
+    const c = GLS.crate; if (!c || c.done) return;
+    const k = clamp(c.t / c.dur, 0, 1), x = lerp(c.x0, c.x1, k), y = lerp(c.y0, c.y1, k) - Math.sin(k * Math.PI) * 4;
+    list.push({ y: 990, d: () => {
+      for (let i = 0; i < 3; i++) {
+        const bx = x - 7 + i * 7, by = y + (i === 1 ? 1 : 0), b = { x: bx, y: by + 3, sq: GLS.sq || (GLS.sq = sq()), animMs: renderMs + i * 70, flip: c.x1 < c.x0 };
+        drawBug(g, b, 'clockwork'); g.fillStyle = '#f2c641'; g.fillRect(Math.round(bx) - 2, Math.round(by) - 4, 5, 2); g.fillRect(Math.round(bx) - 3, Math.round(by) - 2, 7, 1); // the Foreman's hard hats
+      }
+      const cx = Math.round(x), cy = Math.round(y) - 8;
+      g.fillStyle = '#2a1c16'; g.fillRect(cx - 6, cy - 1, 13, 7); g.fillStyle = '#b8864f'; g.fillRect(cx - 5, cy, 11, 5); g.fillStyle = '#8a6a48'; g.fillRect(cx - 5, cy + 2, 11, 1); g.fillRect(cx, cy, 1, 5);
+    } });
+  }
+
+  // ---- stage 6: dusk falls, the lamp lights, the beam sweeps, the golfers cheer, then the credits ----
+  const GLF = { pending: false, t: -1, then: null, dusk: null, force: false };
+  /** buyComplete hands the credits over (the finale bought with the Light); a reload just rolls them */
+  function glFinale(then) {
+    GLF.pending = false; GLF.t = 0; GLF.then = then;
+    clearTimeout(GLF.timer); GLF.timer = setTimeout(() => glFinaleDone(), (RM_() ? 4 : 8) * 1000 + 3000); // the credits roll even if the game is paused meanwhile
+    const dn = B.dayNight; GLF.dusk = isNight() ? null : { from: state.dayT, to: dn.dayLengthSec + 2 };
+    GLS.shown = glN(); bgDirty = true; emit('light', { phase: 'lit' });
+    sfx(sfxHas('ship_bell') ? 'ship_bell' : 'request_ask', { volume: 0.8 });
+    toast(tx('light.lit', 'The Light is lit! Gullhaven is yours.'), { front: true });
+  }
+  function glFinaleTick(dt) {
+    if (GLF.t < 0) return;
+    GLF.t += dt;
+    const D = GLF.dusk; if (D) { const k = clamp(GLF.t / 3, 0, 1); state.dayT = D.from + (D.to - D.from) * k * k; if (k >= 1) GLF.dusk = null; }
+    if (!GLF.cheered && GLF.t >= 3.6) { GLF.cheered = true; AMB.cheerAt = gameT; sfx('prestige', { volume: 0.5 }); if (!RM_()) for (let i = 0; i < 6; i++) fx.sprite('sparkle', GLX + rand(-14, 14), rand(2, 26)); }
+    if (GLF.t >= (RM_() ? 4 : 8)) glFinaleDone();
+  }
+  function glFinaleDone() { if (GLF.t < 0) return; clearTimeout(GLF.timer); const f = GLF.then; GLF.t = -1; GLF.then = null; GLF.cheered = false; GLF.dusk = null; if (f) f(); }
+  /** the beam sweeps faster while the lamp first lights (two passes in the finale) */
+  const glBeamAng = () => (GLF.t >= 0 ? renderMs / 600 : renderMs / 1600);
+
+  // ---- stage 5: the beam lights the balls it sweeps over at night (+litBonus of a swing, like a lantern pool) ----
+  function glBeamTick() {
+    const bm = glBeam(); if (!bm || !isNight() || !isOpen() || glShown() < 5) return;
+    const ang = glBeamAng(), sn = Math.sin(ang); if (sn < 0.6) return;
+    const cx = bm.x + Math.cos(ang) * 110, until = gameT + 3;
+    for (const b of world.balls) if (!b.trapped && b.st !== 'air' && !b.demo && Math.abs(b.x - cx) < 14) b.glLit = until;
+  }
+  function glLitPickup(robot, b) {
+    if (!(b.glLit > gameT) || b.demo || b.lit) return;
+    const f = (GLC_().beam && GLC_().beam.litBonus) || 0; if (!(f > 0)) return;
+    const v = earn(f * swingPrice() * xSwingK(), 'lantern'); if (!(v > 0) || robot) return;
+    fx.popup('+' + fmt(v), b.x, b.y - 8, { small: true, chip: true, money: true, merge: 'litrat', value: v, prefix: '+', color: '#f2a65a' });
+  }
+
+  /** the step: the crate, the finale, the beam (and phase 3's moments) */
+  function glTick(dt) {
+    if (GLS.crate) glCrateTick(dt);
+    if (GLF.t >= 0) glFinaleTick(dt);
+    if (rangeId() !== GLC_().range) { if (glMoLive()) glMoEnd(); return; }
+    glBeamTick();
+    glMoTick(dt); // phase 3: the moments
+    if (glHere() && (state.paid | 0) === 0 && glGateOk() && !frSaid('light')) firstNow('light');
+  }
+  /** the rows' shop icons (10 x 10, code-drawn): a brass whistle, a toll purse, a net with sea glass */
+  const GL_ICONS = {
+    whistle: [['#2a1c16', [[1, 3, 7, 4], [7, 4, 2, 2], [0, 4, 1, 2]]], ['#f2c641', [[2, 4, 5, 2], [7, 5, 1, 1]]], ['#b98a2c', [[2, 5, 5, 1]]], ['#fff2a6', [[3, 4, 1, 1]]], ['#2a1c16', [[3, 7, 1, 2], [2, 8, 3, 1]]]],
+    tolls: [['#2a1c16', [[2, 2, 6, 1], [1, 3, 8, 6], [3, 1, 4, 1]]], ['#8a6a48', [[2, 4, 6, 4]]], ['#b8864f', [[2, 3, 6, 1], [3, 4, 2, 1]]], ['#f2c641', [[4, 0, 2, 2], [6, 6, 2, 2]]], ['#fff2a6', [[4, 0, 1, 1]]], ['#c9473b', [[2, 3, 6, 1]]]],
+    nets: [['#2a1c16', [[0, 1, 10, 1], [0, 1, 1, 8], [9, 1, 1, 8], [1, 8, 8, 1]]], ['#b8864f', [[1, 3, 8, 1], [1, 5, 8, 1], [3, 2, 1, 6], [6, 2, 1, 6]]], ['#5fbf8a', [[4, 3, 2, 2]]], ['#7fb2e6', [[1, 6, 2, 2]]], ['#f2a541', [[7, 6, 2, 2]]], ['#fffaee', [[4, 3, 1, 1]]]]
+  };
+  function glIconURL(name, scale) {
+    const id = name.slice(3), s = scale || 3, key = name + '@' + s; if (GL_ICON[key] != null) return GL_ICON[key];
+    try { const c = makeCanvas(10 * s, 10 * s), g = c.getContext('2d'); for (const [col, rs] of GL_ICONS[id] || []) { g.fillStyle = col; for (const r of rs) g.fillRect(r[0] * s, r[1] * s, r[2] * s, r[3] * s); } GL_ICON[key] = c.toDataURL(); } catch (e) { GL_ICON[key] = ''; }
+    return GL_ICON[key];
+  }
+
+  // ---- phase 3: the three moments (gull raids, the Captain's ball, storm surges) ----
+  // From their stage on (Free roam: all three), at most one at a time, gapSec apart, never while nobody's playing (the rat
+  // still for 30 s, a menu, a work block), during a beat with props (kite day, the pipe band), the crate or the lamp. Rewards
+  // are seconds of income (incomePerSec(30), like members' requests). They're the rat's: the gulls, the pennant ball and
+  // the sea glass aren't balls the beetles or Pip can see (the pennant ball leaves world.balls while it flies its pennant).
+  // Nothing here is saved but the tallies (state.moments): a reload ends a moment quietly (a carried ball is simply gone,
+  // as with today's gull). _test.glMoment(cmd, arg) drives them for tests and stills.
+  const GLMO = { t: {}, gap: 0, raid: null, cap: null, surge: null, wb: null, hide: false }; // hide: tests (the perf budget measures the moments' own draws)
+  const GL_MO = ['raid', 'captain', 'surge'];
+  const glMoCfg = () => GLC_().moments || {};
+  function glMoState() {
+    const z = () => ({ raid: { n: 0, won: 0 }, captain: { n: 0, won: 0 }, surge: { n: 0, glass: 0 } });
+    if (!isObj(state.moments)) state.moments = z();
+    const M = state.moments, d = z(); for (const k in d) { if (!isObj(M[k])) M[k] = d[k]; for (const f in d[k]) M[k][f] = Math.max(0, +M[k][f] || 0) | 0; }
+    return M;
+  }
+  const glMoLive = () => !!(GLMO.raid || GLMO.cap || GLMO.surge);
+  /** the Captain's waiting (golfers' and Pip's chatter keeps quiet over his ask, as over a member's request) */
+  function glMoCap() { return !!GLMO.cap; }
+  /** a beat with props on the field (kite day, the pipe band) */
+  function glPropBeat() { const bs = state.beats || {}; for (const id of ['kites', 'pipeBand']) { const b = bs[id]; if (isObj(b) && isNum(b.at) && state.visitT >= b.at && b.until != null && state.visitT < b.until) return true; } return false; }
+  /** no moment starts now (it would land on nobody, or on something else) */
+  function glMoQuiet() {
+    if (mode !== 'game' || paused.menu || paused.modal || focusQuiet() || GLF.t >= 0 || GLS.crate) return true;
+    const p = world.player; if (!p || p.lastMoveT == null || gameT - p.lastMoveT > 30) return true; // away / idle: no moments
+    return glPropBeat();
+  }
+  /** what a moment pays: sec seconds of your income (never less than a few swings' worth), as earned + a popup and coins */
+  function glPaySec(sec, x, y, key, fb) {
+    const v = Math.round(Math.max(10 * valueMult() * pmult(), sec * incomePerSec(30)));
+    earn(v, 'moment');
+    fx.popup(tx(key, fb, { n: fmt(v) }), x, y - 10, { color: '#f2c641', chip: true, big: key === 'light.raid.won' });
+    fx.popup(tx('light.toBar', '+{n} s toward the Light', { n: Math.round(sec) }), x, y + 2, { small: true, color: '#fff2a6' });
+    fx.coinFly && fx.coinFly(x, y - 6, 4);
+    return v;
+  }
+  /** the moments' clock: one at a time, gapSec apart, each its own interval (everySec) */
+  function glMoTick(dt) {
+    if (rangeId() !== GLC_().range || mode !== 'game') { glMoEnd(); return; }
+    if (GLMO.wb && GLMO.wb !== world.balls) glMoEnd(); // the world was rebuilt (a reload, a visit, a dev jump)
+    if (GLMO.raid) glRaidTick(dt); if (GLMO.cap) glCapTick(dt); if (GLMO.surge) glSurgeTick(dt);
+    const C = glMoCfg(), st = glStage();
+    if (glMoLive()) { GLMO.gap = C.gapSec || 45; return; }
+    const quiet = glMoQuiet(); if (!quiet) GLMO.gap -= dt;
+    let due = null;
+    for (const k of GL_MO) { const M = C[k]; if (!M || st < M.stage) continue; if (GLMO.t[k] == null) GLMO.t[k] = rand(M.everySec[0], M.everySec[1]); if (!quiet) GLMO.t[k] -= dt; if (GLMO.t[k] <= 0 && (!due || GLMO.t[k] < GLMO.t[due])) due = k; }
+    if (!due || quiet || GLMO.gap > 0) return;
+    const M = C[due]; GLMO.t[due] = glMoStart(due) ? rand(M.everySec[0], M.everySec[1]) : 10; // nothing to start it on: try again shortly
+  }
+  function glMoStart(k) { const ok = k === 'raid' ? glRaidStart() : k === 'captain' ? glCapStart() : glSurgeStart(); if (ok) { GLMO.wb = world.balls; GLMO.gap = glMoCfg().gapSec || 45; } return ok; }
+  /** end whatever is running, quietly (a range change, a rebuilt world) */
+  function glMoEnd() { if (GLMO.cap && GLMO.cap.ball && !GLMO.cap.carried && GLMO.wb === world.balls) glCapBack(false); GLMO.raid = GLMO.cap = GLMO.surge = null; GLMO.wb = null; }
+  const glLoose = (b) => pickable(b) && b.type === 'range' && !b.tip && !b.demo && !b.lucky && b.st === 'rest';
+  const glTouch = (x, y, r) => { const p = world.player; return !!p && !(p.stun > 0) && d2(p.x, p.y - 6, x, y) < r * r; };
+
+  // -- the gull raid: gulls swoop in from the sea (east), each grabs a loose ball and circles the field, then leaves --
+  function glRaidStart() {
+    const M = glMoCfg().raid, n = GFX.level >= 2 ? M.gullsLow || 3 : M.gulls || 4;
+    const pool = world.balls.filter(glLoose); if (!pool.length) return false;
+    const gulls = [];
+    for (let i = 0; i < n && pool.length; i++) { const j = Math.floor(Math.random() * pool.length), b = pool.splice(j, 1)[0]; b.claim = -2;
+      gulls.push({ i, x: G.W + 10 + i * 14, y: G.fieldD0 + rand(10, 60), ball: b, phase: 'in', carry: false, t: 0, ang: rand(0, 6.28), cx: 0, cy: 0, r: rand(16, 24), out: false }); }
+    GLMO.raid = { gulls, n: gulls.length, shoo: 0, t: 0 };
+    const S = glMoState(); S.raid.n++;
+    sfx('gull_steal'); sfx('gull_steal', { pitch: 3 });
+    ambientToast('glRaid', tx('light.raid.start', 'Gull raid! Shoo them off the balls.'));
+    emit('light', { phase: 'raid', n: gulls.length });
+    if (!frSaid('raid')) firstNow('raid', { at: () => { const r = GLMO.raid, g = r && r.gulls.find((q) => !q.out); return g ? { x: g.x, y: g.y } : null; } });
+    return true;
+  }
+  function glRaidTick(dt) {
+    const R2 = GLMO.raid, M = glMoCfg().raid; R2.t += dt;
+    for (const q of R2.gulls) {
+      if (q.out) continue; q.t += dt;
+      if (q.phase === 'in') { // dive at the ball (it may have been picked up meanwhile: the gull settles for where it lay)
+        const dx = q.ball.x - q.x, dy = q.ball.y - 2 - q.y, L = Math.hypot(dx, dy);
+        if (L < 3) { const k = world.balls.indexOf(q.ball); if (k >= 0 && q.ball.claim === -2) { world.balls.splice(k, 1); q.carry = true; } if (q.ball.claim === -2) q.ball.claim = -1; q.phase = 'circle'; q.t = 0;
+          const c = clampToField({ x: q.x, y: q.y }, 24); q.cx = clamp(c.x, G.toXY(G.a0, 0).x + q.r, G.toXY(G.a1, 0).x - q.r); q.cy = clamp(c.y, G.fieldD0 + q.r, G.fieldD1 - q.r); q.ang = Math.atan2(q.y - q.cy, q.x - q.cx); }
+        else { q.x += dx / L * 80 * dt; q.y += dy / L * 80 * dt; q.vx = dx; }
+      } else if (q.phase === 'circle') { // a lazy loop over its patch (~35 px/s), then off to sea
+        q.ang += dt * 1.6 * (q.i % 2 ? -1 : 1); const nx = q.cx + Math.cos(q.ang) * q.r, ny = q.cy + Math.sin(q.ang) * q.r * 0.7; q.vx = nx - q.x; q.x = nx; q.y = ny;
+        if (q.t >= (M.circleSec || 10)) q.phase = 'leave';
+      } else { q.x += 60 * dt; q.y -= 20 * dt; q.vx = 1; if (q.x > G.W + 12 || q.y < -10) { q.out = true; // gone: the ball comes back later (today's single gull)
+          if (q.carry) { const p0 = fromPortrait(rand(20, 160), 300), nb = newBall('range', p0.x, p0.y); nb.landed = true; world.balls.push(nb); } } }
+      if (!q.out && glTouch(q.x, q.y, 14)) { // shoo! it drops the ball and a posh ball
+        q.out = true; q.shooed = true; R2.shoo++;
+        if (q.carry) { const nb = newBall('range', q.x, q.y, 6, rand(-10, 10), 10, 20); nb.st = 'air'; nb.landed = true; world.balls.push(nb); } else if (q.ball.claim === -2) q.ball.claim = -1;
+        const sb = newBall('premium', q.x, q.y, 10, 0, 0, 10); sb.st = 'air'; world.balls.push(sb);
+        fx.popup(tx('light.raid.shoo', 'Shoo! {n}/{m}', { n: R2.shoo, m: R2.n }), q.x, q.y - 6, { big: true, color: '#f2c641' });
+        if (!RM_()) fx.particles('feathers', q.x, q.y, 10, { colors: ['#fffaee', '#a6968b'], speed: 50, g: 20, life: 0.8 });
+        sfx('gull_steal', { pitch: 5 }); emit('gullChased', { drop: 'premium', raid: true });
+      }
+    }
+    if (R2.gulls.every((q) => q.out)) {
+      if (R2.shoo >= R2.n) { const p = world.player || { x: 90, y: 160 }, S = glMoState(); S.raid.won++;
+        glPaySec((M.rewardSec || 0) + glRowTotal('whistle'), p.x, p.y - 14, 'light.raid.won', 'Raid seen off! +{n}'); sfx('request_done'); }
+      for (const q of R2.gulls) if (q.ball && q.ball.claim === -2) q.ball.claim = -1;
+      emit('light', { phase: 'raidEnd', shoo: R2.shoo, n: R2.n }); GLMO.raid = null;
+    }
+  }
+
+  // -- the Captain's ball: a golfer in a captain's cap waves, one loose ball flies a navy pennant; bring it home in time --
+  function glCapStart() {
+    const hosts = world.golfers.filter((g) => g && (!g.st || g.st === 'play') && !(world.req && world.req.bay === g.bay));
+    const pool = world.balls.filter((b) => glLoose(b) && b.y > G.fieldD0 + 30); if (!hosts.length || !pool.length) return false;
+    const g = hosts[Math.floor(Math.random() * hosts.length)], b = pool[Math.floor(Math.random() * pool.length)];
+    world.balls.splice(world.balls.indexOf(b), 1);
+    GLMO.cap = { bay: g.bay, x: b.x, y: b.y, t: 0, carried: false, ball: b };
+    glMoState().captain.n++;
+    g.cheer = 1.5; sfx('request_ask', { volume: 0.8 });
+    ui_.bark && ui_.bark(g, tx('light.captain.ask', 'Captain here! Bring my ball home, would you?'), { req: true });
+    emit('light', { phase: 'captain', bay: g.bay });
+    if (!frSaid('captain')) firstNow('captain', { ball: GLMO.cap, at: () => (GLMO.cap && !GLMO.cap.carried ? { x: GLMO.cap.x, y: GLMO.cap.y } : null) });
+    return true;
+  }
+  /** the pennant ball back on the field as a plain ball (time ran out); carried: it drops at the rat's feet */
+  function glCapBack(carried) { const c = GLMO.cap; if (!c) return; const p = world.player, at = carried && p ? { x: p.x, y: p.y + 2 } : { x: c.x, y: c.y }; const nb = newBall('range', at.x, at.y); nb.landed = true; world.balls.push(nb); }
+  function glCapTick(dt) {
+    const c = GLMO.cap, M = glMoCfg().captain, g = world.golfers.find((q) => q && q.bay === c.bay); c.t += dt;
+    if (!c.carried && glTouch(c.x, c.y + 6, 10)) { c.carried = true; sfx('pickup_special', { volume: 0.6, pitch: 5 }); if (!RM_()) fx.sprite('sparkle', c.x, c.y - 2); }
+    if (c.carried) { const p = world.player, dp = dropoffXY(); if (p) { c.x = p.x; c.y = p.y - 12; }
+      if (p && d2(p.x, p.y, dp.x, dp.y + 4) < feel.depositRadius * feel.depositRadius * 1.6) { // home: the Captain's pleased
+        state.stock++; glMoState().captain.won++;
+        if (g) g.cheer = 1.6; if (!RM_()) for (let i = 0; i < 5; i++) fx.sprite('sparkle', dp.x + rand(-8, 8), dp.y - rand(4, 14));
+        glPaySec(M.rewardSec || 0, dp.x, dp.y - 8, 'light.captain.done', 'Aye, thank you! +{n}'); sfx('request_done');
+        emit('light', { phase: 'captainEnd', won: true }); GLMO.cap = null; return; } }
+    else if (g && ((c.t * 2) | 0) % 6 === 0 && (g.cheer || 0) < 0.3) g.cheer = 0.6; // he keeps waving
+    if (c.t >= (M.windowSec || 60) || !g) {
+      glCapBack(c.carried); fx.popup(tx('light.captain.gone', 'The Captain shrugs: next time.'), g ? g.x : c.x, (g ? g.y : c.y) - 26, { small: true, color: '#cfd8e6' });
+      emit('light', { phase: 'captainEnd', won: false }); GLMO.cap = null;
+    }
+  }
+
+  // -- the storm surge: a squall, a bell, a wave over the seaward side, sea glass on the tideline; the tide takes the rest --
+  const GL_GLASS = [['#5fbf8a', '#2f7a55'], ['#7fb2e6', '#3b5f8c'], ['#f2a541', '#a8661e']];
+  const glSurgeX = (u) => G.toXY(G.a1 - (glMoCfg().surge.share || 0.35) * (G.a1 - G.a0) * u, 0).x; // u 0..1: the sea edge .. the tideline
+  function glSurgeStart() {
+    GLMO.surge = { phase: 'warn', t: 0, glass: [], pushed: 0, got: 0 };
+    glMoState().surge.n++;
+    sfx(sfxHas('ship_bell') ? 'ship_bell' : 'request_ask', { volume: 0.8 });
+    ambientToast('glSurge', tx('light.surge.warn', 'Storm surge coming!'));
+    emit('light', { phase: 'surge' });
+    if (!frSaid('surge')) firstNow('surge');
+    return true;
+  }
+  function glSurgeTick(dt) {
+    const s = GLMO.surge, M = glMoCfg().surge; s.t += dt;
+    if (s.phase === 'warn' && s.t >= (M.warnSec || 5)) { s.phase = 'wave'; s.t = 0; sfx(sfxHas('wave_whoosh') ? 'wave_whoosh' : 'gust', { volume: 0.9 }); }
+    if (s.phase === 'wave') {
+      const D = M.waveSec || 2, u = clamp(s.t / D, 0, 1), x = glSurgeX(u), push = (M.pushPx || 20) * dt / D;
+      for (const b of world.balls) { if (b.trapped || b.st === 'air' || b.st === 'belt' || b.demo || b.x < x) continue; b.x -= G.across.x * push; b.y -= G.across.y * push; const q = clampToField({ x: b.x, y: b.y }, 2); b.x = q.x; b.y = q.y; }
+      if (u >= 1) { s.phase = 'tide'; s.t = 0; const xt = glSurgeX(1) + 4, n = M.glass || 5;
+        for (let i = 0; i < n; i++) { const d = fieldD(0.12 + (i + rand(0.2, 0.8)) / n * 0.76); let q = { x: xt + rand(-3, 5), y: d };
+          if (traps.zones) for (let k = 0; k < 4 && traps.zones.some((z) => inTrapZone(z, q.x, q.y, 6)); k++) q = { x: q.x + 8, y: q.y + 6 };
+          s.glass.push({ x: q.x, y: q.y, c: i % GL_GLASS.length, got: false, off: 0 }); } }
+    }
+    if (s.phase === 'tide') {
+      for (const gl of s.glass) if (!gl.got && !gl.off && glTouch(gl.x, gl.y + 6, 10)) { // the rat's: +glassSec (+ Tide Nets' share)
+        gl.got = true; s.got++; glMoState().surge.glass++;
+        glPaySec((M.glassSec || 0) + glRowTotal('nets') / Math.max(1, M.glass || 5), gl.x, gl.y, 'light.surge.glass', 'Sea glass! +{n}');
+        sfx('pickup_special', { volume: 0.6, pitch: 7 }); if (!RM_()) fx.sprite('sparkle', gl.x, gl.y - 2);
+      }
+      if (s.t >= (M.tideSec || 25)) { // the tide pulls back what's left: it slides seaward and fades
+        for (const gl of s.glass) if (!gl.got) gl.off += dt;
+        if (s.glass.every((gl) => gl.got || gl.off >= 1.2)) { emit('light', { phase: 'surgeEnd', got: s.got, of: s.glass.length }); GLMO.surge = null; }
+      } else if (s.glass.every((gl) => gl.got)) { emit('light', { phase: 'surgeEnd', got: s.got, of: s.glass.length }); GLMO.surge = null; }
+    }
+  }
+
+  // -- drawing: the gulls (on top), the pennant ball and the sea glass (y-sorted), the squall, the wave and the foam --
+  function glMoProps(list, g) {
+    if (GLMO.hide) return; const c = GLMO.cap;
+    if (c) list.push({ y: c.carried ? c.y + 14 : c.y, d: () => {
+      const x = Math.round(c.x), y = Math.round(c.y), w = RM_() || GFX.level >= 2 ? 0 : ((renderMs / 220) | 0) % 2;
+      if (!c.carried) { g.fillStyle = 'rgba(24,36,16,.35)'; g.fillRect(x - 1, y + 1, 4, 1); g.fillStyle = '#fffaee'; g.fillRect(x, y - 1, 2, 2); }
+      g.fillStyle = '#2a1c16'; g.fillRect(x + 2, y - 8, 1, 8); // the pennant on its stick (navy, a gold edge)
+      g.fillStyle = '#26406b'; g.fillRect(x + 3, y - 8 + w, 4, 2); g.fillRect(x + 3, y - 6 + w, 2, 1); g.fillStyle = '#f2c641'; g.fillRect(x + 3, y - 8 + w, 1, 1);
+    } });
+    const s = GLMO.surge;
+    if (s && s.phase === 'tide') for (const gl of s.glass) { if (gl.got) continue; const k = clamp(gl.off / 1.2, 0, 1); if (k >= 1) continue;
+      list.push({ y: gl.y, d: () => { const C2 = GL_GLASS[gl.c], x = Math.round(gl.x + k * 26), y = Math.round(gl.y), tw = RM_() ? 0 : ((renderMs / 180 + gl.c * 3) | 0) % 8;
+        g.globalAlpha = 1 - k; g.fillStyle = C2[1]; g.fillRect(x - 1, y - 1, 4, 3); g.fillStyle = C2[0]; g.fillRect(x - 1, y - 2, 3, 2); g.fillStyle = '#fffaee'; if (tw === 0) g.fillRect(x, y - 3, 1, 1); else g.fillRect(x - 1, y - 2, 1, 1); g.globalAlpha = 1; } }); }
+  }
+  function glMoTop(g) {
+    if (GLMO.hide) return; const R2 = GLMO.raid;
+    if (R2) for (const q of R2.gulls) { if (q.out) continue; drawSprite(g, 'gull', q.x, q.y, { frame: frameAt(getSprite('gull'), renderMs + q.i * 90), flip: (q.vx || 0) < 0 }); if (q.carry) { g.fillStyle = '#fffaee'; g.fillRect(Math.round(q.x), Math.round(q.y) + 2, 2, 2); } }
+    const s = GLMO.surge; if (!s) return;
+    const M = glMoCfg().surge, y0 = G.fieldD0, y1 = G.fieldD1, xe = G.toXY(G.a1, 0).x + 14, rm = RM_();
+    if (s.phase === 'warn') { // the squall over the sea band, the sea edge froths
+      const k = clamp(s.t / 1.2, 0, 1), cx = G.W - 34, cy = 14;
+      g.globalAlpha = 0.85 * k; g.fillStyle = '#3d4352'; g.fillRect(cx - 18, cy - 4, 40, 7); g.fillRect(cx - 12, cy - 8, 26, 5); g.fillStyle = '#545b6c'; g.fillRect(cx - 10, cy - 8, 12, 2); g.fillRect(cx - 16, cy - 3, 10, 2);
+      g.fillStyle = '#7f8da3'; for (let i = 0; i < 7; i++) { const rx = cx - 14 + i * 5 + (rm ? 0 : ((renderMs / 90 + i * 3) | 0) % 3); g.fillRect(rx, cy + 4, 1, 3 + (i % 3)); } g.globalAlpha = 1;
+      const fx0 = glSurgeX(0.08); g.fillStyle = 'rgba(255,250,238,.75)'; for (let y = y0; y < y1; y += 9) { const j = rm ? 0 : ((renderMs / 120 + y) | 0) % 4; g.fillRect(fx0 + j, y, 2, 1); }
+    } else if (s.phase === 'wave' || (s.phase === 'tide' && s.t < 1.5)) { // the water over the seaward side, a foam crest at its front
+      const u = s.phase === 'wave' ? (rm ? 1 : clamp(s.t / (M.waveSec || 2), 0, 1)) : 1, a = s.phase === 'wave' ? 0.38 : 0.38 * (1 - s.t / 1.5), x = Math.round(glSurgeX(u));
+      g.fillStyle = `rgba(79,140,168,${a.toFixed(3)})`; g.fillRect(x, y0, xe - x, y1 - y0);
+      g.fillStyle = `rgba(214,236,242,${(a * 1.6).toFixed(3)})`; for (let y = y0; y < y1; y += 5) { const j = rm ? 0 : Math.round(Math.sin(y / 9 + renderMs / 150) * 2); g.fillRect(x + j - 1, y, 3, 4); }
+    }
+    if (s.phase === 'tide') { const x = Math.round(glSurgeX(1)) + 2; g.fillStyle = 'rgba(214,236,242,.35)'; for (let y = y0; y < y1; y += 9) g.fillRect(x + ((y * 7) % 3), y, 2, 1); } // the tideline
+  }
+  /** a golfer's Light look: the Captain's cap (navy, gold braid) while he waits; from stage 4, a red and white flag waved at
+   *  the lighthouse now and then (each bay in turn) */
+  function glGolferLook(g, gf, name, sw, x, y, frame, flip, sx, sy) {
+    const cap = GLMO.cap && GLMO.cap.bay === gf.bay, wave = glShown() >= 4 && !RM_() && ((renderMs / 1000 + gf.bay * 0.9) % 30) < 3;
+    if (!cap && !wave) return;
+    const e = getSprite(name, sw), m = (e && e.meta) || {}, fi = frame % Math.max(1, e.frames.length), pt = m.head; if (!pt) return;
+    const ox = Array.isArray(m.headX) ? (m.headX[fi] || 0) : 0, oy = Array.isArray(m.headY) ? (m.headY[fi] || 0) : 0, lx = pt.x + ox, ly = pt.y + oy;
+    const hx = Math.round(flip ? x + (e.ox - lx) * (sx || 1) : x + (lx - e.ox) * (sx || 1)), hy = Math.round(y + (ly - e.oy) * (sy || 1)), dir = flip ? -1 : 1;
+    if (cap) { g.fillStyle = '#1b2a48'; g.fillRect(hx - 3, hy - 2, 7, 2); g.fillRect(hx - 2, hy - 3, 5, 1); g.fillStyle = '#26406b'; g.fillRect(hx - 2, hy - 2, 5, 1); g.fillStyle = '#f2c641'; g.fillRect(hx - 3, hy - 1, 7, 1); g.fillStyle = '#2a1c16'; g.fillRect(hx + dir * 3, hy, 2, 1); }
+    if (wave || cap) { const fx_ = hx - dir * 6, w = ((renderMs / 200) | 0) % 2; g.fillStyle = '#5a4232'; g.fillRect(fx_, hy - 6, 1, 9);
+      if (cap) { g.fillStyle = '#26406b'; g.fillRect(fx_ - dir * 3 - (dir < 0 ? 0 : 2), hy - 6 + w, 3, 2); } else { g.fillStyle = '#efe7d2'; g.fillRect(fx_ + (dir > 0 ? -4 : 1), hy - 6 + w, 3, 2); g.fillStyle = '#c9473b'; g.fillRect(fx_ + (dir > 0 ? -4 : 1), hy - 6 + w, 1, 2); g.fillRect(fx_ + (dir > 0 ? -2 : 3), hy - 6 + w, 1, 2); } }
+  }
+  /** _test / stills: start a moment ('raid' | 'captain' | 'surge'), put the rat on something ('gull' i | 'pennant' | 'home' |
+   *  'glass' i), end it ('end'), or just look ('view') */
+  function glMoTest(cmd, arg) {
+    if (!glOn() || !state) return null;
+    const p = world.player, put = (x, y) => { if (p) { p.x = x; p.y = y + 6; p.lastMoveT = gameT; } };
+    if (GL_MO.includes(cmd)) { if (arg !== 'also') glMoEnd(); const ok = glMoStart(cmd); /* 'also': on top of the one running (the perf scene's worst case; play never stacks them) */ if (ok && GLMO.surge && arg === 'now') { GLMO.surge.t = 99; glSurgeTick(0); GLMO.surge.t = 99; glSurgeTick(0); } if (!ok) return false; }
+    else if (cmd === 'gull' && GLMO.raid) { const q = GLMO.raid.gulls.filter((z) => !z.out)[arg | 0]; if (q) put(q.x, q.y); }
+    else if (cmd === 'pennant' && GLMO.cap) put(GLMO.cap.x, GLMO.cap.y);
+    else if (cmd === 'home') { const dp = dropoffXY(); put(dp.x, dp.y - 2); }
+    else if (cmd === 'glass' && GLMO.surge) { const q = GLMO.surge.glass.filter((z) => !z.got && !z.off)[arg | 0]; if (q) put(q.x, q.y); }
+    else if (cmd === 'away' && p) { put(G.toXY(0.2, 0).x, fieldD(0.95)); }
+    else if (cmd === 'end') glMoEnd();
+    else if (cmd === 'hide') GLMO.hide = !!arg;
+    else if (cmd === 'clock') { for (const k of GL_MO) if (arg && arg[k] != null) GLMO.t[k] = arg[k]; if (arg && arg.gap != null) GLMO.gap = arg.gap; }
+    const r = GLMO.raid, c = GLMO.cap, s = GLMO.surge;
+    return { raid: r && { n: r.n, shoo: r.shoo, left: r.gulls.filter((q) => !q.out).length, phases: r.gulls.map((q) => (q.out ? (q.shooed ? 'shoo' : 'gone') : q.phase)), carry: r.gulls.filter((q) => q.carry && !q.out).length },
+      captain: c && (() => { const g = world.golfers.find((q) => q && q.bay === c.bay); return { bay: c.bay, t: c.t, carried: c.carried, x: c.x, y: c.y, gx: g ? g.x : null, gy: g ? g.y : null }; })(), rat: p ? { x: p.x, y: p.y } : null, gulls: r ? r.gulls.filter((q) => !q.out).map((q) => ({ x: q.x, y: q.y })) : [], glassAt: s ? s.glass.filter((q) => !q.got && q.off < 1.2).map((q) => ({ x: q.x, y: q.y })) : [], surge: s && { phase: s.phase, t: s.t, glass: s.glass.filter((q) => !q.got && q.off < 1.2).length, got: s.got },
+      clock: Object.assign({ gap: GLMO.gap }, GLMO.t), quiet: glMoQuiet(), tallies: isObj(state.moments) ? JSON.parse(JSON.stringify(state.moments)) : null };
+  }
+
   /** the instalments you've paid, as little pennants along the ball-house roof (all of them on a range you own) */
   function drawPartPennants(g, h) {
-    if (!state || state.freePlay) return; const n = isOwned(rangeId()) ? parts() : state.paid | 0; if (!n || parts() < 2) return;
+    if (!state || state.freePlay) return; const n = isOwned(rangeId()) ? parts0() : state.paid | 0; if (!n || parts() < 2) return; // §GL: an owned range shows its four
     const e = getSprite('ball_house'), top = Math.round(h.y - e.oy), x0 = Math.round(h.x - e.ox + 3), wave = RM_() || GFX.level >= 2 ? 0 : ((renderMs / 300) | 0) % 2;
     for (let k = 0; k < n; k++) { const x = x0 + k * 5; g.fillStyle = '#2a1c16'; g.fillRect(x, top - 6, 1, 6); g.fillStyle = k % 2 ? '#2fa7a0' : '#f2c641'; g.fillRect(x + 1, top - 6 + (k % 2 ? wave : 0), 3, 2); g.fillRect(x + 1, top - 4 + (k % 2 ? wave : 0), 1, 1); }
   }
@@ -32011,6 +33117,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const priceLabel = () => { const c = W.RANGE_RAT_CONFIG; return c && c.price ? String(c.price) : tx('unlock.priceTbd', 'Price set at launch'); };
   /** pay the next instalment of this range's price (the Buy button; RANGE_RAT.sellRange / payInstalment). The last one buys it. */
   function sellRange(fromUi) {
+    if (GULLEND.on && glHere()) return glPay(fromUi); // §GL: a stage of the Light
     if (mode !== 'game' || !prestigeAvailable()) { sfx('ui_deny'); return false; }
     const n = parts(), k = state.paid | 0, cost = nextPartCost();
     state.cash -= cost; state.paidTotal = (state.paidTotal || 0) + cost; state.prestigeReadyFired = false;
@@ -32028,6 +33135,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** pay everything that's left in one go (tests, the dev panel); false unless the wallet covers it */
   function buyRange() {
     if (mode !== 'game' || state.freePlay || state.freeRoam || visiting() || !canAfford(priceLeft())) { sfx('ui_deny'); return false; }
+    if (GULLEND.on && glHere()) { // §GL: every stage left (tests, the dev panel: the gates don't apply)
+      const L = glState(), C = GLC_();
+      while ((state.paid | 0) < parts() - 1) { const c = nextPartCost(); state.cash -= c; state.paidTotal = (state.paidTotal || 0) + c; state.paid++; L.paidAc = (+L.paidAc || 0) + c; L.stage = state.paid; if (state.paid >= (C.chestFrom || 1)) grantPartChest(state.paid, parts()); emit('instalment', { range: rangeId(), part: state.paid, of: parts(), cost: c, light: true }); }
+      GLF.force = true; try { return glPay(false); } finally { GLF.force = false; }
+    }
     while ((state.paid | 0) < parts() - 1) { const c = nextPartCost(); state.cash -= c; state.paidTotal = (state.paidTotal || 0) + c; state.paid++; grantPartChest(state.paid, parts()); emit('instalment', { range: rangeId(), part: state.paid, of: parts(), cost: c }); }
     return sellRange(false);
   }
@@ -32078,7 +33190,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (held) state.heldArrival = held;
     checkAchievements();
     save();
-    if (firstFinale) { state.creditsSeen = true; save(); const fin = B.ranges.findIndex((r) => r.id === rid); setTimeout(() => showCredits(true, fin), 600); } // the credits roll over the range just bought
+    if (firstFinale) { state.creditsSeen = true; save(); const fin = B.ranges.findIndex((r) => r.id === rid); if (GULLEND.on && GLF.pending && roam) glFinale(() => showCredits(true, fin)); else setTimeout(() => showCredits(true, fin), 600); } // the credits roll over the range just bought (§GL: after the lamp lights)
     else if (trialSale) { emit('trialEnd', { range: rid, stars: gained }); setTimeout(() => { if (!api.externalUnlock) ui_.unlockScreen && ui_.unlockScreen(); }, 900); }
     else rangeIntro();
     ui_.refresh && ui_.refresh(true);
@@ -32207,8 +33319,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const n = parts(), paid = vis ? (fs ? fs.paid | 0 : 0) : state.paid | 0; if (paid >= n) return null;
     const P = vis ? (fr.price || fr.prestigeAt || Infinity) : sellTarget();
     if (!isNum(P)) return null;
-    const sh = Math.round(P / n), cost = (k) => (k >= n - 1 ? Math.max(0, Math.round(P) - sh * (n - 1)) : sh), have = Math.max(0, +state.cash || 0);
+    const gl = GULLEND.on && glFront(), sh = Math.round(P / n), cost = (k) => (gl ? glStageCost(k, P) : k >= n - 1 ? Math.max(0, Math.round(P) - sh * (n - 1)) : sh), have = Math.max(0, +state.cash || 0); // §GL: the stages
     let need = 0, k = paid; for (; k < n; k++) { need += cost(k); if (need > have + 1e-9) break; }
+    if (gl) { let left = 0; for (let j = paid; j < n; j++) left += cost(j); need = Math.max(need, Math.min(left, (GLC_().tillFloor || 0) * P)); } // §GL: never less than a quarter of the price (today's away pay)
     return { room: Math.max(0, need - have), part: Math.min(k, n - 1) + 1, n };
   }
   // ---- the on-screen till (DECISIONS 52, approved by Ben 14 Nov 2026; BALANCE.idle.unattended) ----
@@ -32652,7 +33765,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (P.moving) { P.face = Math.abs(vy) > Math.abs(vx) * 1.2 ? (vy < 0 ? 'up' : 'down') : 'side'; P.animMs += dt * 1000 * clamp(sp / (feel.move.animRefSpeed || 40), 0.6, 2); P.idleT = 0; } else P.idleT += dt;
     // waves when you pass (keen); a rare bark with the golfers' spread-out line picker
     if (p && P.waveCd <= 0 && d2(P.x, P.y, p.x, p.y) < 26 * 26 && p.moving) { P.waveT = 0.9; P.waveCd = rand(18, 30); }
-    if ((P.barkT -= dt) <= 0) { P.barkT = rand.apply(null, PIP_().barkSec || [140, 260]); if (!world.req && gameT - lastBark > 20) { const line = dline('text.asst.pip.barks', null); if (line && ui_.bark) { lastBark = gameT; ui_.bark(P, line); } } }
+    if ((P.barkT -= dt) <= 0) { P.barkT = rand.apply(null, PIP_().barkSec || [140, 260]); if (!world.req && !(GULLEND.on && glMoCap()) && gameT - lastBark > 20) { const line = dline('text.asst.pip.barks', null); if (line && ui_.bark) { lastBark = gameT; ui_.bark(P, line); } } }
     // pickups: anything loose in reach, never a tip ball, never one you're closer to
     if (P.hopN < cap && !a.rest) {
       const r2 = pipReach() * pipReach(), bc = p && pipYouActive() ? bodyCentre(p) : null, yz2 = bc ? pipYouZone() * pipYouZone() : 0;
@@ -32878,6 +33991,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       crewTick(dt); requestTick(dt); ledgerTick(dt); tierSwapTick();
       if (m14Live('chute') || M1114.stars || m14Live('foreman')) m14Tick(dt); // §M1114 previews
       if (schoolOn()) schoolTick(dt); // §S the School
+      if (GULLEND.on && GLC_()) glTick(dt); // §GL the Gullhaven Light
       if (world.ledgerFlash > 0) world.ledgerFlash -= dt;
       if (world.greens && world.greens.length !== pinCount()) syncPins(); // a load, a visit or a dev level change
     } else {
@@ -34161,6 +35275,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (sky && hasSprite(sky)) { drawSprite(g, sky, 0, 33); }
       else if (sky) { const e = fallbackEntry(sky); g.drawImage(e.frames[0], 0, 33 - e.h); }
       if (sky) { g.clearRect(0, 0, EDGE, 33); g.clearRect(G.W - EDGE, 0, EDGE, 33); } // live sky in the outer band: the layout's side margins extend it cleanly
+      if (GULLEND.on) glBackground(g); // §GL: the Light, at its stage
       // band under the backdrop: river (muni), beach (links), hedge (others)
       if (rid === 'muni') { g.fillStyle = th.water || '#5f7b6a'; g.fillRect(0, 33, G.W, 5); g.fillStyle = shade(th.water || '#5f7b6a', 0.25); for (let x = 0; x < G.W; x += 7) g.fillRect(x + (rnd() * 4 | 0), 34 + (rnd() * 3 | 0), 3, 1); }
       else if (rid === 'links') { g.fillStyle = th.water || '#6f8c99'; g.fillRect(0, 33, G.W, 3); g.fillStyle = '#e6d6a6'; g.fillRect(0, 36, G.W, 3); }
@@ -34774,6 +35889,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     oakProp(list, g); // Oakridge's big oak
     if (mode === 'game') livingProps(list); // §I3 birds, walkers, squirrel, owl, glove, pennant
     escProps(list, g); // crew crates, the foreman, carriers, request bubbles
+    if (GULLEND.on && GLC_()) { glProps(list, g); if (mode === 'game') glMoProps(list, g); } // §GL: the stage crate, the pennant ball, the sea glass
     beatPropsList(list, g); // DECISIONS 49: the fairy ring's toadstools, the duckling parade
     if (mode === 'game' && lvl('ledger') > 0 && world.house) { const q = ledgerDeskXY(); list.push({ y: q.y, d: () => drawLedgerDesk(g) }); } // Gus's Ledger (idle pass)
     const rs = robotStats();
@@ -34842,6 +35958,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // visual flyers (deposit stream, ballstock drop)
     for (const f of flyers) if (f.t >= 0) drawSprite(g, f.sprite, f.x, f.y);
     if (world.mech && world.mech.render) world.mech.render(g, 'top');
+    if (GULLEND.on && GLC_() && mode === 'game') glMoTop(g); // §GL: the raid's gulls, the surge
     if (mode === 'game') livingTop(g); // §I3 birds in flight, falling leaves, dragonflies, chimney steam, golfer emotes
     fogDraw(g); gustCuesDraw(g); // weather 1109: Gullhaven's sea fog (the haar) over the field; a gust's wind arrows
     // particles
@@ -35448,8 +36565,9 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         const x = f.x + Math.sin(renderMs / 1000 * f.sp + f.ph) * 6, y = f.y + Math.cos(renderMs / 1300 * f.sp + f.ph) * 4;
         blob(g, 'green', x, y, NFX.deco[0], NFX.deco[0], NFX.deco[1] * (0.5 + 0.5 * Math.sin(renderMs / 400 + f.ph * 3)) * night);
       }
-      if (AMB.beam && L > 0.3) { // Gullhaven lighthouse sweep
-        const bx = AMB.beam.x, by = AMB.beam.y, ang = red ? 0.9 : renderMs / 1600, c = Math.cos(ang), dir = c >= 0 ? 1 : -1, len = 44 * Math.abs(c) + 6;
+      const BM = GULLEND.on && GLC_() && rid === GLC_().range ? glBeam() : AMB.beam; // §GL: the Light's lamp, dark until the lens is in
+      if (BM && L > 0.3) { // Gullhaven lighthouse sweep
+        const bx = BM.x, by = BM.y, ang = red ? 0.9 : GULLEND.on ? glBeamAng() : renderMs / 1600, c = Math.cos(ang), dir = c >= 0 ? 1 : -1, len = 44 * Math.abs(c) + 6;
         g.fillStyle = `rgba(255,236,170,${(0.1 + 0.22 * Math.max(0, Math.sin(ang))) * L})`;
         g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + dir * len, by - 3); g.lineTo(bx + dir * len, by + 4); g.closePath(); g.fill();
         blob(g, 'warm', bx, by, 5, 5, 0.9 * L);
@@ -36187,6 +37305,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       drawSprite(g, name, gf.x, y, { frame, flip, sx: sqX(gf.sq), sy: sqY(gf.sq), swap: sw });
       if (golferTier(gf) !== 2) drawGolferAcc(g, gf, name, sw, gf.x, y, frame, flip, sqX(gf.sq), sqY(gf.sq)); // a sun hat replaces the hat
       drawTierLook(g, gf, name, sw, gf.x, y, frame, flip, sqX(gf.sq), sqY(gf.sq));
+      if (GULLEND.on && mode === 'game' && GLC_() && rangeId() === GLC_().range) glGolferLook(g, gf, name, sw, gf.x, y, frame, flip, sqX(gf.sq), sqY(gf.sq)); // §GL: the Captain's cap, stage 4's flags
       if (gold) drawGoldenCrown(g, gf, name, sw, y);
       if (stuck && ((renderMs / 2600 + (gf.bay | 0) * 0.29) % 1) < 0.35) { const x = Math.round(gf.x) - 2, yy = Math.round(gf.y) - 29; g.fillStyle = '#2a1c16'; g.fillRect(x, yy, 5, 1); g.fillRect(x + 1, yy - 1, 1, 1); g.fillRect(x + 3, yy + 1, 1, 1); }
       if (gf.cheer > 0.4) { g.fillStyle = '#f2c641'; g.fillRect(Math.round(gf.x) - 1, Math.round(gf.y) - 27, 1, 3); g.fillRect(Math.round(gf.x) - 1, Math.round(gf.y) - 23, 1, 1); }
@@ -37124,9 +38243,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       }
       g.globalAlpha = 1;
     }
-    if (rid === 'links' && AMB.beam && !rm && q > 0) { // the lighthouse beam washes over the field as it swings past (synced with the skyline beam)
-      const ang = renderMs / 1600, sn = Math.sin(ang), L = lightsLevel();
-      if (sn > 0.25 && L > 0.3) { g.globalCompositeOperation = 'lighter'; blob(g, 'warm', AMB.beam.x + Math.cos(ang) * 110, 170, 64, 150, Math.pow((sn - 0.25) / 0.75, 2) * 0.08 * L); g.globalCompositeOperation = 'source-over'; }
+    const BM = GULLEND.on && GLC_() && rid === GLC_().range ? glBeam() : AMB.beam; // §GL
+    if (rid === 'links' && BM && !rm && q > 0) { // the lighthouse beam washes over the field as it swings past (synced with the skyline beam)
+      const ang = GULLEND.on ? glBeamAng() : renderMs / 1600, sn = Math.sin(ang), L = lightsLevel();
+      if (sn > 0.25 && L > 0.3) { g.globalCompositeOperation = 'lighter'; blob(g, 'warm', BM.x + Math.cos(ang) * 110, 170, 64, 150, Math.pow((sn - 0.25) / 0.75, 2) * 0.08 * L); g.globalCompositeOperation = 'source-over'; }
       if (sn > 0.97 && !LV.lhUp) lvSfx('lighthouse_hum', 0.15, 6000); LV.lhUp = sn > 0.97;
     }
   }
@@ -37577,6 +38697,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     return `<img class="rr-ic" alt="" src="${iconURL(name, r)}" style="width:${px}px;height:${px}px">`;
   }
   function iconURL(name, scale) {
+    if (GULLEND.on && name.startsWith('gl_')) return glIconURL(name, scale); // §GL
     const key = name + '@' + (scale || 3);
     if (iconCache[key]) return iconCache[key];
     try {
@@ -37967,7 +39088,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function saveRowHTML() {
     if (!gusPickOn()) return ''; const g = gusPick().pick; if (!g || g.kind !== 'save') return '';
     const c = nextPartCost(), f = clamp(state.cash / Math.max(1, c), 0, 1);
-    return `<div class="rr-row rr-saverow" data-help="hud:sell"><img class="ic" alt="" src="${iconURL('star')}"><div class="mid"><div class="nm">${esc(tx('buy.saveFor', 'Save for {name}', { name: rangeShort(rangeId()) }))} <span class="rr-gusbadge">${hasSprite('gus_portrait') ? `<img alt="" src="${iconURL('gus_portrait', 1)}">` : ''}${esc(tx('shop.gusPickShort', "Gus's pick"))}</span></div><div class="ef">${esc(tx('buy.saveWhy', 'Every buy here would slow it down. {part}: {n} / {m}', { part: buyBtnLabel(), n: fmtAs(state.cash, c), m: fmt(c) }))}</div><div class="rr-lvrow"><span class="rr-lvbar"><i style="width:${(f * 100).toFixed(1)}%"></i></span></div></div></div>`;
+    return `<div class="rr-row rr-saverow" data-help="hud:sell"><img class="ic" alt="" src="${iconURL('star')}"><div class="mid"><div class="nm">${esc(GULLEND.on && glHere() ? tx('light.saveFor', 'Save for stage {n}: {name}', { n: (state.paid | 0) + 1, name: glStageName(glDef(state.paid | 0).id) }) : tx('buy.saveFor', 'Save for {name}', { name: rangeShort(rangeId()) }))} <span class="rr-gusbadge">${hasSprite('gus_portrait') ? `<img alt="" src="${iconURL('gus_portrait', 1)}">` : ''}${esc(tx('shop.gusPickShort', "Gus's pick"))}</span></div><div class="ef">${esc(tx('buy.saveWhy', 'Every buy here would slow it down. {part}: {n} / {m}', { part: buyBtnLabel(), n: fmtAs(state.cash, c), m: fmt(c) }))}</div><div class="rr-lvrow"><span class="rr-lvbar"><i style="width:${(f * 100).toFixed(1)}%"></i></span></div></div></div>`;
   }
   /** DECISIONS 40 (Ben 2026-11-06, UX audit #1): the "Gus would buy" card pinned at the top of the shop: Gus's pick with its
    *  icon, name, plain line and one Buy button (x1, whatever the x1 / x10 / Max choice). It is the default helper: it shows
@@ -38724,7 +39845,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const Tr = hb && hb.bottom > T && hb.top < T + 40 && hb.right > Rt - 120 && hb.left < Rt ? hb.bottom : T;
     let y = Tl + 6; const x = L + 6, out = [];
     const at = (c, xx, yy) => { const op = c.offsetParent || fw, pr = op.getBoundingClientRect(); return [c, Math.round(xx - pr.left - op.clientLeft) + 'px', Math.round(yy - pr.top - op.clientTop) + 'px']; };
-    for (const c of chips) { out.push(at(c, x, y)); y += c.offsetHeight + 4; }
+    // §GL: the Light stands in the skyline's top-left corner, where the counter sits: at Gullhaven with the preview on, the counter goes top-right (under the FPS line)
+    const glR = GULLEND.on && mode === 'game' && !!GLC_() && rangeId() === GLC_().range;
+    if (glR) { let yr = Tr + 6 + (fc ? fc.offsetHeight + 2 : 0); for (const c of chips) { out.push(at(c, Rt - 6 - c.offsetWidth, yr)); yr += c.offsetHeight + 4; } }
+    else for (const c of chips) { out.push(at(c, x, y)); y += c.offsetHeight + 4; }
     if (fc) out.push(at(fc, Rt - 3 - fc.offsetWidth, Tr + 2)); // tucked into the top-right corner: 3 px in, 2 px down
     const k = out.map((o) => o[1] + ',' + o[2]).join('|') + out.length; if (k === chipK) return; chipK = k;
     for (const [c, l, t] of out) { if (c.style.left !== l) c.style.left = l; if (c.style.top !== t) c.style.top = t; }
@@ -39668,10 +40792,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     m.querySelector('[data-ok]').addEventListener('click', () => { sfx('ui_tap'); closeModal(); onOk(); });
   }
   /** the Buy button's label: "Pay part 2/4" for an instalment, "Buy Oakridge" for the last part */
-  function buyBtnLabel() { const n = parts(), k = (state.paid | 0) + 1; return k < n ? tx('buy.payPart', 'Pay part {n}/{m}', { n: k, m: n }) : W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.signs && W.RANGE_RAT_TOWN.signs() ? dstr('town.goal.signAt', 'Sign at the estate agent') : tx('buy.buyIt', 'Buy {name}', { name: rangeShort(rangeId()) }); }
+  function buyBtnLabel() { const n = parts(), k = (state.paid | 0) + 1; if (GULLEND.on && glHere()) return k < n ? tx('light.build', 'Build stage {n}/{m}', { n: k, m: n }) : tx('light.lightIt', 'Light the Light'); return k < n ? tx('buy.payPart', 'Pay part {n}/{m}', { n: k, m: n }) : W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.signs && W.RANGE_RAT_TOWN.signs() ? dstr('town.goal.signAt', 'Sign at the estate agent') : tx('buy.buyIt', 'Buy {name}', { name: rangeShort(rangeId()) }); }
   function confirmSell() {
     if (!prestigeAvailable()) { sfx('ui_deny'); return; }
-    if ((state.paid | 0) < parts() - 1) { sellRange(true); return; } // an instalment: no question, it's a step towards the range
+    if ((state.paid | 0) < parts() - 1 || (GULLEND.on && glHere())) { sellRange(true); return; } // an instalment: no question, it's a step towards the range (§GL: every stage, the last too: the lamp is the moment)
     closeSheet(true);
     { const T2 = W.RANGE_RAT_TOWN; try { if (T2 && T2.hooks && T2.hooks.sign && T2.hooks.sign()) return; } catch (e) { /* ignore */ } } // Town V1: the deeds are signed at Ferris & Daughter (ui/town.js); desk mode keeps the question here
     const next = B.ranges[(state.rangeIdx + 1) % B.ranges.length];
@@ -41562,7 +42686,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       // the idle pass + the third deck: away efficiency (and what makes it up), the away cap, Gus's Ledger, bays with the deck
       idle: { eff: awayEff(), parts: awayEffParts().map((q) => q.id), capH: awayCapHours(), ledger: lvl('ledger') > 0, ledgerOn: lvl('ledger') > 0 && ledgerState().on, shifts: lvl('shifts') }, maxBays: maxBaysNow(), deck: lvl('deck') > 0,
       esc: (() => { const e = escState(); return { open: Object.keys(e.open), requests: e.req, finds: Object.assign({}, e.finds), tierBays: { members: lvl('tb1'), holiday: lvl('tb2') }, crews: lvl('crews') > 0, conveyor: lvl('conveyor') > 0, request: world.req ? { kind: world.req.kind, bay: world.req.bay, got: !!world.req.got } : null }; })()
-    });
+    }, GULLEND.on ? { light: glView() } : {}); // §GL: the Light's stages, rows and moments (only with the preview on)
   }
   const seenShop = {};
   function getShop() {
@@ -41606,6 +42730,12 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** §M1114 previews (design/mechanics_1114.md): o = { chute, stars, foreman } switches them; returns what's on and their state */
       /** §S the School (talent tree: routes): on / off for this page; inspect: the engine's numbers (sim parity) */
       school(on) { return schoolTest(on); }, schoolInspect() { return schoolInspect(); },
+      /** §GL the Gullhaven Light: on / off for this page (the save converts parts <-> stages); returns its view */
+      gullEnd(on) { return glTest(on); },
+      /** the till's room now (BALANCE.idle.till; §GL: never below a quarter of the price) */
+      awayTill() { return awayTill(); },
+      /** §GL phase 3: the moments ('raid' | 'captain' | 'surge' starts one; 'gull' i / 'pennant' / 'home' / 'glass' i puts the rat there; 'view') */
+      glMoment(cmd, arg) { return glMoTest(cmd, arg); },
       mechanics1114(o) { return m14Test(o); }, m14tap(x, y) { return m14Tap({ x, y }); }, m14order(k) { setOrder(k); return orderMode(); }, m14award(k) { starAward(k); return masteryView(); },
       /** DECISIONS 50: force a UI skin ('plain' | 'club' | a panel style id; null = the save's own) and return the one showing */
       skin(id) { if (id !== undefined) { skinOverride = id || null; applySkin(); } const r = layout.root; return r ? r.getAttribute('data-rr-skin') || 'plain' : null; },
@@ -41951,7 +43081,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         state.freePlay = null; state.potterTour = null; state.tour = 0; state.freeRoam = false; state.rangeIdx = i;
         if (i > 0) { state.unlocked = true; state.unlockedBy = 'dev'; state.giftedBeetle = true; }
         for (let n = 0; n < i; n++) { const id = B.ranges[n].id; state.stats.rangesSold[id] = Math.max(1, state.stats.rangesSold[id] | 0); sitesOf()[id] = Object.assign(sitesOf()[id] || {}, { owned: true }); } // Escalation: earlier ranges are yours
-        state.frontier = i; state.paid = 0;
+        state.frontier = i; state.paid = 0; if (state.light) delete state.light; // §GL: a fresh visit
         if (k.stars != null) { state.stars = Math.max(0, Math.floor(+k.stars || 0)); state.paidTotal = paidForStars(state.stars); }
         if (k.allTimeCash != null) state.allTimeCash = Math.max(0, +k.allTimeCash || 0);
         resetRun();
@@ -42047,6 +43177,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     /** the one star figure (QA 2026-11-06 night): what going from `from` to `to` stars does to income ("+34%", "×18") */
     starBoost(from, to) { return starBoost(from, to); },
     /** §S the School (ui/town.js draws it): null while it's off. view(): the sheet's data; learn(id) / retake(): true if done */
+    /** §GL the Gullhaven Light (ui/help.js: the goal card, the ⓘ list): null while it's off */
+    light() { return GULLEND.on ? glView() : null; }, lightBusy() { return GULLEND.on && GLF.t >= 0; }, lightIcon(s) { return GULLEND.on ? glIcon(s) : ''; },
     school: { get on() { return schoolOn(); }, view() { return schoolView(); }, learn(id) { return schLearn(String(id)); }, retake() { return schRetake(); }, free() { return schFree(); } },
     /** has the player seen range i's name (route map rule)? Until then it's ??? and its tease */
     rangeKnown(i) { return rangeKnown(typeof i === 'string' ? rIdx(i) : i); },
@@ -44935,6 +46067,7 @@ html.dk-html .rh-scrim{padding:4px}
     }
     // Escalation Plan: visiting a range you own. The main goal becomes "back to the one you're buying" (tap = go back)
     if (s.visiting) { const fr = rs[s.frontier | 0], back = fr ? shortName(fr.id) : ''; return { none: true, visit: true, label: H('goal.visit', { name }), explain: H('goal.explainVisit', { name, n: Math.round((s.visitPayMult || 0) * 100), back, p: Math.round(((s.portfolio || 1) - 1) * 100) }), back, p: 0 }; }
+    if (s.light && s.light.here) return lightObjective(s, s.light); // the Gullhaven Light (PREVIEW, ?gullend=1): six stages
     // buying the range: a price tag paid in parts. The bar is the whole price (paid parts + the wallet towards the next)
     const target = Math.max(1, s.price || s.prestigeAt), parts = Math.max(1, s.parts | 0 || 1), paid = s.paid | 0, ready = !!s.prestigeReady;
     const paidAmt = Math.max(0, target - (s.priceLeft != null ? s.priceLeft : target)), toward = Math.min(s.cash || 0, s.partCost || 0);
@@ -44959,6 +46092,25 @@ html.dk-html .rh-scrim{padding:4px}
     const nums = k ? H('goal.nums', { n: saved, m: fmt(s.partCost || 0) }) : H('goal.nums', { n: fmtAs(s.cash || 0, target), m: n });
     const numsCard = k ? H('goal.numsPart', { part, n: saved, m: fmt(s.partCost || 0) }) : nums;
     return { label, labelShort: label0 !== sellL ? [parts > 1 ? H('goal.labelPrice', { sell: sellL, price: n }) : sellL, sellL] : null, explain, arrive, p, ready, t, nums, numsCard, parts, name, sell: sellL, target, run: s.cash || 0, part, partCost: s.partCost || 0, carryNote };
+  }
+
+  /** the Gullhaven Light (PREVIEW, loop/game.js §GL): "Restore the Light 2/6", a six-segment bar, "395T / 555T", Build. A stage
+   *  can't be funded before its gate (it says so); the ⓘ lists the six stages and what each opens (lightListHTML) */
+  function lightObjective(s, L) {
+    const target = Math.max(1, L.price), nx = L.next, k = nx ? nx.k : L.of, cost = nx ? nx.cost : 0, ready = !!s.prestigeReady;
+    const toward = Math.min(s.cash || 0, cost), p = clamp((L.paidAc + toward) / target, 0, 1);
+    const label = H('light.goal', { n: L.stage, m: L.of }), t = timeLeft();
+    const waits = !!(nx && !nx.open), part = H('light.part', { n: k, m: L.of });
+    const saved = fmtAs(toward, cost), nums = H('goal.nums', { n: saved, m: fmt(cost) }) + (waits && toward >= cost ? ' · ' + H('light.waitShort') : '');
+    let explain = H('light.explain', { m: L.of }) + ' ' + (nx ? H('light.explainNext', { n: k, name: (L.stages[k - 1] || {}).name || '' }) : '');
+    if (waits) explain += ' ' + H('light.explainWait');
+    else if (t && !ready) explain += ' ' + (t === H('goal.nearly') ? H('goal.explainNearly') : H('goal.explainTime', { t }));
+    return { label, labelShort: null, explain, arrive: '', p, ready, t: waits ? H('light.waitShort') : t, nums, numsCard: H('goal.numsPart', { part, n: saved, m: fmt(cost) }), parts: L.of, name: shortName(s.range), sell: label, target, run: s.cash || 0, part, partCost: cost, carryNote: false, readyLabel: k >= L.of ? H('light.lightIt') : H('light.buildReady', { n: k, m: L.of }), light: L };
+  }
+  /** the ⓘ's list of stages: the lighthouse at each, its name and what it opens (done ones ticked) */
+  function lightListHTML() {
+    let L = null; try { L = R.light && R.light(); } catch (e) { L = null; } if (!L || !L.here) return '';
+    return '<ol class="rh-light">' + L.stages.map((x) => `<li class="${x.done ? 'done' : ''}"><img alt="" src="${R.lightIcon ? R.lightIcon(x.k) : ''}"><span><b>${esc(x.k + '. ' + x.name)}</b>${x.done ? ' ✓' : ''}<br>${esc(x.opens)}</span></li>`).join('') + '</ol>';
   }
 
   // ------------------------------------------------------------------ CSS
@@ -45027,6 +46179,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
 .rh-card .bd{padding:4px 14px 8px;overflow:auto}
 .rh-card .bd p{margin:6px 0}
 .rh-card .goal{padding:8px 10px;border-radius:8px;background:#f2c641;font-weight:700}
+.rh-light{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}.rh-light li{display:flex;gap:8px;align-items:center;font-size:.92em;line-height:1.25}.rh-light li img{width:15px;height:36px;image-rendering:pixelated;flex:0 0 auto}.rh-light li.done{opacity:.7}
 .rh-card .pic{float:right;margin:4px 0 4px 10px;image-rendering:pixelated}
 .rh-card .acts{display:grid;grid-template-columns:repeat(var(--n,1),1fr);gap:10px;padding:8px 14px 14px}
 .rh-card .acts button{min-height:44px;border-radius:calc(10px*var(--rr-round,1));border:2px solid #2a1c16;background:#f2c641;border-image:var(--rr-fr-btn,none);color:#2a1c16;font-family:var(--rr-font-label,sans-serif);font-weight:700;font-size:calc(16px*var(--rr-fs,1));cursor:pointer}
@@ -45067,7 +46220,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     el.setAttribute('role', modal ? 'dialog' : 'tooltip'); el.id = id;
     if (modal) { el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', id + 't'); el.setAttribute('aria-describedby', id + 'b'); }
     const why = hereOf(key);
-    el.innerHTML = `<div class="rh-ph"><div class="rh-pt" id="${id}t">${esc(nameOf(key))}</div><button type="button" class="rh-x" aria-label="${esc(H('ui.close'))}">✕</button></div><p id="${id}b">${esc(helpOf(key))}</p>${why ? `<p class="rh-why"><b>${esc(H('ui.whyHere'))}</b>${esc(why)}</p>` : ''}<div class="rh-pad" aria-hidden="true"><b class="rr-glyph gB">B</b> ${esc(H('ui.close'))}</div>`;
+    el.innerHTML = `<div class="rh-ph"><div class="rh-pt" id="${id}t">${esc(nameOf(key))}</div><button type="button" class="rh-x" aria-label="${esc(H('ui.close'))}">✕</button></div><p id="${id}b">${esc(helpOf(key))}</p>${key === 'goal' ? lightListHTML() : ''}${why ? `<p class="rh-why"><b>${esc(H('ui.whyHere'))}</b>${esc(why)}</p>` : ''}<div class="rh-pad" aria-hidden="true"><b class="rr-glyph gB">B</b> ${esc(H('ui.close'))}</div>`;
     (root || document.body).appendChild(el);
     el.addEventListener('pointerdown', (e) => e.stopPropagation());
     el.addEventListener('pointerenter', () => clearTimeout(leaveT));
@@ -45251,7 +46404,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
       { const cv = obj.querySelector('.cv'); const show = !!(o.carryNote && card); cv.hidden = !show; cv.textContent = show ? H('carry.note') : ''; } // DECISIONS 47: in the card (the phone's sell row has its own)
       obj.classList.remove('no-k', 'no-t', 'wrap', 'none'); obj.querySelector('.bar>i').style.width = '100%';
       const st0 = stats() || {}, last = (st0.paid | 0) + 1 >= Math.max(1, st0.parts | 0 || 1), signs = last && W.RANGE_RAT_TOWN && W.RANGE_RAT_TOWN.signs && W.RANGE_RAT_TOWN.signs(); // the last part is signed at the estate agent (town V1)
-      const rl = signs ? dget('town.goal.signAt', 'Sign at the estate agent') : o.part ? H('goal.payReady', { part: o.part }) : dget('ui.readyToSell', 'Ready to buy!');
+      const rl = o.readyLabel ? o.readyLabel : signs ? dget('town.goal.signAt', 'Sign at the estate agent') : o.part ? H('goal.payReady', { part: o.part }) : dget('ui.readyToSell', 'Ready to buy!'); // readyLabel: the Light's Build
       obj.querySelector('.k').textContent = H('goal.kicker'); obj.querySelector('.t').textContent = rl;
       obj.querySelector('.n').textContent = o.nums; obj.querySelector('.tm').textContent = '· ' + o.label;
       obj.style.setProperty('--parts', String(o.parts || 1));
@@ -45452,6 +46605,8 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
         if (saidB || after(i)) quirks += item(H('ui.names.' + bid), H('beats.' + bid)); }
       for (const u in mu) if (mu[u] === r.id && (after(i) || !((B().rangeMechanics[r.id].upgrades[u] || {}).unlockAt) || (s.pace || 0) >= B().rangeMechanics[r.id].upgrades[u].unlockAt)) quirks += upLine(u);
       if (r.id === 'resort' && catchMet) quirks += item(H('intro.catch.title'), H('page.catch')); // the catch log: fishing's odd finds
+      if (r.id === 'links') { let L = null; try { L = R.light && R.light(); } catch (e) { L = null; } // the Gullhaven Light (PREVIEW, ?gullend=1): the stages, then the moments once stage 1 is built
+        if (L) { quirks += item(H('light.howTitle'), H('page.light')); if ((L.stage | 0) >= 1) quirks += item(H('light.howMoments'), H('page.lightMoments')); } }
     });
     quirks += locked(unreached, H('ui.locked'));
     const dodgeSeen = rollHere() && (!!(st.dodge && st.dodge.owned) || sn('timesStunned') > 0); // no roll on a phone: never named there
@@ -45626,7 +46781,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     if (pendingArrive && R.mode === 'game' && now() - pendingArrive.t > 700 && !root.querySelector('.rr-dialog') && !busyElsewhere()) {
       const id = pendingArrive.range; pendingArrive = null; if (willExplain(id)) showArrival(id);
     }
-    if (introQ.length && !pendingArrive && R.mode === 'game' && !layers.length && !root.querySelector('.rr-dialog') && !busyElsewhere()) showIntro(introQ.shift());
+    if (introQ.length && !pendingArrive && R.mode === 'game' && !layers.length && !root.querySelector('.rr-dialog') && !busyElsewhere() && !(R.lightBusy && R.lightBusy())) showIntro(introQ.shift()); // the Light's lamp moment: cards wait
   }
   function init() {
     R = W.RANGE_RAT;
@@ -46628,6 +47783,16 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
   const PROP_BEATS = { fairyRing: 1, ducklings: 1, kites: 1 };
   for (const r in BEATS) for (const b of BEATS[r]) add({ id: 'beat:' + b, on: 'event:beat', match: (p) => !!p && p.id === b, line: 'beats.' + b, point: PROP_BEATS[b] ? { world: 'beat' } : null, prio: 2, range: r,
     covers: { beats: [b] }, live: (c) => c.beatOn(b), met: (st) => past(st, r) || !!(st && isObj(st.beats) && st.beats[b]) });
+
+  // ================================================================ the Gullhaven Light (PREVIEW, ?gullend=1; loop/game.js §GL): stage 1 can be
+  // funded (the goal card says what it is), the first stage built, and the three moments (phase 3). 'call' entries: the engine
+  // fires them, so with the preview off they never come up
+  const lit = (st, k) => !!(st && isObj(st.light) && (st.light.stage | 0) >= k);
+  add({ id: 'light', on: 'call', hook: 'glTick: stage 1 can be funded', line: ['firsts.light', 'firsts.light2'], point: { dom: 'goal' }, prio: 3, range: 'links', met: (st) => past(st, 'links') || lit(st, 1) });
+  add({ id: 'lightStage', on: 'call', hook: 'glCrateTick: the first stage built', line: 'firsts.lightStage', prio: 2, range: 'links', met: (st) => past(st, 'links') || lit(st, 2) });
+  add({ id: 'raid', on: 'call', hook: 'glRaidStart: the first gull raid', line: 'firsts.raid', point: { world: 'gull' }, prio: 3, range: 'links', live: (c, x) => !!(x && x.at && x.at()), met: (st) => past(st, 'links') || !!(st && isObj(st.moments) && isObj(st.moments.raid) && (st.moments.raid.n | 0) > 0) });
+  add({ id: 'captain', on: 'call', hook: "glCaptainStart: the first Captain's ball", line: 'firsts.captain', point: { world: 'ball' }, prio: 3, range: 'links', live: (c, x) => !!(x && x.at && x.at()), met: (st) => past(st, 'links') || !!(st && isObj(st.moments) && isObj(st.moments.captain) && (st.moments.captain.n | 0) > 0) });
+  add({ id: 'surge', on: 'call', hook: 'glSurgeStart: the first storm surge', line: 'firsts.surge', prio: 3, range: 'links', met: (st) => past(st, 'links') || !!(st && isObj(st.moments) && isObj(st.moments.surge) && (st.moments.surge.n | 0) > 0) });
 
   const byId = {}; for (const e of T) byId[e.id] = e;
   W.RANGE_RAT_FIRSTS = {

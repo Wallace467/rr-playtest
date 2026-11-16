@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-16-dc4141a9-aca64287">
+<meta name="rr-pwa" content="2026-11-16-218a2d3d-6caa5576">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-16-dc4141a9">
+<meta name="range-rat-build" content="2026-11-16-218a2d3d">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-16-dc4141a9", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-16-218a2d3d", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-16-dc4141a9", "builtAt": "2026-11-16T07:09:13Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-16-218a2d3d", "builtAt": "2026-11-16T09:10:29Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -35504,7 +35504,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const gx = Math.round(b.x) - 1 - X, gy = Math.round(y) - 2 - Y;
     const top = Math.max(-bY, km, -sY, -gy) + 2, left = Math.max(-bX, -sX, 2) + 1, W2 = left + Math.max(bX + bw, sX + sw, 2) + 1, H2 = top + Math.max(bY + bh, sY + sh, 1) + 1;
     if (top > 120 || W2 > 40) return false;
-    stamp(g, 'air:' + name + ':' + fi + ':' + [sX, sY, sw, sa, km, bX, bY, bw, bh, gl ? 1 : 0].join(','), X, Y, left, top, W2, H2, (q, ax, ay) => {
+    airStamp(g, 'air:' + name + ':' + fi + ':' + [sX, sY, sw, sa, km, bX, bY, bw, bh, gl ? 1 : 0].join(','), X, Y, left, top, W2, H2, (q, ax, ay) => {
       const si = es.frames[0]; q.globalAlpha = sa / 255; q.drawImage(sw === si.width && sh === si.height ? si : scaledImg(si, sw, sh), ax + sX, ay + sY); q.globalAlpha = 1;
       if (km >= 3) q.drawImage(dropLine(), 0, DROP_H - 1 - km, 1, km + 1, ax, ay - km, 1, km + 1);
       const bi = e.frames[fi]; q.drawImage(bw === bi.width && bh === bi.height ? bi : scaledImg(bi, bw, bh), ax + bX, ay + bY);
@@ -36904,7 +36904,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   // perf 2026-11-07 (wip/perf-1107): the in-air balls, the worth acorn, the hedge badges, the terrace lamps, the wind flag and
   // the ball house's pile are cached stamps, and the resting glow balls' light cuts a cached mask. STAMPS.on = false draws
   // them live as before (RANGE_RAT._test.stampsCheck() compares the two pictures at one clock)
-  const STAMPS = { on: true, n: 0, off: {} }; const stOn = (k) => STAMPS.on && !STAMPS.off[k];
+  const STAMPS = { on: true, n: 0, off: {}, wipes: 0 }; const stOn = (k) => STAMPS.on && !STAMPS.off[k];
   function stamp(g, key, x, y, ox, oy, w, h, paint) {
     if (g !== ctx || g.globalAlpha !== 1 || g.globalCompositeOperation !== 'source-over') { paint(g, x, y); return; }
     g.drawImage(stampCanvas(key, ox, oy, w, h, paint), x - ox, y - oy, w, h);
@@ -36912,9 +36912,40 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** the cached canvas behind stamp() (w x h logical at the render scale, painted once with its anchor at ox, oy) */
   function stampCanvas(key, ox, oy, w, h, paint) {
     const RS = renderScale, k = key + '@' + RS; let c = stampCache[k];
-    if (!c && ++STAMPS.n > 2000) { for (const q in stampCache) delete stampCache[q]; STAMPS.n = 1; } // bounded (the wind flag's shapes, balls by height): rebuilt lazily
+    if (!c && ++STAMPS.n > 2000) stampWipe(); // bounded (the wind flag's shapes, balls by height): rebuilt lazily
     if (!c) { c = stampCache[k] = makeCanvas(w * RS, h * RS); const q = c.getContext('2d'); q.imageSmoothingEnabled = false; q.setTransform(RS, 0, 0, RS, 0, 0); paint(q, ox, oy); }
     return c;
+  }
+  function stampWipe() { for (const q in stampCache) delete stampCache[q]; airAtlasReset(false); STAMPS.n = 1; STAMPS.wipes++; }
+  // perf 2026-11-15 (wip/cache-churn): the in-air balls' stamps ('air:' keys: the ball's exact integer geometry, so ~2,500 of
+  // them in a late session, ~95% of all the stamps made; the 2000 cap above never settles) live in a few shared atlas pages
+  // instead of a canvas each. Making a canvas (create + 2d context) cost ~0.1-0.5 ms on this box, 1-3 of them a frame in a
+  // late scene for the first minute and after every wipe; painting a stamp into a page costs ~0.02 ms. Nothing else changes:
+  // the same keys, the same paint at the same render scale into a transparent cell of the same size, the same count toward
+  // the 2000 wipe (which empties the pages too), and the blit is the same 1:1 device-pixel drawImage, from a sub-rect.
+  // Cells are stacked in columns, one open column per cell width (the widths are few, the heights many); a column starts at
+  // the first page with room across it. Pages are kept and cleared on a wipe (only the first fill makes them)
+  const AIRAT = { pages: [], map: new Map(), cols: new Map(), PW: 512, PH: 256, made: 0 };
+  function airAtlasReset(drop) {
+    if (drop) AIRAT.pages = []; else for (const c of AIRAT.pages) { if (c._used) { c._g.setTransform(1, 0, 0, 1, 0, 0); c._g.clearRect(0, 0, c.width, c.height); c._used = false; } c._x = 0; }
+    AIRAT.map.clear(); AIRAT.cols.clear();
+  }
+  function airStamp(g, key, x, y, ox, oy, w, h, paint) {
+    if (g !== ctx || g.globalAlpha !== 1 || g.globalCompositeOperation !== 'source-over') { paint(g, x, y); return; }
+    const RS = renderScale, k = key + '@' + RS, cw = w * RS, ch = h * RS; let s = AIRAT.map.get(k);
+    if (!s) {
+      if (cw > AIRAT.PW || ch > AIRAT.PH || stampCache[k]) { g.drawImage(stampCanvas(key, ox, oy, w, h, paint), x - ox, y - oy, w, h); return; } // too big for a page (a big ?rs): its own canvas as before
+      if (++STAMPS.n > 2000) stampWipe();
+      let col = AIRAT.cols.get(cw);
+      if (!col || col.y + ch > AIRAT.PH) {
+        let pg = AIRAT.pages.find((c) => c._x + cw <= AIRAT.PW);
+        if (!pg) { pg = makeCanvas(AIRAT.PW, AIRAT.PH); pg._g = pg.getContext('2d'); pg._g.imageSmoothingEnabled = false; pg._x = 0; AIRAT.pages.push(pg); AIRAT.made++; }
+        col = { c: pg, x: pg._x, y: 0 }; pg._x += cw; AIRAT.cols.set(cw, col);
+      }
+      const pg = col.c, q = pg._g; s = { c: pg, x: col.x, y: col.y, cw, ch }; col.y += ch; pg._used = true; AIRAT.map.set(k, s);
+      q.save(); q.setTransform(1, 0, 0, 1, 0, 0); q.beginPath(); q.rect(s.x, s.y, cw, ch); q.clip(); q.setTransform(RS, 0, 0, RS, s.x, s.y); paint(q, ox, oy); q.restore();
+    }
+    g.drawImage(s.c, s.x, s.y, s.cw, s.ch, x - ox, y - oy, w, h);
   }
   // Posh Buckets tiers (DECISIONS 37): the golfers' bucket by tier [body, band, shade]. Placeholder recolours of the plain
   // bucket; hi-fi art is on art/PIXELLAB_PROMPTS.md §6 ("Posh Buckets tiers")
@@ -42623,7 +42654,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     initSprites(); // SPR.cache + swapCache: frames are rebuilt lazily by getSprite
     scaledCache = new WeakMap(); silCache = new WeakMap(); silScratch = null; sqScratch_.c = null;
     for (const m of [ratScratchCache, stampCache, bugTintCache, grassTileCache, iconCache]) for (const k in m) delete m[k];
-    ringCache.clear();
+    ringCache.clear(); airAtlasReset(true); // the air stamps' pages may be blank (a lost context): new ones
     fullBubbleCv = null; dropCv = null;
     bgCanvas = makeCanvas(G.W * bgRes(), G.H * bgRes()); lightCanvas = makeCanvas(G.W, G.H); bgDirty = true;
     CODEART.cv = {}; CODEART.fieldCv = null; // the code art's canvases (its pixel data is kept)
@@ -42933,6 +42964,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       focusResumeAway() { return focusResumeAway(); },
       // Escalation Plan hooks: a forced catch-log find, a request now, n balls landing in this range's trap
       escFish(id) { return mode === 'game' ? fishFind(world.player, id || 'boot') : null; },
+      /** wip/cache-churn: the stamp caches' sizes: entries, the air atlas (cells, pages) and the backing pixels they hold */
+      stampStats() { let px = 0, n = 0, airCv = 0; for (const k in stampCache) { const c = stampCache[k]; px += c.width * c.height; n++; if (k.startsWith('air:')) airCv++; } const pp = AIRAT.pages.length * AIRAT.PW * AIRAT.PH; let cell = 0; for (const s of AIRAT.map.values()) cell += s.cw * s.ch; return { stamps: n, airCanvases: airCv, air: AIRAT.map.size, pages: AIRAT.pages.length, pagesMade: AIRAT.made, count: STAMPS.n, wipes: STAMPS.wipes, px, pagePx: pp, cellPx: cell, mb: +((px + pp) * 4 / 1048576).toFixed(2) }; },
       /** Gus's float (DECISIONS 36): fill the income history with perSec acorns/s for n seconds (what incomePerSec reads) */
       /** Posh Buckets tiers: the tier the golfers' buckets are drawn in now, and the bucket stamps drawn so far ('bucket<fill>.<tier>@<scale>') */
       bucketLook() { return { tier: bucketTier(), stamps: Object.keys(stampCache).filter((k) => k.startsWith('bucket') || k.startsWith('bstk')) }; }, // bstk: a bay's stack (one stamp)

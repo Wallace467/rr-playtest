@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Range Rat public play stats (Ben 2026-11-16). Reads GET <endpoint>/v1/stats (server/analytics: aggregates only, any group
+     under 20 players hidden). The endpoint is filled in by scripts/publish_phone.sh once the Worker exists; empty = "coming
+     soon". ?demo=1 draws made-up numbers so the page can be judged before there are players. No trackers, no third-party
+     requests: the fonts are the game's own (fonts.css, a copy of ui/fonts.css), the charts are plain SVG drawn here. -->
+<meta name="rr-stats-endpoint" content="">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1c1410">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; script-src 'unsafe-inline'; connect-src https:; base-uri 'none'; form-action 'none'">
+<title>Range Rat · Play stats</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root { --bg: #1c1410; --card: #2a1d16; --card2: #231812; --line: #5a4232; --fg: #f6ecd6; --mute: #dccaa8; --dim: #a6968b; --gold: #f2c641; --green: #a9bd5a; --hatch: #4a372a; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif; overflow-x: hidden; }
+.wrap { max-width: 600px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)); }
+header { text-align: center; margin: 4px 0 14px; }
+.logo { font-family: "Pixelify Sans", "Atkinson Hyperlegible", sans-serif; font-weight: 600; font-size: 34px; line-height: .95; color: var(--gold); text-shadow: 3px 3px 0 #2a1c16, 0 0 0 #000; letter-spacing: .02em; }
+h1 { font-family: "Pixelify Sans", "Atkinson Hyperlegible", sans-serif; font-weight: 600; font-size: 22px; margin: 6px 0 2px; color: var(--fg); }
+.sub { margin: 0; color: var(--mute); font-size: 14px; }
+.demo { display: inline-block; margin-top: 8px; padding: 2px 10px; border-radius: 999px; background: #4d2a1a; border: 2px solid #e8892c; color: #ffd9b0; font-weight: 700; font-size: 13px; }
+.card { background: var(--card); border: 3px solid var(--line); border-radius: 12px; padding: 12px 14px 12px; margin: 12px 0; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.card h2 { font-family: "Pixelify Sans", "Atkinson Hyperlegible", sans-serif; font-weight: 600; font-size: 19px; line-height: 1.15; margin: 0 0 2px; color: var(--gold); }
+.card .what { margin: 0 0 8px; color: var(--mute); font-size: 13.5px; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tile { background: var(--card2); border: 2px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.tile b { display: block; font-family: "Pixelify Sans", "Atkinson Hyperlegible", sans-serif; font-weight: 600; font-size: 26px; line-height: 1.1; color: var(--gold); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tile span { display: block; color: var(--mute); font-size: 13px; line-height: 1.25; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: "Atkinson Hyperlegible", system-ui, sans-serif; fill: var(--fg); }
+svg .lab { font-size: 13px; fill: var(--fg); }
+svg .val { font-size: 13px; font-weight: 700; fill: var(--fg); font-variant-numeric: tabular-nums; }
+svg .ax { font-size: 11px; fill: var(--dim); }
+svg .bar { fill: var(--gold); }
+svg .bar2 { fill: var(--green); }
+svg .tick { stroke: #fff7e0; stroke-width: 2; }
+svg .track { fill: #1a110c; }
+svg .grid { stroke: #3a2a20; stroke-width: 1; }
+svg .hit { fill: transparent; }
+svg .hit:hover + .bar, svg g:hover > .bar, svg g:hover > .bar2 { filter: brightness(1.15); }
+details { margin-top: 6px; }
+summary { cursor: pointer; color: var(--mute); font-size: 13px; min-height: 32px; display: flex; align-items: center; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 3px 4px; border-bottom: 1px dashed #4a372a; }
+td.n, th.n { text-align: right; }
+.state { text-align: center; padding: 22px 14px; }
+.state p { margin: 6px 0 0; color: var(--mute); }
+.state .big { font-family: "Pixelify Sans", "Atkinson Hyperlegible", sans-serif; font-weight: 600; font-size: 24px; color: var(--gold); margin: 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 4px 18px; margin-top: 12px; border-radius: 10px; border: 2px solid #2a1c16; background: #4d6a24; color: var(--fg); font: 700 15px "Atkinson Hyperlegible", system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+footer { margin: 18px 0 0; color: var(--dim); font-size: 13px; text-align: center; }
+footer a { color: var(--gold); }
+.legend { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 2px 0 6px; font-size: 13px; color: var(--mute); }
+.legend i { display: inline-block; width: .75em; height: .75em; border-radius: 2px; margin-right: .35em; vertical-align: -.05em; }
+.legend .hatch { background: repeating-linear-gradient(135deg, var(--hatch) 0 3px, #1a110c 3px 6px); border: 1px solid #6b5140; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">RANGE<br>RAT</div>
+    <h1>Play stats</h1>
+    <p class="sub" id="sub">From players who chose to share anonymous play stats.</p>
+    <span class="demo" id="demo" hidden>Demo: made-up numbers, not real players</span>
+  </header>
+  <main id="main" aria-live="polite">
+    <section class="card state" id="loading"><p class="big">Loading…</p></section>
+  </main>
+  <footer>
+    <p>Only totals and medians are shown. Any group of fewer than <span id="mg">20</span> players stays hidden. This page has no trackers or ads.</p>
+    <p><a href="../">Play Range Rat</a> · <a href="../privacy.html">Privacy</a></p>
+  </footer>
+</div>
+<script>
+(function () {
+  'use strict';
+  var RANGES = [['muni', 'Mudbank'], ['county', 'Oakridge'], ['resort', 'Lily Lagoon'], ['neon', 'Firefly Bays'], ['links', 'Gullhaven'], ['credits', 'The credits']];
+  var ROUTES = { hands: 'Hands-on', crew: 'Crew', club: 'Clubhouse' };
+  var DEVICES = { phone: 'Phones', tablet: 'Tablets', desktop: 'Computers', deck: 'Steam Deck' };
+  var NAME = {}; RANGES.forEach(function (r) { NAME[r[0]] = r[1]; });
+  var main = document.getElementById('main');
+  var qs = new URLSearchParams(location.search);
+  var meta = document.querySelector('meta[name="rr-stats-endpoint"]');
+  var endpoint = String((meta && meta.content) || '').trim().replace(/\/+$/, '');
+  if (endpoint && !/^https:\/\/[^\s/?#]+(\/[^\s?#]*)?$/.test(endpoint)) endpoint = '';
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(n) { return n == null ? '–' : Math.round(n).toLocaleString('en-GB'); }
+  function big(n) { if (n == null) return '–'; var a = Math.abs(n); if (a >= 1e9) return (n / 1e9).toFixed(a >= 1e10 ? 0 : 1) + 'B'; if (a >= 1e6) return (n / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M'; if (a >= 1e4) return Math.round(n / 1e3) + 'K'; return num(n); }
+  function dur(min) { if (min == null) return '–'; if (min < 60) return Math.round(min) + ' min'; var h = Math.floor(min / 60), m = Math.round(min - h * 60); if (m === 60) { h++; m = 0; } return h + ' h' + (m ? ' ' + m + ' min' : ''); }
+  function days(d) { return d == null ? '–' : (d < 1 ? 'same day' : (Math.round(d * 10) / 10) + (d === 1 ? ' day' : ' days')); }
+  function pct(a, b) { return b ? Math.round(a * 100 / b) + '%' : ''; }
+
+  // ---- charts: hand-drawn SVG. One series each (one colour, no legend needed), every bar labelled, a table under each ----
+  /** horizontal bars. rows: [{ label, v, text, hidden, tip }] */
+  function hbars(rows, opt) {
+    opt = opt || {};
+    var W = 340, LW = opt.labelW || 104, VW = opt.valW || 92, rh = 30, bh = 16, pad = 4, H = rows.length * rh + pad;
+    var max = opt.max || Math.max.apply(null, rows.map(function (r) { return r.hidden || r.v == null ? 0 : r.v; }).concat([1e-9]));
+    var bw = W - LW - VW - 8, out = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(opt.aria || '') + '">';
+    rows.forEach(function (r, i) {
+      var y = pad + i * rh, by = y + (rh - bh) / 2 - 2;
+      out += '<g><title>' + esc(r.tip || (r.label + ': ' + r.text)) + '</title>';
+      out += '<text class="lab" x="0" y="' + (by + bh - 3) + '">' + esc(r.label) + '</text>';
+      out += '<rect class="track" x="' + LW + '" y="' + by + '" width="' + bw + '" height="' + bh + '" rx="4"/>';
+      if (r.hidden) out += '<rect x="' + LW + '" y="' + by + '" width="' + bw + '" height="' + bh + '" rx="4" fill="url(#hatch)" opacity=".9"/>';
+      else if (r.v > 0) { var w = Math.max(4, bw * r.v / max); out += '<rect class="' + (opt.cls || 'bar') + '" x="' + LW + '" y="' + by + '" width="' + w.toFixed(1) + '" height="' + bh + '" rx="4"/>'; if (r.mark != null) { var mx = LW + Math.max(2, bw * r.mark / max); out += '<line class="tick" x1="' + mx.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y1="' + (by - 3) + '" y2="' + (by + bh + 3) + '"/>'; } }
+      out += '<text class="val" x="' + (LW + bw + 8) + '" y="' + (by + bh - 3) + '">' + esc(r.hidden ? 'under ' + MG : r.text) + '</text>';
+      out += '<rect class="hit" x="0" y="' + y + '" width="' + W + '" height="' + rh + '"/></g>';
+    });
+    return out + HATCH + '</svg>';
+  }
+  /** vertical bars (the sessions histogram). cols: [{ label, v, hidden }] */
+  function vbars(cols, opt) {
+    var W = 340, H = 168, top = 18, bottom = 34, left = 4, gap = 8, n = cols.length, cw = (W - left - gap * (n - 1)) / n, ph = H - top - bottom;
+    var max = Math.max.apply(null, cols.map(function (c) { return c.hidden ? 0 : c.v || 0; }).concat([1e-9]));
+    var out = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(opt.aria) + '">';
+    out += '<line class="grid" x1="0" x2="' + W + '" y1="' + (top + ph) + '" y2="' + (top + ph) + '"/>';
+    cols.forEach(function (c, i) {
+      var x = left + i * (cw + gap), h = c.hidden ? ph : Math.max(c.v > 0 ? 4 : 0, ph * (c.v || 0) / max), y = top + ph - h;
+      out += '<g><title>' + esc(c.label + ' sessions: ' + (c.hidden ? 'fewer than ' + MG + ' players' : num(c.v) + ' players')) + '</title>';
+      if (c.hidden) out += '<rect x="' + x.toFixed(1) + '" y="' + top + '" width="' + cw.toFixed(1) + '" height="' + ph + '" rx="4" fill="url(#hatch)"/>';
+      else if (h > 0) out += '<rect class="bar" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + cw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4"/>';
+      out += '<text class="val" text-anchor="middle" x="' + (x + cw / 2).toFixed(1) + '" y="' + (c.hidden ? top + ph / 2 + 4 : y - 5).toFixed(1) + '">' + esc(c.hidden ? '<' + MG : big(c.v)) + '</text>';
+      out += '<text class="lab" text-anchor="middle" x="' + (x + cw / 2).toFixed(1) + '" y="' + (H - bottom + 18) + '">' + esc(c.label) + '</text>';
+      out += '<rect class="hit" x="' + x.toFixed(1) + '" y="0" width="' + cw.toFixed(1) + '" height="' + H + '"/></g>';
+    });
+    out += '<text class="ax" text-anchor="middle" x="' + (W / 2) + '" y="' + (H - 2) + '">sessions per player</text>';
+    return out + HATCH + '</svg>';
+  }
+  var MG = 20;
+  var HATCH = '<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(135)"><rect width="6" height="6" fill="#1a110c"/><rect width="3" height="6" fill="#4a372a"/></pattern></defs>';
+  function table(head, rows) {
+    return '<details><summary>Show as a table</summary><table><thead><tr>' + head.map(function (h, i) { return '<th' + (i ? ' class="n"' : '') + ' scope="col">' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr>' + r.map(function (c, i) { return i ? '<td class="n">' + esc(c) + '</td>' : '<th scope="row">' + esc(c) + '</th>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></details>';
+  }
+  function card(id, title, what, body) { return '<section class="card" id="' + id + '"><h2>' + esc(title) + '</h2>' + (what ? '<p class="what">' + esc(what) + '</p>' : '') + body + '</section>'; }
+  var hiddenLegend = '<div class="legend"><span><i class="hatch"></i>fewer than ' + MG + ' players: hidden</span></div>';
+
+  function render(S) {
+    MG = S.minGroup || 20; document.getElementById('mg').textContent = MG;
+    hiddenLegend = '<div class="legend"><span><i class="hatch"></i>fewer than ' + MG + ' players: hidden</span></div>';
+    var h = '';
+    if (S.players == null) { show('few'); return; }
+    // fun totals
+    var T = S.totals;
+    h += card('totals', 'Everyone together', (S.asOf && S.asOf !== 'demo' ? 'As of ' + S.asOf + '. ' : '') + num(S.players) + ' players share their stats.',
+      '<div class="tiles">' +
+      '<div class="tile"><b>' + big(T && T.balls) + '</b><span>golf balls picked up</span></div>' +
+      '<div class="tile"><b>' + big(T && T.tips) + '</b><span>tip balls</span></div>' +
+      '<div class="tile"><b>' + big(T && T.gold) + '</b><span>gold balls</span></div>' +
+      '<div class="tile"><b>' + (T && T.credits != null ? num(T.credits) : '–') + '</b><span>saw the credits</span></div></div>');
+    // funnel
+    var F = S.funnel || [], all = (F[0] && F[0].n) || S.players;
+    h += card('funnel', 'How far players got', 'Players who reached each range (everyone starts at Mudbank).',
+      (F.some(function (f) { return f.hidden; }) ? hiddenLegend : '') + hbars(F.map(function (f) { return { label: NAME[f.range] || f.range, v: f.n, hidden: f.hidden, text: num(f.n) + ' · ' + pct(f.n, all), tip: (NAME[f.range] || f.range) + ': ' + (f.hidden ? 'fewer than ' + MG + ' players' : num(f.n) + ' players (' + pct(f.n, all) + ')') }; }), { aria: 'Players by range reached', valW: 96 }) +
+      table(['Range', 'Players', 'Share'], F.map(function (f) { return [NAME[f.range] || f.range, f.hidden ? '<' + MG : num(f.n), f.hidden ? '' : pct(f.n, all)]; })));
+    // time to reach: play, then calendar (two charts: one axis each)
+    var R = S.reach || [];
+    h += card('reach', 'Time to get there', 'Middle player (median), counted from the very start.',
+      '<p class="what" style="margin:4px 0 0">Play time</p>' + hbars(R.map(function (r) { return { label: NAME[r.range] || r.range, v: r.playMin, hidden: r.hidden, text: dur(r.playMin) }; }), { aria: 'Median play time to reach each range' }) +
+      '<p class="what" style="margin:10px 0 0">Days on the calendar</p>' + hbars(R.map(function (r) { return { label: NAME[r.range] || r.range, v: r.days, hidden: r.hidden, text: days(r.days) }; }), { aria: 'Median calendar days to reach each range', cls: 'bar2' }) +
+      table(['Reached', 'Play', 'Days', 'Players'], R.map(function (r) { return [NAME[r.range] || r.range, dur(r.playMin), days(r.days), r.hidden ? '<' + MG : num(r.n)]; })));
+    // minutes at each range (finished runs)
+    var St = S.stay || [];
+    if (St.some(function (s) { return !s.hidden; })) h += card('stay', 'Time at each range', 'How long the first visit to each range took, for players who reached the credits (median).',
+      hbars(St.map(function (s) { return { label: NAME[s.range] || s.range, v: s.min, hidden: s.hidden, text: dur(s.min) }; }), { aria: 'Median minutes at each range' }) +
+      table(['Range', 'Play', 'Players'], St.map(function (s) { return [NAME[s.range] || s.range, dur(s.min), s.hidden ? '<' + MG : num(s.n)]; })));
+    // School route
+    var Ro = S.routes || { split: [] };
+    h += card('routes', 'School route', Ro.n ? 'The route each player picked last (' + num(Ro.n) + ' players).' : 'Not enough players have picked a route yet.',
+      hbars((Ro.split || []).map(function (r) { return { label: ROUTES[r.route] || r.route, v: r.share, hidden: r.hidden, text: r.share == null ? '–' : Math.round(r.share * 100) + '%', tip: (ROUTES[r.route] || r.route) + ': ' + (r.hidden ? 'fewer than ' + MG + ' players' : num(r.n) + ' players') }; }), { aria: 'School route split', max: 1, valW: 60 }) +
+      table(['Route', 'Players', 'Share'], (Ro.split || []).map(function (r) { return [ROUTES[r.route] || r.route, r.hidden ? '<' + MG : num(r.n), r.share == null ? '' : Math.round(r.share * 100) + '%']; })));
+    // sessions per player
+    var Se = S.sessions || [];
+    h += card('sessions', 'Coming back', 'How many times each player has sat down to play.' + (S.sessionMin != null ? ' A typical sitting: ' + dur(S.sessionMin) + '.' : ''),
+      vbars(Se.map(function (s) { return { label: s.b, v: s.n, hidden: s.hidden }; }), { aria: 'Players by number of sessions' }) +
+      table(['Sessions', 'Players'], Se.map(function (s) { return [s.b, s.hidden ? '<' + MG : num(s.n)]; })));
+    // fps by device
+    var Fp = (S.fps || []).filter(function (f) { return !f.hidden; });
+    h += card('fps', 'Frame rate', 'Frames a second, the middle player on each kind of device. The white tick: their slowest moments (5th percentile).',
+      (Fp.length ? hbars(Fp.map(function (f) { return { label: DEVICES[f.device] || f.device, v: f.med, mark: f.p5, text: Math.round(f.med) + ' fps', tip: (DEVICES[f.device] || f.device) + ': ' + Math.round(f.med) + ' fps, slowest moments ' + Math.round(f.p5) + ' fps (' + num(f.n) + ' players)' }; }), { aria: 'Median frame rate by device', max: 60, valW: 64 }) : '<p class="what">Not enough players on any one kind of device yet.</p>') +
+      table(['Device', 'Median fps', 'Slow moments', 'Players'], (S.fps || []).map(function (f) { return [DEVICES[f.device] || f.device, f.hidden ? '' : Math.round(f.med), f.hidden ? '' : Math.round(f.p5), f.hidden ? '<' + MG : num(f.n)]; })));
+    main.innerHTML = h;
+  }
+
+  function show(kind, extra) {
+    var M = {
+      soon: ['Stats coming soon', 'Once players start sharing anonymous play stats (it’s off unless they say yes), the numbers will appear here.'],
+      few: ['Not enough players yet', 'We only show numbers once at least ' + MG + ' players are behind them. Check back soon.'],
+      error: ['Couldn’t load the stats', 'The stats server didn’t answer. It may be busy; try again in a minute.']
+    }[kind];
+    main.innerHTML = '<section class="card state" id="state-' + kind + '"><p class="big">' + esc(M[0]) + '</p><p>' + esc(M[1]) + '</p>' + (kind === 'error' ? '<button class="btn" id="retry" type="button">Try again</button>' : '') + (extra || '') + '</section>';
+    var b = document.getElementById('retry'); if (b) b.addEventListener('click', load);
+  }
+
+  // ---- ?demo=1: made-up numbers in the server's exact shape (server/analytics/src/aggregate.mjs), clearly labelled ----
+  function demo() {
+    var n = 1840;
+    return {
+      v: 1, asOf: 'demo', minGroup: 20, players: n,
+      funnel: [{ range: 'muni', n: n }, { range: 'county', n: 1312 }, { range: 'resort', n: 902 }, { range: 'neon', n: 611 }, { range: 'links', n: 433 }, { range: 'credits', n: 287 }],
+      reach: [{ range: 'county', n: 1312, playMin: 52, days: 0.5 }, { range: 'resort', n: 902, playMin: 214, days: 2 }, { range: 'neon', n: 611, playMin: 301, days: 4 }, { range: 'links', n: 433, playMin: 431, days: 6 }, { range: 'credits', n: 287, playMin: 548, days: 9 }],
+      stay: [{ range: 'muni', n: 287, min: 46 }, { range: 'county', n: 287, min: 158 }, { range: 'resort', n: 287, min: 84 }, { range: 'neon', n: 287, min: 127 }, { range: 'links', n: 287, min: 119 }],
+      routes: { n: 1240, split: [{ route: 'hands', n: 372, share: 0.3 }, { route: 'crew', n: 781, share: 0.63 }, { route: 'club', n: 87, share: 0.07 }] },
+      sessions: [{ b: '1', n: 402 }, { b: '2', n: 288 }, { b: '3-5', n: 466 }, { b: '6-10', n: 371 }, { b: '11-20', n: 214 }, { b: '21+', n: null, hidden: true }],
+      sessionMin: 38,
+      fps: [{ device: 'phone', n: 1104, med: 59, p5: 41 }, { device: 'tablet', n: 96, med: 60, p5: 48 }, { device: 'desktop', n: 588, med: 60, p5: 52 }, { device: 'deck', n: null, hidden: true }],
+      totals: { players: n, balls: 48213977, tips: 391240, gold: 21877, credits: 287 }
+    };
+  }
+  function valid(S) { return S && S.v === 1 && Array.isArray(S.funnel) && Array.isArray(S.reach) && Array.isArray(S.sessions); }
+  function load() {
+    if (!endpoint) { show('soon'); return; }
+    main.innerHTML = '<section class="card state"><p class="big">Loading…</p></section>';
+    var done = false, t = setTimeout(function () { if (!done) { done = true; show('error'); } }, 8000);
+    fetch(endpoint + '/v1/stats', { mode: 'cors', credentials: 'omit', cache: 'default', referrerPolicy: 'no-referrer' })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function (S) { if (done) return; done = true; clearTimeout(t); if (!valid(S)) throw new Error('shape'); render(S); })
+      .catch(function () { if (done) return; done = true; clearTimeout(t); show('error'); });
+  }
+  if (qs.get('demo') === '1') { document.getElementById('demo').hidden = false; document.getElementById('sub').textContent = 'What this page will look like once players share their stats.'; render(demo()); }
+  else load();
+})();
+</script>
+</body>
+</html>

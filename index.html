@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-16-31a2f2a5-15c5d8d4">
+<meta name="rr-pwa" content="2026-11-16-dc4141a9-aca64287">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-16-31a2f2a5">
+<meta name="range-rat-build" content="2026-11-16-dc4141a9">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-16-31a2f2a5", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-16-dc4141a9", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-16-31a2f2a5", "builtAt": "2026-11-16T01:07:22Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-16-dc4141a9", "builtAt": "2026-11-16T07:09:13Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -25258,9 +25258,12 @@ window.DIALOG = {
     // bring in and the tour groups' doubles earn rolls into one small "+X" by the acorns, a batch every batchMs, instead of
     // a number on the field for each. The rat's own deposits, tips, requests and catches keep their numbers
     incomeTicker: { on: true, batchMs: 4000, holdMs: 700, ease: 0.35 },
-    // declutter looks (Ben 14 Nov, iPhone, late Firefly Bays: "the amount of stuff on screen is intense"). PREVIEWS for Ben to
-    // pick from, all off by default: ?declutter=1 (all) or ?declutter=lane,gus,keepout,payout,dots in the page URL, or
-    // <meta name="range-rat-declutter" content="..."> (build.py --declutter), or live: RANGE_RAT.feel.declutter.<look> = true.
+    // declutter looks (Ben 14 Nov, iPhone, late Firefly Bays: "the amount of stuff on screen is intense"). ON BY DEFAULT since
+    // Ben 16 Nov 08:03 Taipei ("turn them all on", DECISIONS 60): every look below but tipdot, which stays a preview (off; Ben
+    // hasn't seen it). Switches to compare, in the page URL (?declutter=...) or <meta name="range-rat-declutter" content="...">
+    // (build.py --declutter), a comma list read left to right: none (or 0 / off: every look off, the game before 16 Nov),
+    // all (or 1: the default set again), lane (that look on), -air (that look off). E.g. ?declutter=-air, ?declutter=tipdot,
+    // ?declutter=none,lane (only the lane). Live: RANGE_RAT.feel.declutter.<look> = true / false.
     //   lane     one message lane: toasts, Gus's peek and the trophy card take turns (one up at a time), never stacked or
     //            hidden behind the REQUEST card
     //   gus      a compact Gus peek (small portrait, smaller text): covers about half as much of the field
@@ -25281,7 +25284,7 @@ window.DIALOG = {
     //            less noisy"): a small dim core and a faint shadow, no glint, no glow; the full ball once it lands
     //   tipdot   a quieter tip ball (Ben 15 Nov, ~15 tip balls each with the ring + twinkle + bobbing acorn): a small gold
     //            four-point glint with a dark rim on the ball, no ring, no twinkle, no acorn post (the first one keeps its show)
-    declutter: { lane: false, gus: false, keepout: false, payout: false, dots: false, budget: false, air: false, tipdot: false },
+    declutter: { lane: true, gus: true, keepout: true, payout: true, dots: true, budget: true, air: true, tipdot: false }, // DECISIONS 60: on (tipdot: a preview)
     budget: { staleSec: 8, ambientSec: 180, quietMs: 5000, logMax: 30 },
     // the pickup sound (playtest round 3 note 8): quick pickups climb a pentatonic ladder (step 0..top, a sparkle at 4 and 9),
     // a pause of resetMs drops it back to the bottom; past the top it wanders wander[0..1] (hundreds of pickups never sit on
@@ -25311,9 +25314,13 @@ window.DIALOG = {
     dodge: { scoopMult: 1.8, hitStopMs: 45, btnPx: 64, bufferSec: 0.2, ghostEveryMs: 34, ghostMs: 170, ghostAlpha: 0.55, stretch: 0.28, nudge: 1.6, landSquash: 0.3 },
     reduced: { shake: 0, flash: 0, hitStop: 0.35, particles: 0.4 }
   };
-  const DC_NOT_ALL = ['tipdot']; // a look ?declutter=all leaves out: only by name, until Ben has compared it (15 Nov)
-  { const pick = (v) => { v = String(v || '').trim(); if (!v || v === '0') return; const all = v === '1' || v === 'all', ks = v.split(','); for (const k of Object.keys(feel.declutter)) if ((all && !DC_NOT_ALL.includes(k)) || ks.includes(k)) feel.declutter[k] = true; };
-    pick(QS.get('declutter')); try { const m = W.document && document.querySelector('meta[name="range-rat-declutter"]'); if (m) pick(m.getAttribute('content')); } catch (e) { /* ignore */ } }
+  const DC_NOT_ALL = ['tipdot']; // a look ?declutter=all (and the default) leaves out: only by name, until Ben has compared it (15 Nov)
+  { const D = feel.declutter, set = (on) => { for (const k of Object.keys(D)) D[k] = on && !DC_NOT_ALL.includes(k); };
+    const pick = (v) => { for (let t of String(v || '').split(',')) { t = t.trim().toLowerCase(); if (!t) continue;
+      if (t === '0' || t === 'none' || t === 'off') set(false); else if (t === '1' || t === 'all') set(true);
+      else { const off = t[0] === '-', k = off ? t.slice(1) : t; if (k in D) D[k] = !off; } } };
+    try { const m = W.document && document.querySelector('meta[name="range-rat-declutter"]'); if (m) pick(m.getAttribute('content')); } catch (e) { /* ignore */ }
+    pick(QS.get('declutter')); } // the build's meta first, then the URL (the URL wins)
   const dcOn = (k) => !!(feel.declutter && feel.declutter[k]); // read live: a look can be switched on and off while playing
   const reducedMotion = () => !!(S0().settings && S0().settings.reducedMotion);
   // accessibility: screen shake and flashes can be turned off on their own (reduced motion turns both off too)
@@ -25660,7 +25667,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (chipEnds.length >= (feel.popup.chipBudget || 1e9) && !(o.big || o.huge || o.tip)) return false; // big chips (your own deposit) and tip balls always show, and count
     chipEnds.push(renderMs + (o.big || o.huge ? feel.popup.bigMs : feel.popup.ms)); return true;
   }
-  // declutter look `payout` (preview, feel.declutter.payout). Ben's iPhone, 14 Nov: "+938M", "Tip! +8.1M" twice, "+78.7M",
+  // declutter look `payout` (feel.declutter.payout, on by default: DECISIONS 60). Ben's iPhone, 14 Nov: "+938M", "Tip! +8.1M" twice, "+78.7M",
   // "+9.7M", "+4.9M" big in the middle of the field. A routine payout (a tip ball, a golden golfer's swing, the goal's "+X"
   // that its toast also says) worth less than PAYOUT.routineSec of income is a plain chip (chip size, and the chip budget
   // applies, so it can be skipped while 5 are up: its acorns still count); at most PAYOUT.bigMax big floaters at once (a
@@ -29391,7 +29398,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (mode !== 'game' || paused.user || paused.menu || paused.modal || paused.dialog || paused.away || sheet || modal || chestScene || document.hidden) return false;
     if ((bannerBusy || achShowQ.length) && !((prio | 0) >= 3)) return false; // a trophy card (or one waiting its beat after a bonk / tip / chest, feel #14): P2 / P3 lines wait it out; core ones go (Gus is at the bottom; up top his clock stops under the card)
     if (dlg || dialogQ.length || focusQuiet() || uiBusyNow() || (gusFree !== false && ui_.gusBusy && ui_.gusBusy())) return false;
-    if (gusFree !== false && laneOn() && !laneFree('peek')) return false; // declutter lane: a toast or the trophy card is up
+    if (gusFree !== false && laneOn() && !laneFree('peek') && !dockEl()) return false; // declutter lane: a toast or the trophy card is up (a line for Gus's dock, wide or in town, is off the field: it goes, as gusShow lets it)
     const r = layout.root; if (r && r.querySelector('.rr-sheet.on, .rr-modal, .rl-scrim, .rh-scrim')) return false;
     return true;
   }
@@ -33208,7 +33215,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // Mudbank, where the crate's beetles are behind the paywall). Its arrival toasts and Gus's float wait in
     // state.heldArrival until the unlock takes them there (heldArrivalRelease)
     if (!trialSale) toastNewRange(); // QA 2026-11-06 night: toasts still queued from the range you left don't follow you
-    const held = trialSale ? [] : null, say = (k, text, x) => { if (held) held.push(Object.assign({ k, text }, x || {})); else if (text) toast(text); };
+    const held = trialSale ? [] : null, say = (k, text, x) => { if (held) held.push(Object.assign({ k, text }, x || {})); else if (text) toast(text, k === 'bought' ? { front: true } : undefined); }; // the sale's toast is the payment's confirmation (front: first in the message lane)
     say('bought', tx('buy.bought', '{name} is yours!', { name: rangeName(rid) }) + ' ' + tx('buy.starsGain', '+{n} ★ → {p} income for good', { n: fmt(gained), p: starBoost(state.stars - gained, state.stars) }));
     if (carried) say('carried', tx('buy.carried', '{n} acorns came with you, and {b} beetles in a crate.', { n: fmt(carried.cap), b: carried.beetles }), { b: carried.beetles });
     if (floatAmt > 0) { if (held) say('float', '', { amount: floatAmt, rate: leavingRate }); else { emit('arrivalFloat', { range: newId, amount: floatAmt, rate: leavingRate }); if (!(frOwns('float') && !frSaid('float'))) toast(tx('buy.float', 'Gus left a float in the till: {n} acorns to get you going.', { n: fmt(floatAmt) })); } }
@@ -38585,7 +38592,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-peek canvas{width:96px;height:96px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto;background:var(--rr-sheet-tx),var(--rr-sheet-bg);border:3px solid var(--rr-line);border-image:var(--rr-fr-dialog);border-radius:calc(12px*var(--rr-round));box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .rr-peek .rr-bubble{position:relative;transform:none;margin-bottom:46px;font-size:calc(16px*var(--rr-fs));flex:0 1 auto;min-width:0;max-width:320px}
 .rr-pdock-top>.rr-peek .rr-bubble{margin:10px 0 0}.rr-pdock-top>.rr-peek .rr-bubble:after{bottom:auto;top:12px}
-/* declutter look "gus" (preview, feel.declutter.gus): a compact peek, about half the field it covered (Ben, 14 Nov: Gus's
+/* declutter look "gus" (feel.declutter.gus, on by default: DECISIONS 60): a compact peek, about half the field it covered (Ben, 14 Nov: Gus's
    festival line over the top third of the phone field). The portrait 52 px (was 96), the name on the line's first row,
    14 px text; the tail and the slide-in as before */
 .rr-dc-gus .rr-peek{margin-bottom:6px;gap:3px}.rr-dc-gus .rr-pdock-top>.rr-peek{margin-top:2px}
@@ -39979,7 +39986,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (pinEl && pinEl.isConnected && +pinEl.style.opacity > 0) { const hw = (pinEl._w || 60) / 2 / layout.scale + 1, ps = pinSpot(p, hw); top = Math.min(top, ps[1] - (pinEl.offsetHeight || 10) / layout.scale - 2); }
     return Math.min(y, top);
   }
-  /** declutter look `keepout` (preview, feel.declutter.keepout): the top-left counter line (the range counter "Firefly jar
+  /** declutter look `keepout` (feel.declutter.keepout, on by default: DECISIONS 60): the top-left counter line (the range counter "Firefly jar
    *  0/10 Jar lanterns 10/10" and the Show FPS readout above it) as one box in the fx layer's px, 4 px of air round it; null
    *  when the look is off or nothing is there. Read at most every 500 ms (render clock): a pop never forces a layout */
   const KO = { t: -1e9, box: null, key: '' };
@@ -40108,7 +40115,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (!toastHeld.length) return;
     if (mode !== 'game') { toastHeld.length = 0; return; }
     if (toastCovered()) { toastHeldT = Math.max(toastHeldT, 0.35); return; }
-    if (dcOn('budget')) { // message budget: a toast that has waited budget.staleSec (on an open field) is stale: to the quiet line
+    if (dcOn('budget') && !dlg) { // message budget: a toast that has waited budget.staleSec (on an open field) is stale: to the quiet line
+      // (not while Gus's dialog box holds the range: the arrival's "X is yours! +N ★" waited out his arrival lines and went
+      // to the quiet line unseen. The toasts wait for the box, as they wait for a sheet; DECISIONS 60)
       for (let i = toastHeld.length - 1; i >= 0; i--) { const x = toastHeld[i]; x.w = (x.w || 0) + dt; if (x.w > (feel.budget.staleSec || 8) && !(x.o && (x.o.front || x.o.goal > 0))) { toastHeld.splice(i, 1); emit('toastDropped', { text: x.text, why: 'stale' }); quietLog(x.text); } }
       if (!toastHeld.length) return;
     }
@@ -40131,7 +40140,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const fade = () => { if (!e.isConnected) return; try { const a = e.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }); a.onfinish = () => e.remove(); } catch (er) { e.remove(); } };
     readHold(e, readMs(text), fade, [['pointerenter', 'pointerleave'], ['pointerdown', 'pointerup', 'pointercancel']]);
   }
-  // ---- one message lane (declutter look `lane`, a preview: feel.declutter.lane). Ben's iPhone, 14 Nov, late Firefly Bays:
+  // ---- one message lane (declutter look `lane`, feel.declutter.lane, on by default: DECISIONS 60). Ben's iPhone, 14 Nov, late Firefly Bays:
   // Gus's line over the top third of the field, two goal toasts and a "Lantern festival" toast stacked over the middle, one
   // of them half under the REQUEST card, all at once. With the lane on, toasts, Gus's peek and the trophy card take turns:
   // one up at a time, the next LANE.gapMs after the last one went, nothing dropped (each waits in its own queue). When
@@ -40145,9 +40154,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function laneBusy() { const t = els().toasts; return !!((t && t.firstElementChild) || peek || peekOut || bannerBusy || dlg); }
   /** what waits for the lane, in turn order */
   const laneToastKind = (x) => (x && x.o && (x.o.front || x.o.goal > 0) ? 'toastFront' : 'toast');
-  function laneWants() { const k = toastHeld.length ? laneToastKind(toastHeld[0]) : null; return { banner: bannerQ.length > 0 && !bannerHeld(), toastFront: k === 'toastFront', peek: peekQ.length > 0, toast: k === 'toast' }; }
+  // (a toast held under a sheet, card or modal can't go yet: it doesn't hold Gus's line in the Shop / a card back; DECISIONS 60)
+  function laneWants() { const k = toastHeld.length && !toastCovered() ? laneToastKind(toastHeld[0]) : null; return { banner: bannerQ.length > 0 && !bannerHeld(), toastFront: k === 'toastFront', peek: peekQ.length > 0, toast: k === 'toast' }; }
   /** turn order: the trophy card, a payment / goal toast, then Gus and the other toasts in the order they came */
-  function laneOrder() { const t = toastHeld[0], q = peekQ[0]; return t && q && (t.at || 0) < (q.at || 0) ? ['banner', 'toastFront', 'toast', 'peek'] : ['banner', 'toastFront', 'peek', 'toast']; }
+  // (a payment's own confirmation, o.front: a part paid, the sale's "X is yours! +N ★", goes ahead of the trophy cards it
+  // set off; on arrival three cards had put the sale toast ~15 s after Gus's lines. DECISIONS 60)
+  function laneOrder() { const t = toastHeld[0], q = peekQ[0], o = t && q && (t.at || 0) < (q.at || 0) ? ['banner', 'toastFront', 'toast', 'peek'] : ['banner', 'toastFront', 'peek', 'toast'];
+    return t && t.o && t.o.front ? ['toastFront'].concat(o.filter((k) => k !== 'toastFront')) : o; }
   /** may a `kind` message start now? Always true with the lane off */
   function laneFree(kind) {
     if (!laneOn()) return true;
@@ -40159,7 +40172,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     return true;
   }
   /** something else waits for the lane (a showing Gus line, once read, makes way) */
-  function laneWaiting() { return laneOn() && (toastHeld.length > 0 || bannerQ.length > 0); }
+  function laneWaiting() { return laneOn() && ((toastHeld.length > 0 && !toastCovered()) || bannerQ.length > 0); }
   /** two short plain toasts waiting together go up as one two-line toast (true: shown) */
   function laneMerge() {
     if (toastHeld.length < 2) return false;
@@ -42876,7 +42889,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       /** the fog layer's densest and brightest pixel in logical rect r: { a: alpha 0..255, rgb: max channel } (the night set is thinner + dimmer) */
       fogInk(r) { const F = WX.F, c = F.cv; if (!c || !(F.lv > 0)) return null; const k = c.width / G.W, x0 = Math.round(r[0] * k), y0 = Math.round(r[1] * k), w = Math.max(1, Math.round((r[2] - r[0]) * k)), h = Math.max(1, Math.round((r[3] - r[1]) * k));
         const d = c.getContext('2d').getImageData(x0, y0, w, h).data; let a = 0, m = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3]) { a = Math.max(a, d[i + 3]); m = Math.max(m, d[i], d[i + 1], d[i + 2]); } return { a, rgb: m, night: !!F.night }; },
-      /** the declutter looks (feel.declutter, previews): o = { lane, gus, keepout, payout } (true / false; 'all' / 'none'), returns
+      /** the declutter looks (feel.declutter, on by default but tipdot): o = { lane, gus, keepout, ... } (true / false; 'all' / 'none'), returns
        *  what is on, plus the lane's state (what is up, what waits) */
       declutter(o) {
         const D = feel.declutter; if (o === 'all' || o === 'none') { for (const k in D) D[k] = o === 'all'; } else if (isObj(o)) for (const k in o) if (k in D) D[k] = !!o[k];

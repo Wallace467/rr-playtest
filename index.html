@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-15-df084ae8-3377245e">
+<meta name="rr-pwa" content="2026-11-16-31a2f2a5-15c5d8d4">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-15-df084ae8">
+<meta name="range-rat-build" content="2026-11-16-31a2f2a5">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-15-df084ae8", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-16-31a2f2a5", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-15-df084ae8", "builtAt": "2026-11-15T22:23:44Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-16-31a2f2a5", "builtAt": "2026-11-16T01:07:22Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -27458,14 +27458,33 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
    *  _replaced (as an import does). Its clocks move to now: going back never pays offline time again for the hours since */
   function restoreRoll(n, i) {
     n = clamp(n | 0, 1, SLOT_N); i = clamp(i | 0, 0, ROLL_N - 1);
-    const raw0 = store.get(rollKey(n, i)); if (!raw0 || rawNewer(raw0)) return false;
+    return restoreRaw(n, store.get(rollKey(n, i)), { roll: i });
+  }
+  /** the desktop build's save-backups folder (desktop/app/cloud-store.js: the copies kept when the Steam Cloud file and this
+   *  machine disagreed at launch, outside the synced folder): slot n's, newest first [{ id, raw, at }], read through the
+   *  preload once a session (the folder only changes at launch). Browser builds: none */
+  const deskBk = {};
+  function deskBackups(n) {
+    if (!deskBk[n]) {
+      let l = []; try { const d = W.RR_DESKTOP && W.RR_DESKTOP.storage; if (d && typeof d.backups === 'function') l = d.backups(n); } catch (e) { l = []; }
+      deskBk[n] = (Array.isArray(l) ? l : []).filter((b) => b && typeof b.id === 'string' && typeof b.raw === 'string' && b.raw).slice(0, 10).map((b) => ({ id: b.id, raw: b.raw, at: rawSavedAt(b.raw) || (isNum(b.at) ? b.at : 0) }));
+    }
+    return deskBk[n];
+  }
+  /** Settings > Saves > Backups (desktop): a save-backups copy of slot n goes live, the same way a rolling backup does */
+  function restoreDesk(n, id) {
+    n = clamp(n | 0, 1, SLOT_N); const b = deskBackups(n).find((x) => x.id === id);
+    return !!b && restoreRaw(n, b.raw, { desk: 1 });
+  }
+  function restoreRaw(n, raw0, how) {
+    if (!raw0 || rawNewer(raw0)) return false;
     let raw; try { stateFromRaw(raw0); const o = parseSave(raw0); o.savedAt = o.lastSeenMax = Date.now(); raw = JSON.stringify(o); } catch (e) { return false; }
     if (n === slot && state && state.started && mode === 'game') save(); // the game being played is what's kept aside
     const cur = store.get(slotKey(n)), rk = slotKey(n) + '_replaced';
     if (cur && store.get(rk) !== cur && store.set(rk, cur) === false) { saveFailed('storage', n); return false; }
     if (store.set(slotKey(n), raw) === false) { saveFailed('storage', n); return false; }
     lastWritten[n] = raw;
-    emit('saveRestore', { slot: n, roll: i, at: rawSavedAt(raw0) });
+    emit('saveRestore', Object.assign({ slot: n, at: rawSavedAt(raw0) }, how));
     if (n === slot) { saveDisabled = true; try { switchToSlot(n); } finally { saveDisabled = false; } }
     return true;
   }
@@ -27474,11 +27493,17 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const T = (k, fb, v) => tx('savesafe.' + k, fb, v);
     let h = head(T('backups', 'Backups')) + `<div class="ef" style="color:var(--rr-text2);text-align:center">${esc(T('backupsHelp', 'Copies of this save, about one an hour of play.'))}</div>`;
     const list = rollList(slot).filter((r) => !rawNewer(r.raw));
+    // the desktop build: the save-backups folder's copies of this slot too (deskBackups), in the same list by age; one that
+    // is the same save as a rolling backup shows once
+    const seen = new Set(list.map((r) => r.raw));
+    deskBackups(slot).forEach((b, j) => { if (!rawNewer(b.raw) && !seen.has(b.raw)) { seen.add(b.raw); list.push({ desk: b.id, j, raw: b.raw, at: b.at }); } });
+    list.sort((a, b) => b.at - a.at);
     if (!list.length) return h + `<div class="ef" data-k="rollnone" style="text-align:center">${esc(T('none', 'None yet. The first one is kept as you play.'))}</div>`;
     for (const r of list) {
       let sum = null; try { sum = rawSummary(r.raw, slot); } catch (e) { continue; }
       const ago = T('ago', '{t} ago', { t: fmtTime((Date.now() - r.at) / 1000) });
-      h += `<div class="rr-set" data-roll="${r.i}"><span><b>${esc(ago)}</b><small style="display:block;color:var(--rr-text2)">${esc(sum.rangeName)} · ${esc(fmtTime(sum.playSeconds))} · ${esc(tx('hud.cash', '{n} acorns', { n: fmt(sum.cash) }))}</small></span><button class="rr-btn" data-k="roll${r.i}" data-act="rollrestore" data-i="${r.i}" aria-label="${esc(tx('profile.restore', 'Restore backup') + ': ' + ago)}">${esc(tx('profile.restore', 'Restore backup'))}</button></div>`;
+      const btn = r.desk ? `data-k="deskbk${r.j}" data-act="deskrestore" data-id="${esc(r.desk)}"` : `data-k="roll${r.i}" data-act="rollrestore" data-i="${r.i}"`;
+      h += `<div class="rr-set" ${r.desk ? `data-deskbk="${r.j}"` : `data-roll="${r.i}"`}><span><b>${esc(ago)}</b><small style="display:block;color:var(--rr-text2)">${esc(sum.rangeName)} · ${esc(fmtTime(sum.playSeconds))} · ${esc(tx('hud.cash', '{n} acorns', { n: fmt(sum.cash) }))}</small></span><button class="rr-btn" ${btn} aria-label="${esc(tx('profile.restore', 'Restore backup') + ': ' + ago)}">${esc(tx('profile.restore', 'Restore backup'))}</button></div>`;
     }
     return h;
   }
@@ -39498,7 +39523,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       bind(inst) {
         const el = inst.el;
         bindSetTabs(inst);
-        { const mv = el.querySelector('[data-mv]'); if (mv) { if (mv.dataset.mv === 'export') mountExportUI(mv); else mountImportUI(mv, (n) => { inst.state.io = null; if (mode === 'game' && n === slot) { closeSheet(); startGame(); } else if (mode === 'title') { closeModal(); renderProfiles(); } else inst.update(true); }); } }
+        { const mv = el.querySelector('[data-mv]'); if (mv) { if (mv.dataset.mv === 'export') mountExportUI(mv); else {
+          mountImportUI(mv, (n) => { inst.state.io = null; inst.state.ioText = ''; if (mode === 'game' && n === slot) { closeSheet(); startGame(); } else if (mode === 'title') { closeModal(); renderProfiles(); } else inst.update(true); });
+          // a redraw of the panel (the first pad press switches the prompts to pad, a language change) keeps a pasted code
+          // (Steam readiness QA 2026-11-15: it emptied the field)
+          const ta = mv.querySelector('[data-in]'); if (ta && inst.state.ioText && !ta.value) ta.value = inst.state.ioText;
+          mv.addEventListener('input', (e) => { if (e.target && e.target.matches && e.target.matches('[data-in]')) inst.state.ioText = e.target.value; });
+        } } else inst.state.ioText = ''; }
         el.querySelectorAll('[data-tog]').forEach((b) => b.addEventListener('click', () => {
           const k = b.dataset.tog;
           if (k === '_unlocked') { state.unlocked = !state.unlocked; state.unlockedBy = state.unlocked ? 'dev' : null; }
@@ -39532,7 +39563,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           else if (a === 'focusOpen') focusSettingAct(a, b); // the Work timer panel, back to Settings when closed (leaveSettingsFor)
           else if (a && a.startsWith('focus')) { focusSettingAct(a, b); inst.update(true); }
           else if (a === 'title') { closeSheet(); save(); showTitle(); }
-          else if (a === 'rollrestore') { const i = +b.dataset.i; confirmModal(tx('savesafe.restoreQ', 'Go back to this backup?'), tx('savesafe.restoreWarn', 'The save you have now is kept aside on this device.'), tx('profile.restore', 'Restore backup'), () => { if (!restoreRoll(slot, i)) { sfx('ui_deny'); return; } sfx('upgrade', { pitch: 2 }); if (mode === 'game') { closeSheet(); startGame(); } else { closeModal(); renderProfiles(); } toast(tx('profile.restored', 'Backup restored.')); }); }
+          else if (a === 'rollrestore' || a === 'deskrestore') { const i = +b.dataset.i, id = b.dataset.id; confirmModal(tx('savesafe.restoreQ', 'Go back to this backup?'), tx('savesafe.restoreWarn', 'The save you have now is kept aside on this device.'), tx('profile.restore', 'Restore backup'), () => { if (!(a === 'deskrestore' ? restoreDesk(slot, id) : restoreRoll(slot, i))) { sfx('ui_deny'); return; } sfx('upgrade', { pitch: 2 }); if (mode === 'game') { closeSheet(); startGame(); } else { closeModal(); renderProfiles(); } toast(tx('profile.restored', 'Backup restored.')); }); }
           else if (a === 'desk') { closeSheet(); enterDesk(); }
           else if (a === 'fullscreen') { try { W.RR_DESKTOP.toggleFullscreen(); } catch (e) { /* no wrapper */ } setTimeout(() => { try { inst.update(true); const f = inst.el.querySelector('[data-k=set-fullscreen]'); if (f) f.focus({ preventScroll: true }); } catch (e) { /* closed */ } }, 300); }
           else if (a === 'newgame') { confirmModal(tx('title.newGameQ', 'New game?'), tx('title.wipeExport', 'This wipes your progress here. Export your save first.'), tx('title.wipeIt', 'Wipe it'), () => { closeSheet(); hardReset(); }); }
@@ -40221,6 +40252,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     b.onclick = (e) => { e.stopPropagation(); sfx('ui_tap'); unlockAudio(); hide(); if (chOpen() && mode === 'game' && !chestScene) playChestScene(chc.chestId); else openTrophiesAt(it.id); };
     b.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.onclick(e); } };
     b.onpointerdown = (e) => e.stopPropagation(); // never steers the rat
+    // a name with a word longer than the card is wide (Steam Deck QA 2026-11-15: German "Aufziehkünstler" in Large text at
+    // 1280x800 ran under the Open chest button) gets a smaller size, never a break inside the word (BRIEF §16)
+    { const n = b.querySelector('.n'); if (n) for (let k = 0.92; k >= 0.6 && n.scrollWidth > n.clientWidth + 1; k -= 0.08) n.style.fontSize = `calc(21px*var(--rr-fs)*${k.toFixed(2)})`; }
     void b.offsetWidth; // restart CSS animations
     { // never over the HUD (15 Nov: on phones the field runs up under the HUD, and the card's top 12 px sat on it)
       b.style.top = ''; const hud = layout.root && layout.root.querySelector('.rr-hud'), op = b.offsetParent;
@@ -42281,19 +42315,22 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (!(a && r && r.contains(a) && a.matches && a.matches(FOCUSABLE) && a.closest)) return false;
     return !!(a.closest(PAD_PANELS) || (a === gp.navEl && a.closest(PAD_BARS)));
   }
+  /** a pad move always shows its focus ring (Steam readiness QA 2026-11-15): after a mouse click or a touch on the Deck's
+   *  screen, Chromium kept :focus-visible off for script focus, so the d-pad moved an invisible focus */
+  function padFocus(e, keepScroll) { try { e.focus({ preventScroll: !!keepScroll, focusVisible: true }); } catch (er) { try { e.focus(); } catch (er2) { /* ignore */ } } }
   function navFocus(container, dir) {
     let list = focusables(container); if (!list.length) return;
     // the open range (no layer on top): only the panels and bars the pad can stay in; anything else would hand the stick
     // back to the rat and leave a focus ring behind (the canvas, a toast's button, the dodge button)
     if (container === layout.root) { list = list.filter((e) => e.closest(PAD_PANELS) || e.closest(PAD_BARS)); if (!list.length) return; }
     const cur = document.activeElement;
-    if (!list.includes(cur)) { gp.navEl = list[0]; list[0].focus(); return; }
+    if (!list.includes(cur)) { gp.navEl = list[0]; padFocus(list[0], false); return; }
     // sliders / selects / tab rows use left-right for their value
     if ((dir === 'left' || dir === 'right') && cur.tagName === 'INPUT' && cur.type === 'range') { const st = +cur.step || 1; cur.value = clamp(+cur.value + (dir === 'right' ? st : -st), +cur.min || 0, +cur.max || 100); cur.dispatchEvent(new Event('input', { bubbles: true })); cur.dispatchEvent(new Event('change', { bubbles: true })); return; }
     if ((dir === 'left' || dir === 'right') && cur.getAttribute('role') === 'tab' && cur.parentNode && cur.parentNode.__step) { cur.parentNode.__step(dir === 'right' ? 1 : -1); return; } // settings tabs: left/right switch tab
     if ((dir === 'left' || dir === 'right') && cur.getAttribute('role') === 'radio' && cur.parentNode && cur.parentNode.matches && cur.parentNode.matches('.rr-looks[role=radiogroup], [role=radiogroup][data-pad-radio]')) { // the rat looks (or a group marked data-pad-radio): left / right pick, as the arrow keys do. Not every radiogroup: the d-pad on Gus's Ledger rule buttons just moves (review r4 #7)
       const g = [...cur.parentNode.querySelectorAll('[role=radio]')], i = g.indexOf(cur), nb = g[(i + (dir === 'right' ? 1 : g.length - 1)) % g.length];
-      try { nb.focus({ preventScroll: true }); } catch (e) { /* ignore */ } nb.click(); return;
+      padFocus(nb, true); nb.click(); return;
     }
     if ((dir === 'left' || dir === 'right') && cur.tagName === 'SELECT') { const n = cur.options.length; cur.selectedIndex = (cur.selectedIndex + (dir === 'right' ? 1 : n - 1)) % n; cur.dispatchEvent(new Event('change', { bubbles: true })); return; }
     const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
@@ -42307,7 +42344,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
     if (!best) { const i = list.indexOf(cur); best = list[(i + (dir === 'up' || dir === 'left' ? list.length - 1 : 1)) % list.length]; }
     gp.navEl = best; SG.userT = performance.now();
-    try { best.focus({ preventScroll: false }); best.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) { /* ignore */ }
+    padFocus(best, false); try { best.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) { /* ignore */ }
   }
   // After Hours (canvas side mode) speaks keyboard: the pad is translated into its keys.
   // A = hold to swing / tap to strike (Space), B = close a panel, or back to the range when none is open,
@@ -42341,6 +42378,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const max = +a.maxLength > 0 ? Math.min(256, +a.maxLength) : 256;
     const none = (why) => { toast(tx('keys.noOsk', 'No on-screen keyboard here. Use a keyboard to type.')); emit('textEntry', { result: 'none', why: why || 'no-steam' }); };
     const K = padKeyboard(); if (!K) { none(); return; }
+    // Steam's keyboard holds 256 characters: a pasted save code (thousands) would come back cut short over the whole code
+    // (Steam readiness QA 2026-11-15). The field keeps what it has; a real keyboard (or Load file) carries on from there
+    if (String(a.value || '').length > max) { none('too-long'); return; }
     let rect = null; try { const r = a.getBoundingClientRect(), k = W.devicePixelRatio || 1; rect = { x: r.left * k, y: r.top * k, w: r.width * k, h: r.height * k }; } catch (e) { /* ignore */ }
     padText.busy = true;
     let p; try { p = Promise.resolve(K.textInput(fieldLabel(a), max, a.value, rect)); } catch (e) { p = Promise.resolve(null); }
@@ -42372,7 +42412,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       if (dir && (dir !== gp.dir || (gp.rep -= dt) <= 0)) { gp.rep = dir === gp.dir ? 0.12 : 0.38; navFocus(menu, dir); }
       if (!dir) gp.rep = 0;
       gp.dir = dir;
-      if (down(0)) { if (dlg && top === dlg.box) dialogTap(); else { const a = document.activeElement; if (a && menu.contains(a) && isTextField(a)) padTextEntry(a); else if (a && menu.contains(a) && a.click) a.click(); else { const f = focusables(menu)[0]; if (f) f.focus(); } } }
+      if (down(0)) { if (dlg && top === dlg.box) dialogTap(); else { const a = document.activeElement; if (a && menu.contains(a) && isTextField(a)) padTextEntry(a); else if (a && menu.contains(a) && a.click) a.click(); else { const f = focusables(menu)[0]; if (f) padFocus(f, false); } } }
       if (down(1)) { if (top) padBack(top); else { gp.navEl = null; try { document.activeElement.blur(); } catch (e) { /* ignore */ } } }
       if (top && (down(4) || down(5))) { const bar = top.querySelector('[data-stabs]'); if (bar && bar.__step) bar.__step(down(5) ? 1 : -1); } // LB / RB: previous / next settings tab
     } else {
@@ -45067,18 +45107,20 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     else mount('body', name, host, { shape: 'column' });
     if (user) { try { W.SFX && W.SFX.play && W.SFX.play('ui_tap'); } catch (e) { /* ignore */ } }
   }
+  /** pad / keys opened it (Y, View, 1-4): the focus ring shows even right after a mouse click (Steam readiness QA 2026-11-15) */
+  const keysFocus = () => { try { const m = window.RANGE_RAT && window.RANGE_RAT.inputMode; return m === 'pad' || m === 'kb'; } catch (e) { return false; } };
   function openPanel(name, o) {
     if (cur === 'desk') { if (name === 'shop' || name === 'wardrobe' || name === 'achievements') return W.RANGE_RAT_DESK.open(name); return origOpen(name); }
     if ((name === 'goals' || name === 'journal') && (cur === 'narrow' || !cur)) return openGoalsSheet();
     if (name === 'goals' && cur === 'duo') name = 'journal';
     if (cur === 'narrow' || !cur || name === 'settings' || name === 'stats') return origOpen(name);
-    if (TABS[cur] && TABS[cur].includes(name)) { setTab(name, true); const t = els.side.querySelector(`[data-rl-tab="${name}"]`); if (t) try { t.focus({ preventScroll: true }); } catch (e) { /* ignore */ } return; }
+    if (TABS[cur] && TABS[cur].includes(name)) { setTab(name, true); const t = els.side.querySelector(`[data-rl-tab="${name}"]`); if (t) try { t.focus({ preventScroll: true, focusVisible: keysFocus() }); } catch (e) { /* ignore */ } return; }
     // wide keeps the whole Journal in the rat corner: point at it instead of opening the engine's (empty) journal modal
     if ((name === 'goals' || name === 'journal') && cur === 'wide') { const g = els.corner.querySelector('[data-rl=goals]'); if (g) { try { g.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } if (g.animate) g.animate([{ boxShadow: '0 0 0 3px #f2c641' }, { boxShadow: '0 0 0 0 transparent' }], { duration: 600 }); }
       // the pad's View (o.focus): focus goes INTO the corner, so the d-pad walks the Journal until B (Deck audit S5)
       if (o && o.focus) { const vis = (e) => e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden'; const q = 'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
         const f = [...((g && g.querySelectorAll(q)) || [])].find(vis) || [...els.corner.querySelectorAll(q)].find(vis);
-        if (f) try { f.focus({ preventScroll: true }); f.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } }
+        if (f) try { f.focus({ preventScroll: true, focusVisible: keysFocus() }); f.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } }
       return; }
     return origOpen(name);
   }

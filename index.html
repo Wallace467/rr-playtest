@@ -14,11 +14,11 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-17-84973ec2-108f7948">
+<meta name="rr-pwa" content="2026-11-17-b6ca6b3f-49e5e26a">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-17-84973ec2">
+<meta name="range-rat-build" content="2026-11-17-b6ca6b3f">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-17-84973ec2", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-17-b6ca6b3f", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-17-84973ec2", "builtAt": "2026-11-17T04:35:57Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-17-b6ca6b3f", "builtAt": "2026-11-17T05:23:49Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -37453,12 +37453,18 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const tNow = nowMs(); if (o && o.key.split('|')[0] === lk.split('|')[0] && o.mode === mode && tNow - o.at < 150 && !/~$/.test(o.key)) { o.stale = true; return o; } // stale: ui/layout.js asks again
     SIDES.regrades++; const tG = nowMs();
     const rid = rangeId(), th = theme(rid), A = sideArt(rid, side, wl), U = N * 2, H = A.H, k = skyNow(), night = visualNight();
-    const WW = wl != null; // the wider world: outside reads as outside, a touch darker and greyer than the play area (Ben 15 Nov)
+    const WW = wl != null; // the wider world (phones): after dark the outside reads as outside, darker than the play area
     const dDim = WW ? 1 : 1 - DESK_NIGHT * clamp(night, 0, 1); // desktop (DECISIONS 56, 17 Nov): the day look as approved; after dark the outside as dark as the phones' (no greying), so the lit field and its edge stand out
-    const wDim = WIDE_DIM * (1 - WIDE_NIGHT * clamp(night, 0, 1)); const wGrey = WIDE_GREY * (1 - clamp(night, 0, 1)); // after dark no greying: the outside keeps the night's own blue (Ben 16 Nov: a grey slab beside the night field) // and a touch darker again after dark (the lit field stands out)
+    // phones (17 Nov, Ben's iPhone: "the sides colours have gone weird"): by day the outside has the day look the phones had
+    // before the wider world (013abb99: the strips' own colours, no dimming or greying); the approved night look (WIDE_DIM x
+    // (1 - WIDE_NIGHT), no greying) comes in with the dark and is reached in full from night WIDE_RAMP (Firefly Bays, always
+    // night, has it in full). After dark no greying: the outside keeps the night's own blue (Ben 16 Nov: a grey slab)
+    const nn = clamp(night, 0, 1), wS = clamp(nn / WIDE_RAMP, 0, 1), wDim = 1 + (WIDE_DIM * (1 - WIDE_NIGHT * nn) - 1) * wS, wGrey = WIDE_GREY * (1 - nn) * wS;
     const nl = th.night ? nlCfg() : null, tint = nl && nl.tint || NIGHT_TINT, nA = th.night ? (nl.dark || 0.5) : nightMaskA(th) * night;
     const warmA = k.warm > 0.02 && !alwaysNight() ? 0.11 * k.warm * (1 - night * 0.6) : 0, gold = nl && nl.cols ? nl.cols[0] : [242, 198, 65];
-    const ac = o && o.ac && o.ac.width === U ? o.ac : makeCanvas(U, H), q = ac.getContext('2d'), img = q.createImageData(U, H), d = img.data, imgL = WW ? q.createImageData(U, H) : null, dL = imgL ? imgL.data : null; // dL: the same strip lit (no night darkness): the wider world shows it where the field's lamps light its edge
+    // dL: the same strip lit (no night darkness): the wider world shows it after dark where the field's lamps light its edge.
+    // Only made after dark (by day nothing shows it)
+    const ac = o && o.ac && o.ac.width === U ? o.ac : makeCanvas(U, H), q = ac.getContext('2d'), img = q.createImageData(U, H), d = img.data, imgL = WW && night > 0.001 ? q.createImageData(U, H) : null, dL = imgL ? imgL.data : null;
     const srnd = mulberry(hashStr('sidestars|' + rid + side));
     // Firefly Bays look B: each art px's lamplight, banded + ordered-dithered (u-space dither: the same pixels at any width).
     // It doesn't change with the light key, so it is worked out once per strip art
@@ -37529,15 +37535,22 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     q.putImageData(img, 0, 0);
     const RS = renderScale, cv = o && o.cv && o.cv.width === N * RS ? o.cv : makeCanvas(N * RS, G.H * RS), cg = cv.getContext('2d');
     cg.imageSmoothingEnabled = false; cg.clearRect(0, 0, cv.width, cv.height); cg.drawImage(ac, 0, 0, U, H, 0, 0, N * RS, G.H * RS);
-    let lcv = null; if (imgL) { q.putImageData(imgL, 0, 0); lcv = o && o.lcv && o.lcv.width === N * RS ? o.lcv : makeCanvas(N * RS, G.H * RS); const lg = lcv.getContext('2d'); lg.imageSmoothingEnabled = false; lg.clearRect(0, 0, lcv.width, lcv.height); lg.drawImage(ac, 0, 0, U, H, 0, 0, N * RS, G.H * RS); q.putImageData(img, 0, 0); }
-    o = { key: N > EDGE && !skyPx ? lk + '~' : lk, cv, lcv, ac, N, side, at: tNow, mode, n: (SIDES.regrades | 0) }; if (WW) for (const [kk, oo] of SIDES.out) if (kk !== okey && kk.indexOf('|w') > 0 && kk[0] === side && oo !== o) SIDES.out.delete(kk); SIDES.out.set(okey, o); SIDES.ms += nowMs() - tG; return o; // '~': no canvas sky to match yet (asked again)
+    // the lit picture goes through its own scratch canvas: a canvas is never written again once it has been drawn from (17 Nov,
+    // Ben's iPhone: the right strip from mid-field down had red and blue swapped, Mudbank's mud as a blue "water" strip. 84973ec2
+    // put the lit picture into the same scratch canvas right after drawing the strip from it, then put the strip back; on
+    // iOS Safari the strip's copy can be made later than it is asked for (the canvas work is done out of process), so it
+    // could pick up the scratch canvas mid-write. 013abb99 put each picture once, and showed right on the same iPhone)
+    let lcv = null, acL = null;
+    if (imgL) { acL = o && o.acL && o.acL.width === U ? o.acL : makeCanvas(U, H); acL.getContext('2d').putImageData(imgL, 0, 0); lcv = o && o.lcv && o.lcv.width === N * RS ? o.lcv : makeCanvas(N * RS, G.H * RS); const lg = lcv.getContext('2d'); lg.imageSmoothingEnabled = false; lg.clearRect(0, 0, lcv.width, lcv.height); lg.drawImage(acL, 0, 0, U, H, 0, 0, N * RS, G.H * RS); }
+    o = { key: N > EDGE && !skyPx ? lk + '~' : lk, cv, lcv, ac, acL, N, side, at: tNow, mode, n: (SIDES.regrades | 0) }; if (WW) for (const [kk, oo] of SIDES.out) if (kk !== okey && kk.indexOf('|w') > 0 && kk[0] === side && oo !== o) SIDES.out.delete(kk); SIDES.out.set(okey, o); SIDES.ms += nowMs() - tG; return o; // '~': no canvas sky to match yet (asked again)
   }
   // ---- the wider world on phones (Ben 15 Nov: "draw more world at the sides"; "make sure that the design is clear on the
   // edges though so the playable area is obvious"). The extension is the dressed sides' art (DECISIONS 56) drawn into the
-  // canvas beyond the play area, a touch darker and greyer, whole props only short of the bezel, nothing ball-like. It is
+  // canvas beyond the play area (by day in the strips' own colours, after dark darker), whole props only short of the bezel, nothing ball-like. It is
   // drawn last in the ambient pass (its strips are graded for the light already), so nothing in play is ever drawn there:
   // a sprite reaching past x 0 / G.W is cut where the canvas edge used to cut it. Per frame: 2 blits (+ 2 under fog, + the
   // night rail: 2 fills). The pictures are the strips' cached ones: new only when the light key, the range or the fit moves
+  const WIDE_RAMP = 0.6; // phones: the night look in full from this night (17 Nov: by day the strips' own colours, as 013abb99)
   const WIDE_DIM = 0.86, WIDE_GREY = 0.12, WIDE_NIGHT = 0.28, DESK_NIGHT = 1 - WIDE_DIM * (1 - WIDE_NIGHT); // DESK_NIGHT 0.38: the desktop strips at full night as dark as the phones' extension // ~14% darker, 12% greyer (Ben: "10-15% darker or less saturated")
   /** art px from the band's inner edge to 8 logical px short of the screen edge (whole props end inside it) */
   function wideLim() { const vis = extViewport && extViewport.edgeX != null ? extViewport.edgeX : VPAD; return Math.max(0, Math.floor(2 * (EDGE + vis - 8))); }
@@ -44140,6 +44153,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         PLAYPIX = d; return { hash: h >>> 0, pad: VPAD, diff: P && P.length === d.length ? n / (d.length / 4) : null, bbox: n ? bb : null, pts };
       },
       wide() { return { pad: VPAD, edge: extViewport && extViewport.edgeX != null ? extViewport.edgeX : VPAD, rs: renderScale, edgeBand: EDGE, lim: VPAD ? wideLim() : 0 }; }, // the wider world on phones (DECISIONS 55): logical px drawn past each side of the play area
+      sideFresh() { SIDES.out.clear(); }, // tests: the next frame makes the strip pictures anew
       sideRegrades() { return SIDES.regrades; }, sideMs() { return Math.round(SIDES.ms * 100) / 100; }, // strip pictures made so far (read only: makes none)
       /** Firefly Bays' lantern light look (NLOOK, tests only): 'B' (the shipped look) or 'cur' (the old paint, which check
        *  fireflylight shows failing its limits); read it with no id. The night caches rebuild on the next frame */

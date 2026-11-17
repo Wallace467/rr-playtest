@@ -14,12 +14,12 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-17-ab744be0-33b76871">
-<meta name="rr-pwa-built" content="1794938122">
+<meta name="rr-pwa" content="2026-11-18-b0294810-32521d79">
+<meta name="rr-pwa-built" content="1794958405">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-17-ab744be0">
+<meta name="range-rat-build" content="2026-11-18-b0294810">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -41,10 +41,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-17-ab744be0", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-18-b0294810", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-17-ab744be0", "builtAt": "2026-11-17T17:55:21Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-18-b0294810", "builtAt": "2026-11-17T23:33:24Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -33958,7 +33958,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
           const c = clampToField({ x: q.x, y: q.y }, 24); q.cx = clamp(c.x, G.toXY(G.a0, 0).x + q.r, G.toXY(G.a1, 0).x - q.r); q.cy = clamp(c.y, G.fieldD0 + q.r, G.fieldD1 - q.r); q.ang = Math.atan2(q.y - q.cy, q.x - q.cx); }
         else { q.x += dx / L * 80 * dt; q.y += dy / L * 80 * dt; q.vx = dx; }
       } else if (q.phase === 'circle') { // a lazy loop over its patch (~35 px/s), then off to sea
-        q.ang += dt * 1.6 * (q.i % 2 ? -1 : 1); const nx = q.cx + Math.cos(q.ang) * q.r, ny = q.cy + Math.sin(q.ang) * q.r * 0.7; q.vx = nx - q.x; q.x = nx; q.y = ny;
+        // it flies onto its loop at dive speed: the loop's centre is the patch (where it took the ball), so the rim starts r px
+        // away, and setting x, y on the rim teleported it 16-24 px on the first tick (a rat standing on it missed the shoo)
+        q.ang += dt * 1.6 * (q.i % 2 ? -1 : 1); const tx_ = q.cx + Math.cos(q.ang) * q.r, ty_ = q.cy + Math.sin(q.ang) * q.r * 0.7, ex = tx_ - q.x, ey = ty_ - q.y, el = Math.hypot(ex, ey), mv = 80 * dt;
+        const nx = el <= mv ? tx_ : q.x + ex / el * mv, ny = el <= mv ? ty_ : q.y + ey / el * mv; q.vx = nx - q.x; q.x = nx; q.y = ny;
         if (q.t >= (M.circleSec || 10)) q.phase = 'leave';
       } else { q.x += 60 * dt; q.y -= 20 * dt; q.vx = 1; if (q.x > G.W + 12 || q.y < -10) { q.out = true; // gone: the ball comes back later (today's single gull)
           if (q.carry) { const p0 = fromPortrait(rand(20, 160), 300), nb = newBall('range', p0.x, p0.y); nb.landed = true; world.balls.push(nb); } } }
@@ -33982,7 +33985,10 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   // -- the Captain's ball: a golfer in a captain's cap waves, one loose ball flies a navy pennant; bring it home in time --
   function glCapStart() {
     const hosts = world.golfers.filter((g) => g && (!g.st || g.st === 'play') && !(world.req && world.req.bay === g.bay));
-    const pool = world.balls.filter((b) => glLoose(b) && b.y > G.fieldD0 + 30); if (!hosts.length || !pool.length) return false;
+    // a ball the rat can touch (glCapTick's glTouch at the ball + 6): one resting against the back of the field is past where
+    // his feet stop (playerBounds: fieldD1 - 3), so as the pennant ball it could never be picked up (the moment timed out)
+    const reach = (b) => { const s = clampToField({ x: b.x, y: b.y + 6 }, 3); return d2(s.x, s.y - 6, b.x, b.y + 6) < 81; };
+    const pool = world.balls.filter((b) => glLoose(b) && b.y > G.fieldD0 + 30 && reach(b)); if (!hosts.length || !pool.length) return false;
     const g = hosts[Math.floor(Math.random() * hosts.length)], b = pool[Math.floor(Math.random() * pool.length)];
     world.balls.splice(world.balls.indexOf(b), 1);
     GLMO.cap = { bay: g.bay, x: b.x, y: b.y, t: 0, carried: false, ball: b };

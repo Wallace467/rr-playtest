@@ -14,12 +14,12 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-18-2ab4a900-c40f0c01">
-<meta name="rr-pwa-built" content="1795039266">
+<meta name="rr-pwa" content="2026-11-19-734bd804-cc80362a">
+<meta name="rr-pwa-built" content="1795049431">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-18-2ab4a900">
+<meta name="range-rat-build" content="2026-11-19-734bd804">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -41,10 +41,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-18-2ab4a900", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-19-734bd804", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-18-2ab4a900", "builtAt": "2026-11-18T22:01:06Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-19-734bd804", "builtAt": "2026-11-19T00:50:31Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -42882,6 +42882,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   const FOREIGN_CLS = /^(rh-|rv-tag|rr-fchev)/; // rr-fchev: the first-time pointer's chevron, inside the row it points at (frChevAt)
   const isForeign = (n) => !!n && ((n.nodeType === 1 && typeof n.className === 'string' && FOREIGN_CLS.test(n.className)) || (n.nodeType === 3 && !n.nodeValue.trim() && n.nextSibling && n.nextSibling.nodeType === 1 && typeof n.nextSibling.className === 'string' && FOREIGN_CLS.test(n.nextSibling.className)));
   const morphKey = (e) => (e.nodeType === 1 ? (e.getAttribute('data-k') || e.getAttribute('data-help') || e.getAttribute('data-id') || '') : '');
+  const morphNextKey = (t) => { for (let x = t.nextSibling; x; x = x.nextSibling) { const k = morphKey(x); if (k) return k; } return ''; };
   function morphAct(e) { let o = ''; for (const a of e.attributes) if (MORPH_ACTION.test(a.name)) o += a.name + ' '; return o; }
   function morphSame(a, b) {
     if (a.nodeType !== b.nodeType) return false;
@@ -42906,7 +42907,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       if (morphSame(f, t)) { morphNode(f, t); f = f.nextSibling; t = tn; continue; }
       let m = null; const k = morphKey(t);
       if (k) for (let x = f.nextSibling; x; x = x.nextSibling) if (!isForeign(x) && morphKey(x) === k && morphSame(x, t)) { m = x; break; }
-      if (m) { while (f && f !== m) { const nx = f.nextSibling; if (!isForeign(f)) from.removeChild(f); f = nx; } morphNode(m, t); f = m.nextSibling; }
+      // a keyless row (the shop's ??? locked rows, a header) matched past keyed rows that are leaving or moving: before, a row
+      // maxing away above the locked rows (a dusk at Firefly Bays, the Ledger's buy) rebuilt every row after it while you read
+      // (f stays when it is the next keyed one in the new list: then this keyless row is new, inserted before it, as before)
+      let leave = false; // (here the keyed rows passed are leaving or moving down: they go, as before)
+      if (!m && !k && t.nodeType === 1 && morphKey(f) && morphNextKey(t) !== morphKey(f)) for (let x = f.nextSibling; x; x = x.nextSibling) { if (isForeign(x)) continue; if (morphSame(x, t)) { m = x; leave = true; break; } if (!morphKey(x)) break; }
+      // a match further on, and the row here comes right after it in the new list (a row coming back from All done to its
+      // place above): move that one row up; the rows in between stay (they were all removed and rebuilt before)
+      if (m && !leave && morphKey(f) && morphNextKey(t) === morphKey(f)) { from.insertBefore(m, f); morphNode(m, t); }
+      else if (m) { while (f && f !== m) { const nx = f.nextSibling; if (!isForeign(f)) from.removeChild(f); f = nx; } morphNode(m, t); f = m.nextSibling; }
       else from.insertBefore(t, f);
       t = tn;
     }
@@ -44860,6 +44869,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         const bt = el2.closest('.rr-buy'), f = bt && bt.querySelector('.fill'); if (f) f.style.width = Math.round(clamp(state.cash / Math.max(1, c), 0, 1) * 100) + '%';
       });
       if (crossed && sheetInst) { try { sheetInst.update(true); } catch (e) { /* ignore */ } }
+      sgCheck(sh.querySelector('.rr-sheetbody')); // the scroll guard's watch: a place lost without a scroll event, a list grown back after a clamp
       sheet.walletT = setTimeout(wTick, 250);
     };
     wTick();
@@ -44872,28 +44882,71 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
    *  he read it. Whatever WebKit does there, the list only moves when YOU move it: a scroll up of more than a screenful that
    *  no finger, wheel or key started (and that isn't the list getting shorter under you) is put straight back. Counted in
    *  sheetGuard (tests, the dev panel). */
-  const SG = { restored: 0, last: null, userT: -1e9 }; // userT: the pad's navigation scrolls on purpose too (no DOM event)
+  const SG = { restored: 0, last: null, userT: -1e9, why: {} }; // userT: the pad's navigation scrolls on purpose too (no DOM event)
+  /** Ben's iPhone again (19 Nov, train 6, reading, no taps): the guard above only judged scroll EVENTS, and only a jump that
+   *  left the list long enough to go back to. Three ways round it, all closed now:
+   *   - 'clamp': the list is short for a moment (WebKit lays it out between two DOM steps, a row maxed away at the bottom, the
+   *     sheet's header growing): the scroll clamps to the new end, the guard took that end as your place, and when the list
+   *     grew back you were left near the top. The place before the clamp is kept (body.__want) and put back once the list is
+   *     long enough again, unless you scrolled meanwhile.
+   *   - 'silent': the place is lost with no scroll event at all (WebKit rebuilding the scroller's box). The sheet's 250 ms
+   *     wallet tick and a ResizeObserver on the list now check where the list IS, not only what the events said.
+   *   - 'chain': a jump of half a screen or more in ONE event right after a swipe counted as the swipe's glide (momentum moves
+   *     a little each frame, never 240 px at once). It is put back like any other unasked jump. */
   function scrollGuard(body) {
-    if (!body || body.__guard) return; body.__guard = 1; body.__good = 0;
+    if (!body || body.__guard) return; body.__guard = 1; body.__good = 0; body.__want = null; body.__last = 0;
     let scrollT = -1e9, touching = false;
     const now = () => performance.now();
-    const user = () => { SG.userT = now(); };
+    const user = () => { SG.userT = now(); body.__want = null; };
     for (const ev of ['touchstart', 'touchmove', 'wheel', 'pointerdown', 'keydown', 'mousedown']) body.addEventListener(ev, (e) => { user(); if (ev === 'touchstart') touching = true; }, { passive: true, capture: true });
     for (const ev of ['touchend', 'touchcancel']) body.addEventListener(ev, () => { touching = false; user(); }, { passive: true, capture: true });
     sheet && sheet.sh.addEventListener('click', user, true); // Gus's line: "show me" scrolls on purpose
+    body.__sgTouching = () => touching;
     body.addEventListener('scroll', () => {
-      const t = now(), top = body.scrollTop, maxTop = body.scrollHeight - body.clientHeight;
-      // a finger, a wheel, a key, or momentum still running from one (scroll events keep coming while it glides)
-      const byUser = touching || t - SG.userT < 1500 || (t - scrollT < 120 && t - SG.userT < 6000);
+      const t = now(), top = body.scrollTop, maxTop = body.scrollHeight - body.clientHeight, step = (body.__last | 0) - top;
+      body.__last = top;
+      // a finger, a wheel, a key, or momentum still running from one (scroll events keep coming while it glides; a glide
+      // never jumps half a screen in one event)
+      const byUser = touching || t - SG.userT < 1500 || (t - scrollT < 120 && t - SG.userT < 6000 && step < Math.max(240, body.clientHeight * 0.5));
+      const chain = !touching && t - SG.userT >= 1500 && t - scrollT < 120 && t - SG.userT < 6000;
       scrollT = t;
-      if (byUser || top >= maxTop - 2) { body.__good = top; return; }
-      const good = body.__good | 0, drop = good - top;
-      if (drop > Math.max(160, body.clientHeight * 0.5) && good <= maxTop + 2) {
-        body.scrollTop = good; SG.restored++; SG.last = { from: good, to: top, at: Math.round(t), tab: sheetTab };
-        return;
-      }
-      body.__good = top;
+      if (byUser) { body.__good = top; body.__want = null; return; }
+      sgJudge(body, top, maxTop, t, chain ? 'chain' : 'event');
     }, { passive: true });
+    // the list's own size: a list that grew back after a clamp gets its place back at once (no wait for the wallet tick)
+    try { const ro = new ResizeObserver(() => { if (body.isConnected) sgCheck(body); }); ro.observe(body); body.__sgRO = ro; const watch = () => { for (const c of body.children) ro.observe(c); }; watch(); new MutationObserver(watch).observe(body, { childList: true }); } catch (e) { /* ignore */ }
+  }
+  /** one look at where the list is (an event, or the watch): put back an unasked jump up, remember the place across a clamp */
+  function sgJudge(body, top, maxTop, t, why) {
+    const good = body.__good | 0, drop = good - top, big = Math.max(160, body.clientHeight * 0.5);
+    if (body.__want && body.__want.top - top > big && maxTop >= body.__want.top - 2 && t - body.__want.t < 15000) { // grown back after a clamp
+      const w = body.__want.top; body.__want = null; sgPut(body, w, top, t, 'clamp'); return;
+    }
+    if (drop > big) {
+      if (good <= maxTop + 2) { sgPut(body, good, top, t, why); return; }
+      if (top >= maxTop - 2) { if (!body.__want || t - body.__want.t >= 15000) body.__want = { top: good, t }; body.__good = top; return; } // clamped: keep the place for when the list is long again
+    }
+    if (body.__want && t - body.__want.t >= 15000) body.__want = null;
+    body.__good = top;
+  }
+  function sgPut(body, to, from, t, why) {
+    body.scrollTop = to; body.__good = to; body.__last = to; SG.restored++; SG.why[why] = (SG.why[why] | 0) + 1;
+    SG.last = { from: Math.round(from), to: Math.round(to), at: Math.round(t), tab: sheetTab, why };
+  }
+  /** the watch (the sheet's wallet tick, the list's ResizeObserver): the place the events don't tell (a silent loss, a list
+   *  grown back after a clamp). Never while a finger is on it or just after any input */
+  function sgCheck(body) {
+    if (!body || !body.__guard || !body.isConnected || !sheet || !sheet.sh.contains(body)) return;
+    const t = performance.now();
+    if ((body.__sgTouching && body.__sgTouching()) || t - SG.userT < 1500) return;
+    const top = body.scrollTop, maxTop = body.scrollHeight - body.clientHeight;
+    if (Math.abs(top - (body.__good | 0)) < 2 && !body.__want) return;
+    if (Math.abs(top - (body.__last | 0)) >= 2) { // moved since the last scroll event: its event is still on the way (it judges)
+      if (!body.__sgSeen || Math.abs(body.__sgSeen.top - top) >= 2) { body.__sgSeen = { top, t }; return; }
+      if (t - body.__sgSeen.t < 400) return; // no event came for it: lost silently
+    }
+    body.__sgSeen = null;
+    sgJudge(body, top, maxTop, t, 'silent');
   }
   function switchTab(name) {
     if (!sheet) return;
@@ -44901,7 +44954,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     menuFirstOpen(name, sheet.sh); // a tab seen for the first time (Style in the Shop sheet) holds the range too
     sheet.sh.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
     if (sheetInst) sheetInst.destroy();
-    const body = sheet.sh.querySelector('.rr-sheetbody'); body.innerHTML = ''; body.scrollTop = 0; body.__good = 0;
+    const body = sheet.sh.querySelector('.rr-sheetbody'); body.innerHTML = ''; body.scrollTop = 0; body.__good = 0; body.__last = 0; body.__want = null; body.__sgSeen = null;
     const host = el('div'); body.appendChild(host);
     sheetInst = mountPanel(name, host);
   }
@@ -47876,7 +47929,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       dline(path) { return dline(String(path), null); },
       /** the range's news held while the town shows (o.age: ms to age the held toasts by; o.loopToast: a toast fired as the game loop would) */
       townHeld(o) { if (o && o.age) for (const x of TH.toasts) x.at -= +o.age; if (o && o.loopToast) { loopDepth++; try { toast(String(o.loopToast)); } finally { loopDepth--; } } return { toasts: TH.toasts.map((x) => x.text), gus: TH.gus.map((x) => x.line), dropped: TH.dropped, showing: townShowing() }; },
-      sheetGuard() { return { restored: SG.restored, last: SG.last }; }, // tests: the shop sheet put back after a jump nobody asked for
+      sheetGuard() { return { restored: SG.restored, last: SG.last, why: Object.assign({}, SG.why) }; },
+      /** tests: morph the HTML `a` into `b` (a panel update); which of a's top-level elements were kept, and the result's keys */
+      morph(a, b) { const f = el('div', '', a), t = document.createElement('template'); t.innerHTML = b; const before = [...f.children]; morphChildren(f, t.content); return { kept: before.filter((x) => x.parentNode === f).length, of: before.length, keys: [...f.children].map((x) => morphKey(x) || x.textContent) }; }, // tests: the shop sheet put back after a jump nobody asked for
       forceRoll(on) { rollForced = on !== false; return true; }, // tests: the spread-out line picker (test_lines_spread.py)
       /** a golfer bark from bay golfer `i` (or the one furthest `side` 'left' / 'right'), e.g. for the bubble-fits-the-field check */
       bark(i, line, side) { let g = world.golfers[i | 0]; if (side) g = world.golfers.slice().sort((a, c) => (side === 'right' ? c.x - a.x : a.x - c.x))[0]; if (!g || !ui_.bark) return false; ui_.bark(g, String(line)); return !!(ui_._bark && ui_._bark.isConnected); },

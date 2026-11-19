@@ -14,12 +14,12 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-19-734bd804-cc80362a">
-<meta name="rr-pwa-built" content="1795049431">
+<meta name="rr-pwa" content="2026-11-19-caa14e93-f244e9f2">
+<meta name="rr-pwa-built" content="1795057544">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-19-734bd804">
+<meta name="range-rat-build" content="2026-11-19-caa14e93">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -41,10 +41,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-19-734bd804", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-19-caa14e93", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-19-734bd804", "builtAt": "2026-11-19T00:50:31Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/1564911753525993622/5cSgECN_cza_5BLBWjD0GoB0j8h0n_JIy1CJzBs1miOLsxpP3s_9K9bPQ1prPiEKUhLc", "build": "2026-11-19-caa14e93", "builtAt": "2026-11-19T03:05:44Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -242,7 +242,10 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
         dpr: W.devicePixelRatio || 1, layout: layoutClass(), gameLocale: locale, browserLocale: navigator.language || null,
         inputMode, touchPoints: navigator.maxTouchPoints | 0, inIframe: inIframe(), reducedMotionPref: !!(W.matchMedia && W.matchMedia('(prefers-reduced-motion: reduce)').matches)
       },
-      settings, game: g, perf: perfAtOpen, gfx, errors: errors.slice()
+      settings, game: g, perf: perfAtOpen, gfx, errors: errors.slice(),
+      // the open sheet's lost scroll places (Ben's iPhone, 19 Nov: the Shop jumping to the top): element / class / CSS property
+      // names and pixel counts only, nothing the player typed (loop/game.js §SL)
+      scroll: (() => { try { return r && typeof r.scrollLog === 'function' ? r.scrollLog() : null; } catch (e) { return null; } })()
     };
   }
   function metaBuild() { const m = document.querySelector('meta[name="range-rat-build"]'); return m ? m.getAttribute('content') : null; }
@@ -393,6 +396,10 @@ window.RR_FEEDBACK_CONFIG = {"endpoint": "https://discord.com/api/webhooks/15649
     const r2 = R(), mode = r2 ? r2.mode : null;
     const on = mode === 'game' && !form && !pv;
     btn.classList.toggle('on', on); if (!on) return;
+    // a sheet open (the Shop, Settings...): the pill stays where it is until it closes. Placing it measured every button in the
+    // sheet and (rateChipZone) put a hidden chip into #rr-root and took it out again, the sheet's own parent, on every tick and
+    // every REQUEST card change: on Ben's iPhone (19 Nov) the open Shop's list jumped back to the top while he read it
+    if (r.querySelector('.rr-sheet')) return; // (ensureButton's 1 s tick places it again once the sheet has gone)
     const fw = btn.parentElement, cv = r.querySelector('[data-el=canvas]'); if (!fw || !cv) return;
     const F = fw.getBoundingClientRect(), vis = visibleField(cv, r), bw = btn.offsetWidth, bh = btn.offsetHeight;
     // persistent things only: avoiding transient pop-ups (banners, toasts) would make the button jump about; .rr-fpsc is the
@@ -42495,11 +42502,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-scrim.on{opacity:1}
 .rr-sheet{position:absolute;left:0;right:0;bottom:0;max-height:78%;display:flex;flex-direction:column;background:var(--rr-sheet-tx),var(--rr-sheet-bg);border-top:3px solid var(--rr-line);border-image:var(--rr-fr-sheet);border-radius:calc(14px*var(--rr-round)) calc(14px*var(--rr-round)) 0 0;z-index:21;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,1.2,.4,1)}
 .rr-sheet.on{transform:translateY(0)}
+/* once it has slid in, a phone sheet holds no transform: its list scrolls inside a plain box (iOS keeps a scroller's place
+   more reliably without a transformed parent; Ben's iPhone, 19 Nov). Wide / duo keep their centring translate */
+.rr-sheet.on.rr-settled{transform:none}
+.rr-fxlayer{position:absolute;inset:0;pointer-events:none}
 .rr-reduced .rr-sheet{transition:transform .12s linear}
 .rr-sheethead{display:flex;align-items:center;gap:4px;padding:6px 8px;border-bottom:2px solid var(--rr-line)}.rr-sheettitle{margin:0 4px;font-family:var(--rr-font-head,inherit);font-size:calc(20px*var(--rr-fs));color:var(--rr-gold);font-weight:600;text-shadow:var(--rr-head-sh)}.rr-iconbtn.rr-lbl{flex-direction:column;gap:2px;min-width:58px;min-height:56px;padding:4px 4px 3px}.rr-iconbtn.rr-lbl img{width:24px;height:24px;image-rendering:pixelated}.rr-iconbtn.rr-lbl small{font-family:var(--rr-font-body,inherit);font-weight:700;font-size:calc(13px*var(--rr-fs));line-height:1;color:var(--rr-text2)}.rr-cog{font-size:calc(24px*var(--rr-fs));line-height:24px;height:24px}.rr-wallet{display:flex;align-items:center;gap:5px;padding:3px 9px;margin-right:4px;border-radius:999px;background:rgba(0,0,0,.25);font-variant-numeric:tabular-nums;white-space:nowrap}.rr-wallet img{width:14px;height:14px;image-rendering:pixelated}.rr-wallet b{font-size:18px;color:var(--rr-gold)}.rr-wallet small{font-size:13px;color:var(--rr-text2)}
 .rr-tab{min-height:44px;padding:0 10px;font-weight:700;border:2px solid transparent;border-radius:calc(8px*var(--rr-round));background:none;font-family:var(--rr-font-label)!important;font-size:calc(15px*var(--rr-fs))!important;color:var(--rr-text2)!important}
 .rr-tab[aria-selected=true]{background:var(--rr-tab-on-bg);border-color:var(--rr-line);border-image:var(--rr-fr-tab);color:var(--rr-tab-on-fg,var(--rr-text))!important}
-.rr-sheetbody{overflow:auto;padding:8px;flex:1;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.rr-sheetbody{overflow:auto;padding:8px;flex:1;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
 /* the first open of a big panel (round 4 tester T4): Gus's one line, between the sheet's head and its list */
 .rr-sheetgus{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:2px solid var(--rr-line);background:rgba(0,0,0,.2);flex:0 0 auto}
 .rr-sheetgus canvas{width:40px;height:40px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto;background:var(--rr-port-bg);border-radius:calc(8px*var(--rr-round))}
@@ -42987,7 +42998,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           if (def.tick) def.tick(inst);
           // preventScroll: a plain focus() scrolled the focused button into view; on iOS a tap doesn't focus, so the focus stayed
           // on the sheet's first button and every rebuild after a buy jumped the Shop back to the top
-          if (focused) { const f = el.querySelector(`[data-k="${focused.replace(/"/g, '')}"]`); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+          if (focused) { const f = el.querySelector(`[data-k="${focused.replace(/"/g, '')}"]`); if (f && f !== document.activeElement) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } } // (the same button: no focus() at all)
           if (anc && inst.state.hlShown === hl0) { if (W.RANGE_RAT_HELP && W.RANGE_RAT_HELP.decorate) W.RANGE_RAT_HELP.decorate(el); scrollRestore(el, scr, anc); } // (the shop introduction's highlight scrolls itself into view once, on the shop's first render only)
         };
         inst.destroy = () => { inst.destroyed = true; W.removeEventListener('pointerup', release, true); W.removeEventListener('pointercancel', release, true); const i = mounted.indexOf(inst); if (i >= 0) mounted.splice(i, 1); el.innerHTML = ''; };
@@ -43345,7 +43356,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     let tgt = null, tr = null; for (const e of cands) { const b = vis(e); if (b) { tgt = e; tr = b; break; } } if (!tgt) return false;
     const rr = layout.root.getBoundingClientRect();
     const hb = hud && hud.contains(tgt) ? vis(hud) : null, base = Math.max(tr.bottom, hb ? hb.bottom : -1e9);
-    c.style.left = (tr.left - rr.left) + 'px'; c.style.top = (base - rr.top) + 'px'; layout.root.appendChild(c);
+    c.style.left = (tr.left - rr.left) + 'px'; c.style.top = (base - rr.top) + 'px'; fxLayer().appendChild(c);
     c.style.marginTop = (c.offsetHeight / 2 + 3) + 'px'; // the chip is centred on its top (translate -50%): its top edge sits 3 px under the numbers
     if (dcOn('keepout')) { // declutter look `keepout`: never over the field's top-left counter line; beside it, else under it
       const ch = c.offsetHeight, cw = c.offsetWidth, L = tr.left - rr.left, T = base - rr.top + 3;
@@ -43357,14 +43368,23 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
     return true;
   }
+  /** the chips' own layer: a box over #rr-root (same rect) made once. A chip going in and out of #rr-root itself changed the
+   *  open sheet's parent's children (Ben's iPhone, 19 Nov: the Shop jumped back to the top while he read it) */
+  function fxLayer() {
+    let L = layout.root.querySelector(':scope > .rr-fxlayer');
+    if (!L) { L = el('div', 'rr-fxlayer'); L.setAttribute('aria-hidden', 'true'); layout.root.appendChild(L); }
+    return L;
+  }
+  let rczLast = null; // the last zone measured (kept while a sheet is open)
   /** the box (viewport px, 4 px of air) a +X/s chip takes when it shows, sized for the rate on screen: the playtest Feedback
    *  button keeps clear of it (Ben's iPhone, 16 Nov: the button sat on a "+188M/s" chip). null: no rate figure on screen */
   function rateChipZone() {
     if (!layout.root || mode !== 'game') return null;
+    if (sheet) return rczLast; // a sheet open: no measuring chip in and out under it (the Feedback pill doesn't move then either)
     const c = el('div', 'rr-ratechip'); c.style.visibility = 'hidden'; c.textContent = '+' + fmt(Math.max(999.9, displayRate() || 0)) + '/s';
     let b = null; try { if (rateChipPlace(c)) b = c.getBoundingClientRect(); } finally { c.remove(); }
     // the chip pops in at x1.1 (and from 6 px left): the box grows by that, and 4 px of air
-    return b && b.width ? { left: b.left - 6 - b.width * 0.05 - 4, top: b.top - b.height * 0.05 - 4, right: b.right + b.width * 0.05 + 4, bottom: b.bottom + b.height * 0.05 + 4 } : null;
+    return rczLast = b && b.width ? { left: b.left - 6 - b.width * 0.05 - 4, top: b.top - b.height * 0.05 - 4, right: b.right + b.width * 0.05 + 4, bottom: b.bottom + b.height * 0.05 + 4 } : null;
   }
   function rateDeltaChip(d) {
     if (!layout.root || !(d > 0)) return;
@@ -43664,7 +43684,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           h += `<div id="rr-setadv" class="rr-setadv">` + tg('showFps', S('showFps', 'Show FPS'), 'showFps');
           if (hapticSupported()) h += tg('hapticTicks', S('hapticTicks', 'Light taps'), 'hapticTicks');
           h += inv('lowPower', S('throttle', 'Save power'), 'throttle') + inv('shake', S('shake', 'Screen shake')) + inv('flashes', S('flashes', 'Flashes'));
-          if (isDebug()) h += `<h3>Debug</h3>${tg('_unlocked', 'Full game unlocked')}`;
+          if (isDebug()) h += `<h3>Debug</h3>${tg('_unlocked', 'Full game unlocked')}<div class="rr-set"><button class="rr-btn" data-k="set-scrolllog" data-act="scrolllog">Copy scroll log (${SL.ring.length})</button></div>`; // §SL (dev / playtest builds; English only like the rest of Debug)
           h += '</div>';
         }
         }
@@ -43703,6 +43723,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           sfx('ui_tap'); const a = b.dataset.act;
           if (a === 'keys') { inst.state.keys = true; inst.update(true); const f = el.querySelector('[data-k=set-moveKeys]'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
           else if (a === 'advanced') { inst.state.adv = !inst.state.adv; inst.update(true); }
+          else if (a === 'scrolllog') { const txt = JSON.stringify(scrollLog(), null, 1), done = (ok) => { b.textContent = ok ? `Copied (${SL.ring.length})` : 'Copy failed: see the Feedback report'; };
+            try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => done(true), () => done(false)); else { const ta = el('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); done(!!(document.execCommand && document.execCommand('copy'))); ta.remove(); } } catch (er) { done(false); } }
           else if (a === 'export') { inst.state.io = inst.state.io === 'export' ? null : 'export'; inst.update(true); }
           else if (a === 'import') { inst.state.io = inst.state.io === 'import' ? null : 'import'; inst.update(true); const ta = el.querySelector('[data-in]'); if (ta) ta.focus(); }
           else if (a === 'profiles') { closeSheet(); if (modal) closeModal(); save(); showTitle(); }
@@ -44223,7 +44245,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     fx.bounce(src, 1.15);
     const img = iconURL('coin', 2);
     for (let i = 0; i < n; i++) {
-      const c = el('img', 'rr-coin'); c.src = img; c.alt = ''; c.style.cssText = `left:${x0}px;top:${y0}px;width:14px;height:14px;z-index:40;position:absolute`; root.appendChild(c);
+      const c = el('img', 'rr-coin'); c.src = img; c.alt = ''; c.style.cssText = `left:${x0}px;top:${y0}px;width:14px;height:14px;z-index:40;position:absolute`; fxLayer().appendChild(c); // (not #rr-root itself: the open sheet's parent)
       const mx = (x0 + x1) / 2 + rand(-24, 24), my = Math.min(y0, y1) - rand(16, 40);
       try { const an = c.animate([{ transform: 'translate(-50%,-50%) scale(1)' }, { transform: `translate(calc(${mx - x0}px - 50%),calc(${my - y0}px - 50%)) scale(1.35)`, offset: 0.45 }, { transform: `translate(calc(${x1 - x0}px - 50%),calc(${y1 - y0}px - 50%)) scale(.7)`, opacity: 0.85 }], { duration: 380 + i * 30, delay: i * 40, easing: 'cubic-bezier(.4,0,.7,1)', fill: 'both' }); an.onfinish = () => { c.remove(); if (i === n - 1) fx.bounce(target, 1.1); }; } catch (er) { c.remove(); }
     }
@@ -44850,6 +44872,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     const head = tabs.length > 1 ? tabs.map((t) => `<button class="rr-tab" role="tab" data-tab="${t}" aria-selected="${t === name}">${esc(sheetLabel(t))}</button>`).join('') : `<h2 class="rr-sheettitle">${esc(sheetLabel(name))}</h2>`;
     const showWallet = tabs.some((t) => t === 'shop' || t === 'wardrobe');
     sh.innerHTML = `<div class="rr-sheethead" ${tabs.length > 1 ? 'role="tablist"' : ''}>${head}<span style="flex:1"></span><span class="rr-wallet" aria-live="off" ${showWallet ? '' : 'style="display:none"'}><img alt="" src="${iconURL('coin', 2)}"><b data-wallet></b><small data-rate></small></span><button class="rr-iconbtn" data-close aria-label="${esc(ui('close', 'Close'))}">✕</button></div><div class="rr-sheetbody"></div>`;
+    // while the sheet is open nothing below changes its parents: the chips' layer and the screen reader's line exist first
+    try { fxLayer(); srEl(); } catch (e) { /* ignore */ }
     ov.appendChild(scrim); ov.appendChild(sh);
     scrim.addEventListener('pointerdown', (e) => { e.stopPropagation(); closeSheet(); });
     sh.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -44858,6 +44882,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     sheet = { sh, scrim, prevFocus: document.activeElement, name };
     scrollGuard(sh.querySelector('.rr-sheetbody'));
     syncInert();
+    slWatch(sh); // §SL: what changes on its parents while it is open (the scroll log)
     const wB = sh.querySelector('[data-wallet]'), wR = sh.querySelector('[data-rate]');
     const wTick = () => {
       if (!sheet || sheet.sh !== sh) return;
@@ -44874,7 +44899,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     };
     wTick();
     switchTab(name);
-    requestAnimationFrame(() => { scrim.classList.add('on'); sh.classList.add('on'); });
+    requestAnimationFrame(() => { scrim.classList.add('on'); sh.classList.add('on'); setTimeout(() => { if (sheet && sheet.sh === sh) sh.classList.add('rr-settled'); }, 400); });
     setTimeout(() => { if (sh.contains(document.activeElement)) return; /* already placed (restoreReturn: the button that left Settings) */ const f = sh.querySelector('.rr-sheetbody [role=tab][aria-selected=true]') || sh.querySelector('.rr-sheetbody button:not([disabled]), .rr-sheetbody input') || sh.querySelector('[data-close]'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 60);
     emit('fx', { kind: 'popup', target: 'sheet' });
   }
@@ -44924,7 +44949,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     }
     if (drop > big) {
       if (good <= maxTop + 2) { sgPut(body, good, top, t, why); return; }
-      if (top >= maxTop - 2) { if (!body.__want || t - body.__want.t >= 15000) body.__want = { top: good, t }; body.__good = top; return; } // clamped: keep the place for when the list is long again
+      if (top >= maxTop - 2) { if (!body.__want || t - body.__want.t >= 15000) { body.__want = { top: good, t }; slLoss(good, top, 'clamp-start', body); } body.__good = top; return; } // clamped: keep the place for when the list is long again
     }
     if (body.__want && t - body.__want.t >= 15000) body.__want = null;
     body.__good = top;
@@ -44932,7 +44957,52 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function sgPut(body, to, from, t, why) {
     body.scrollTop = to; body.__good = to; body.__last = to; SG.restored++; SG.why[why] = (SG.why[why] | 0) + 1;
     SG.last = { from: Math.round(from), to: Math.round(to), at: Math.round(t), tab: sheetTab, why };
+    const e = slLoss(to, from, why, body); // (did the put-back hold? looked at on the next frame)
+    requestAnimationFrame(() => { e.held = body.isConnected ? Math.abs(body.scrollTop - to) < 2 : null; });
   }
+  // ---- §SL the sheet's scroll log (Ben's iPhone, 19 Nov: the Shop still jumped to the top after 734bd804, and WebKit is not
+  // here to look at). The last 20 places the guard saw lost (when, how far, its why, whether the put-back held) with what
+  // changed on the sheet's parents and in the page's style sheets in the 500 ms before. Only names go in it (element ids and
+  // first class, attribute and CSS property names): no text, no numbers from the save. RANGE_RAT.scrollLog(); the Feedback
+  // report carries it; Settings > Advanced > Debug: Copy scroll log
+  const SL = { ring: [], muts: [], obs: null, cb: null, at0: Date.now() - performance.now() };
+  const slName = (n) => (!n || n.nodeType !== 1 ? (n && n.nodeType === 3 ? '#text' : '?') : n.id ? '#' + n.id : n.tagName.toLowerCase() + (typeof n.className === 'string' && n.className.trim() ? '.' + n.className.trim().split(/\s+/)[0] : ''));
+  function slNote(txt) { const t = performance.now(); SL.muts.push({ t, txt }); while (SL.muts.length > 60 || (SL.muts.length && t - SL.muts[0].t > 2000)) SL.muts.shift(); }
+  function slAttr(m) {
+    const a = m.attributeName, nv = m.target.getAttribute(a), ov = m.oldValue;
+    if (a === 'class') { const o = new Set(String(ov || '').split(/\s+/).filter(Boolean)), n = new Set(String(nv || '').split(/\s+/).filter(Boolean)); return 'class ' + [...n].filter((x) => !o.has(x)).map((x) => '+' + x).concat([...o].filter((x) => !n.has(x)).map((x) => '-' + x)).join(' '); }
+    if (a === 'style') { const map = (v) => { const r = {}; for (const d of String(v || '').split(';')) { const i = d.indexOf(':'); if (i > 0) r[d.slice(0, i).trim()] = d.slice(i + 1).trim(); } return r; }; const o = map(ov), n = map(nv); return 'style ' + Object.keys(Object.assign({}, o, n)).filter((k) => o[k] !== n[k]).join(' '); }
+    return a;
+  }
+  /** watch the open sheet's parents (attributes, children) and the page's style sheets while it is open */
+  function slWatch(sh) {
+    slStop(); SL.muts.length = 0; if (!W.MutationObserver) return;
+    try {
+      SL.cb = (ms) => { for (const m of ms) {
+        const t = m.target, st = t.nodeType === 1 ? t : t.parentElement;
+        if (st && (st.tagName === 'STYLE' || st.tagName === 'LINK')) { slNote('css ' + slName(st)); continue; }
+        if (m.type === 'attributes') slNote('attr ' + slName(t) + ' ' + slAttr(m));
+        else if (m.type === 'childList' && t !== document.head) slNote('kids ' + slName(t) + [...m.addedNodes].map((x) => ' +' + slName(x)).join('') + [...m.removedNodes].map((x) => ' -' + slName(x)).join(''));
+        else if (m.type === 'childList') for (const x of [...m.addedNodes, ...m.removedNodes]) if (x.nodeType === 1 && (x.tagName === 'STYLE' || x.tagName === 'LINK')) slNote('css ' + (x.isConnected ? '+' : '-') + slName(x));
+      } };
+      const obs = new MutationObserver(SL.cb);
+      obs.observe(sh, { attributes: true, attributeOldValue: true });
+      for (let a = sh.parentElement; a; a = a.parentElement) obs.observe(a, { attributes: true, attributeOldValue: true, childList: true });
+      obs.observe(document.head, { childList: true, subtree: true, characterData: true });
+      SL.obs = obs;
+    } catch (e) { SL.obs = null; }
+  }
+  function slStop() { if (SL.obs) { try { SL.obs.disconnect(); } catch (e) { /* ignore */ } SL.obs = null; } }
+  function slLoss(want, now, why, body) {
+    if (SL.obs) { try { const ms = SL.obs.takeRecords(); if (ms.length) SL.cb(ms); } catch (e) { /* ignore */ } } // (what changed this very task too)
+    const t = performance.now();
+    const e = { at: new Date(SL.at0 + t).toISOString(), up: Math.round(want - now), from: Math.round(want), to: Math.round(now), why, tab: sheetTab || null, range: state ? rangeId() : null,
+      list: body ? Math.round(body.scrollHeight) + '/' + Math.round(body.clientHeight) : null, held: null,
+      before: SL.muts.filter((x) => t - x.t <= 500).map((x) => '-' + Math.round(t - x.t) + 'ms ' + x.txt).slice(-16) };
+    SL.ring.push(e); if (SL.ring.length > 20) SL.ring.shift();
+    return e;
+  }
+  function scrollLog() { return { build: BUILT || null, ua: (W.navigator && navigator.userAgent) || null, guard: { restored: SG.restored, why: Object.assign({}, SG.why) }, losses: SL.ring.map((e) => Object.assign({}, e, { before: e.before.slice() })) }; }
   /** the watch (the sheet's wallet tick, the list's ResizeObserver): the place the events don't tell (a silent loss, a list
    *  grown back after a clamp). Never while a finger is on it or just after any input */
   function sgCheck(body) {
@@ -44961,9 +45031,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function closeSheet(immediate) {
     if (!sheet) return;
     menuClosed(); // the first open's hold ends with the sheet (menuFirstOpen)
-    const s = sheet; sheet = null; clearTimeout(s.walletT); if (sheetInst) { sheetInst.destroy(); sheetInst = null; }
+    const s = sheet; sheet = null; clearTimeout(s.walletT); slStop(); if (sheetInst) { sheetInst.destroy(); sheetInst = null; }
     if (immediate) { s.sh.remove(); s.scrim.remove(); syncInert(); return; }
-    s.sh.classList.remove('on'); s.scrim.classList.remove('on'); layerClosing(s.sh);
+    s.sh.classList.remove('on', 'rr-settled'); s.scrim.classList.remove('on'); layerClosing(s.sh);
     setTimeout(() => { s.sh.remove(); s.scrim.remove(); }, 300);
     syncInert(); // the page (or the layer under this one) comes back before focus goes to it
     try { if (s.prevFocus && s.prevFocus.focus && s.prevFocus.isConnected) s.prevFocus.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
@@ -47203,10 +47273,14 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (sr.q.includes(text)) return;
     sr.q.push(text);
   }
+  function srEl() {
+    if (!sr.el || !sr.el.isConnected) { if (!layout.root) return null; sr.el = el('div', 'rr-sr'); sr.el.setAttribute('aria-live', 'polite'); sr.el.setAttribute('aria-atomic', 'true'); sr.el.setAttribute('role', 'status'); layout.root.appendChild(sr.el); }
+    return sr.el;
+  }
   function pumpAnnounce() {
     if (!sr.q.length) return;
     const now = nowMs(); if (now - sr.t < SR_GAP_MS) return;
-    if (!sr.el || !sr.el.isConnected) { if (!layout.root) return; sr.el = el('div', 'rr-sr'); sr.el.setAttribute('aria-live', 'polite'); sr.el.setAttribute('aria-atomic', 'true'); sr.el.setAttribute('role', 'status'); layout.root.appendChild(sr.el); }
+    if (!srEl()) return;
     // coalesce: everything waiting, in order, as one message (a very long burst is split at a message boundary, never dropped)
     let t = '', n = 0;
     while (n < sr.q.length) { const nx = sr.q.length > 1 ? srEnd(sr.q[n]) : sr.q[n], cand = t ? t + ' ' + nx : nx; if (t && cand.length > SR_MAX_CHARS) break; t = cand; n++; }
@@ -47537,6 +47611,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     notice(text) { if (!text) return false; toast(String(text)); return true; },
     /** where a +X/s chip would show (viewport px, with air), or null: the playtest builds' Feedback pill keeps clear of it (no feedback file names in the default build: test_feedback) */
     rateChipZone() { try { return rateChipZone(); } catch (e) { return null; } },
+    /** §SL: the open sheet's last 20 lost places (names only: no text, nothing from the save); the Feedback report carries it */
+    scrollLog() { try { return scrollLog(); } catch (e) { return null; } },
     /** opt-in play stats (ui/analytics.js): the coarse numbers its events carry, or null outside a save. Nothing reads this unless the player said yes */
     analyticsSnapshot() { try { return anSnapshot(); } catch (e) { return null; } },
     /** opt-in play stats, tests + the dev panel: open the one question now (a stats build only); null when there's nothing to ask */
@@ -50058,7 +50134,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function paintBackdrop() {
     // wide: a plain mat around a framed field (owner 2026-10-29: the flat sky/ground band beside the field read as a
     // broken render); the themed bands stay where they're slivers (phone) or a phone on its side (duo)
-    if (lastFit && lastFit.lay === 'wide') { if (E.fieldwrap.__bg) { E.fieldwrap.__bg = ''; E.fieldwrap.style.background = ''; } if (root.__cap) { root.__cap = ''; root.style.removeProperty('--rl-skycap'); } return; }
+    if (lastFit && lastFit.lay === 'wide') { if (E.fieldwrap.__bg) { E.fieldwrap.__bg = ''; E.fieldwrap.style.background = ''; } if (E.fieldwrap.__cap) { E.fieldwrap.__cap = ''; E.fieldwrap.style.removeProperty('--rl-skycap'); } return; }
     if (!lastFit || !bandCols) return;
     const cols = bandCols, n = cols.length, unit = fieldS / dpr();
     const off = Math.max(0, (lastFit.fh - lastFit.cssH) / 2);
@@ -50072,7 +50148,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     // title / credits hide the HUD: carry the top sky band up over the empty HUD row (a copy of the field cell's box,
     // one cell-height up (less 1 px), as a shadow: same width, so a duo side column stays as it is). CSS applies it in .rr-root-title only.
     const cap = `0 ${-Math.max(0, Math.floor(lastFit.fh) - 1)}px 0 0 ${cols[c0]}`; // 1 px overlap under the cell: no seam
-    if (root.__cap !== cap) { root.__cap = cap; root.style.setProperty('--rl-skycap', cap); }
+    // on the field cell itself (its only reader), never on #rr-root: an inherited custom property changing on the root restyled
+    // every element under it, the open Shop sheet's whole list included, up to 4 times a second through dusk and dawn (Ben's
+    // iPhone, 19 Nov: the Shop jumped back to the top while he read it; iOS can drop a scroller's place on a restyle that big)
+    if (E.fieldwrap.__cap !== cap) { E.fieldwrap.__cap = cap; E.fieldwrap.style.setProperty('--rl-skycap', cap); }
   }
 
   // ------------------------------------------------------------------ switching layouts + panels
@@ -52114,19 +52193,26 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     }
     // ⓘ opened and closed: hide it now (never while its popover is still open: the popover follows its ⓘ)
     if (pendingI.size && !(W.RANGE_RAT_HELP && W.RANGE_RAT_HELP.isOpen)) { for (const k of pendingI) v.i[k] = 1; pendingI.clear(); writeSeen(); }
-    applyClasses(on);
+    applyClasses(on, silent);
     if (changed.length) {
       if (!silent) for (const e of changed) if (!e.gone) announce(e);
       if (W.RANGE_RAT_LAYOUT && W.RANGE_RAT_LAYOUT.revealChanged) try { W.RANGE_RAT_LAYOUT.revealChanged(silent ? [] : changed.map((e) => e.key)); } catch (er) { /* ignore */ }
     }
     if (tags.size) keepTags();
   }
-  function applyClasses(on) {
+  // A sheet open (the Shop...) and nobody touching it for 1.5 s: what was earned shows once it closes or on the next touch.
+  // These classes sit on #rr-root, the sheet's parent: a change there restyles the whole sheet, and on Ben's iPhone (19 Nov)
+  // the open Shop jumped back to the top while he read it, no taps. A buy's reveal (a tap just before) shows at once, as before
+  let lastIn = -1e9, wasHeld = false;
+  const held = () => !!root.querySelector(':scope > .rr-sheet.on') && performance.now() - lastIn > 1500;
+  function applyClasses(on, silent) {
     let sig = '';
     for (const e of REVEAL) { const hid = e.gone ? !!on[e.key] : !on[e.key]; sig += hid ? '1' : '0'; }
     if (sig === lastSig && root.dataset.rvSig === sig) return;
+    if (!silent && held()) { wasHeld = true; return; } // (lastSig unchanged: the 1 s check applies it later)
     lastSig = sig; root.dataset.rvSig = sig;
     for (const e of REVEAL) { if (e.gone) root.classList.toggle('rvg-' + e.key, !!on[e.key]); else root.classList.toggle('rvh-' + e.key, !on[e.key]); }
+    if (wasHeld) { wasHeld = false; if (W.RANGE_RAT_LAYOUT && W.RANGE_RAT_LAYOUT.revealChanged) try { W.RANGE_RAT_LAYOUT.revealChanged([]); } catch (er) { /* ignore */ } } // (the refit it asked for then)
   }
   function writeSeen() { if (iStyleEl) { const t = seenCSS(); if (iStyleEl.textContent !== t) iStyleEl.textContent = t; } }
 
@@ -52192,6 +52278,8 @@ button>.rv-tag,[role=tab]>.rv-tag,.rl-deck>.rv-tag{position:absolute;top:2px;lef
     iStyleEl = document.createElement('style'); iStyleEl.id = 'rv-seen'; document.head.appendChild(iStyleEl);
     for (const ev of ['buy', 'achievement', 'goalDone', 'stun', 'equip', 'prestige', 'screen', 'profile', 'saveImport', 'chest', 'chestOpen', 'cash']) R.on(ev, soon);
     document.addEventListener('pointerdown', onPointer, true);
+    for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) document.addEventListener(ev, () => { lastIn = performance.now(); }, { capture: true, passive: true });
+    for (const ev of ['buy', 'equip', 'chestOpen']) R.on(ev, () => { lastIn = performance.now(); }); // (a pad's buy has no DOM event)
     check(true); writeSeen();
     checkT = setInterval(() => check(false), 1000);
   }

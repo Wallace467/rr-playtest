@@ -14,12 +14,12 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-24-81b33d85-8b853e3b">
-<meta name="rr-pwa-built" content="1795535579">
+<meta name="rr-pwa" content="2026-11-24-01ecb44b-34434163">
+<meta name="rr-pwa-built" content="1795541385">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-24-81b33d85">
+<meta name="range-rat-build" content="2026-11-24-01ecb44b">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -41,10 +41,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-24-81b33d85", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-24-01ecb44b", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": null, "build": "2026-11-24-81b33d85", "builtAt": "2026-11-24T15:52:59Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": null, "build": "2026-11-24-01ecb44b", "builtAt": "2026-11-24T17:29:45Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -4611,6 +4611,28 @@ window.SPRITES = {
       bell(t + 0.003, mtof(m), 0.2, lp, 0.2);
       return 0.24;
     },
+    // 24 Nov (the Fable review: the empty ball house and its refill had no sound; goal-done reused the upgrade arp):
+    // the ball house runs dry: a hollow crate knock and two falling notes, low and soft (a nudge, not an alarm)
+    stock_empty: function (t, out) {
+      var lp = filt('lowpass', 900, 0.7, out), b = keyBase() - 12;
+      wood(t, 220 * rnd(0.97, 1.03), 0.35, lp); wood(t + 0.09, 165 * rnd(0.97, 1.03), 0.3, lp);
+      kal(t + 0.04, mtof(b + 7), 0.3, out, 0.3); kal(t + 0.17, mtof(b + 3), 0.26, out, 0.35);
+      return 0.55;
+    },
+    // the ball house refilled: a few balls clattering in, then a small rising pair
+    stock_refill: function (t, out) {
+      var lp = filt('lowpass', 3600, 0.6, out), b = keyBase() + 12;
+      for (var i = 0; i < 5; i++) wood(t + i * 0.045 + rnd(0, 0.01), (1250 + i * 90) * rnd(0.95, 1.05), 0.15, lp);
+      kal(t + 0.27, mtof(b), 0.32, out, 0.3); kal(t + 0.34, mtof(b + 7), 0.3, out, 0.4);
+      return 0.75;
+    },
+    // a goal done: its own stinger, bells rising to a bright kalimba top (the upgrade's arp is kalimba all the way)
+    goal_done: function (t, out) {
+      var b = keyBase() + 12, S = [0, 7, 12, 16];
+      for (var i = 0; i < S.length; i++) bell(t + i * 0.085, mtof(b + S[i]), 0.2 + 0.04 * i, out, 0.5);
+      kal(t + 0.34, mtof(b + 24), 0.4, out, 0.7);
+      return 1.1;
+    },
     // the sound-mix pass: a ball from the rat's basket tumbling into the ball house (every ball of the deposit stream): a hard
     // ball-on-balls click, the crate's knock, a settle tick or two. opts.fill (0..1, how far into the load): the crate rings a
     // little higher as it fills
@@ -5911,7 +5933,7 @@ window.SPRITES = {
     pickup: { gap: 0.04, cap: 4 }, pickup_special: { gap: 0.06, cap: 2 }, whiff: { gap: 0.15, cap: 2 }, boing: { gap: 0.12, cap: 2 }, coin_spend: { gap: 0.08, cap: 2 }, ball_land: { gap: 0.045, cap: 4 }, swing: { gap: 0.06, cap: 4 },
     cash: { gap: 0.05, cap: 4 }, coin_tink: { gap: 0.045, cap: 3 }, deposit: { gap: 0.2, cap: 2 }, cart_hit: { gap: 0.08, cap: 3 },
     robot_beep: { gap: 0.15, cap: 2 }, ui_tap: { gap: 0.03, cap: 3 }, ui_deny: { gap: 0.08, cap: 2 },
-    hopper_full: { gap: 0.4, cap: 1 }, stun: { gap: 0.3, cap: 1 }, upgrade: { gap: 0.1, cap: 2 },
+    hopper_full: { gap: 0.4, cap: 1 }, stun: { gap: 0.3, cap: 1 }, upgrade: { gap: 0.1, cap: 2 }, stock_empty: { gap: 1, cap: 1 }, stock_refill: { gap: 1, cap: 1 }, goal_done: { gap: 0.4, cap: 1 },
     gear_up: { gap: 0.5, cap: 1 }, special_ball: { gap: 0.25, cap: 2 }, prestige: { gap: 1, cap: 1 },
     night_fall: { gap: 1, cap: 1 }, day_break: { gap: 1, cap: 1 }, achievement: { gap: 0.4, cap: 2 }, achievement_progress: { gap: 0.3, cap: 2 }, swarm_change: { gap: 0.8, cap: 1 }, chest_shake: { gap: 0.06, cap: 2 }, reel_tick: { gap: 0.03, cap: 3 }, chest_open_wood: { gap: 0.5, cap: 1 }, chest_open_silver: { gap: 0.5, cap: 1 }, chest_open_gold: { gap: 0.8, cap: 1 }, chest_land: { gap: 0.15, cap: 2 }, chest_creak: { gap: 0.2, cap: 1 }, chest_charge: { gap: 0.3, cap: 1 }, chest_pop: { gap: 0.2, cap: 1 }, chest_sparkle: { gap: 0.15, cap: 2 }, reel_clunk: { gap: 0.15, cap: 1 }, chest_fanfare_common: { gap: 0.3, cap: 1 }, chest_fanfare_rare: { gap: 0.4, cap: 1 }, chest_fanfare_epic: { gap: 0.6, cap: 1 }, chest_fanfare_acorns: { gap: 0.3, cap: 1 }, acorn_trickle: { gap: 0.25, cap: 1 }, focus_end: { gap: 1.0, cap: 1 }, focus_start: { gap: 0.4, cap: 1 }, bug_fetch: { gap: 0.25, cap: 2 }, dodge: { gap: 0.15, cap: 2 }, phew: { gap: 0.5, cap: 1 }, swing_transition: { gap: 0.6, cap: 1 },
     equip: { gap: 0.08, cap: 2 }, talk: { gap: 0.05, cap: 3 },
@@ -10064,6 +10086,15 @@ window.DIALOG = {
             "Written when the next build goes out."
           ]
         },
+        "2026-11-24-train9": {
+          title: "New sounds, matching stands",
+          items: [
+            "New sounds when the ball house runs dry, when it fills back up, and when you finish a goal.",
+            "Big moments no longer pile up: a deposit, a goal and a trophy play one after another.",
+            "Tap the field and a ring shows where the rat is heading. The shop shows how close the next gear is.",
+            "Each range's stand has its own colours again, and the third deck, the Grandstand and the bucket stacks match the new art."
+          ]
+        },
         "2026-11-24-train8": {
           title: "A fresh coat of paint",
           items: [
@@ -10467,6 +10498,7 @@ window.DIALOG = {
       gusPick: "Gus's pick",
       nextRangeLock: "Opens at the next range.",
       stagedLock: "Opens later this visit.",
+      gearSaved: "Saved toward it",
       gearHopper: "Hopper {n}",
       gearSpeed: "speed {n}",
       gearReach: "reach {n}",
@@ -13934,6 +13966,15 @@ window.DIALOG = {
               "Wird geschrieben, wenn der nächste Build erscheint."
             ]
           },
+          "2026-11-24-train9": {
+            title: "Neue Klänge, passende Tribünen",
+            items: [
+              "Neue Klänge, wenn das Ballhaus leer ist, wenn es wieder voll wird und wenn du ein Ziel schaffst.",
+              "Große Momente stapeln sich nicht mehr: Abliefern, Ziel und Trophäe klingen nacheinander.",
+              "Tipp aufs Feld und ein Ring zeigt, wohin die Ratte läuft. Der Laden zeigt, wie nah die nächste Ausrüstung ist.",
+              "Jede Range hat wieder eigene Tribünenfarben, und die dritte Tribüne, die große Tribüne und die Eimerstapel passen zum neuen Stil."
+            ]
+          },
           "2026-11-24-train8": {
             title: "Ein frischer Anstrich",
             items: [
@@ -14342,6 +14383,7 @@ window.DIALOG = {
         gusPick: "Gus' Tipp",
         nextRangeLock: "Öffnet auf der nächsten Range.",
         stagedLock: "Öffnet später bei diesem Besuch.",
+        gearSaved: "Dafür gespart",
         gearHopper: "Korb {n}",
         gearSpeed: "Tempo {n}",
         gearReach: "Reichweite {n}",
@@ -17849,6 +17891,15 @@ window.DIALOG = {
               "Se escribirá cuando salga la próxima versión."
             ]
           },
+          "2026-11-24-train9": {
+            title: "Sonidos nuevos y gradas a juego",
+            items: [
+              "Sonidos nuevos cuando la caseta de bolas se vacía, cuando se vuelve a llenar y cuando cumples un objetivo.",
+              "Los grandes momentos ya no se amontonan: una entrega, un objetivo y un trofeo suenan uno tras otro.",
+              "Toca el campo y un aro muestra adónde va la rata. La tienda muestra lo cerca que está el siguiente equipo.",
+              "Cada campo vuelve a tener los colores de su grada, y la tercera grada, la Tribuna y las pilas de cubos van a juego con el nuevo estilo."
+            ]
+          },
           "2026-11-24-train8": {
             title: "Una mano de pintura",
             items: [
@@ -18257,6 +18308,7 @@ window.DIALOG = {
         gusPick: "La elección de Gus",
         nextRangeLock: "Se abre en el próximo campo.",
         stagedLock: "Se abre más adelante en esta visita.",
+        gearSaved: "Ahorrado para ello",
         gearHopper: "Saco {n}",
         gearSpeed: "velocidad {n}",
         gearReach: "alcance {n}",
@@ -21664,6 +21716,15 @@ window.DIALOG = {
               "Escrito quando a próxima versão sair."
             ]
           },
+          "2026-11-24-train9": {
+            title: "Sons novos e arquibancadas combinando",
+            items: [
+              "Sons novos quando a casinha das bolinhas esvazia, quando enche de novo e quando você cumpre um objetivo.",
+              "Os grandes momentos não se amontoam mais: uma entrega, um objetivo e um troféu tocam um depois do outro.",
+              "Toque no campo e um anel mostra para onde o rato vai. A loja mostra quanto falta para o próximo equipamento.",
+              "Cada campo tem de novo as cores da sua arquibancada, e o terceiro andar, a Arquibancada e as pilhas de baldes combinam com o novo estilo."
+            ]
+          },
           "2026-11-24-train8": {
             title: "Uma pintura nova",
             items: [
@@ -22072,6 +22133,7 @@ window.DIALOG = {
         gusPick: "Dica do Gus",
         nextRangeLock: "Abre no próximo campo.",
         stagedLock: "Abre mais adiante nesta visita.",
+        gearSaved: "Guardado para ele",
         gearHopper: "Cesto {n}",
         gearSpeed: "velocidade {n}",
         gearReach: "alcance {n}",
@@ -25572,6 +25634,15 @@ window.DIALOG = {
               "下个版本发布时再写。"
             ]
           },
+          "2026-11-24-train9": {
+            title: "新声音，看台也换了新装",
+            items: [
+              "球屋空了、重新装满、完成目标时，都有了新的声音。",
+              "重要时刻不再挤在一起：存球、目标和奖杯会一个接一个响起。",
+              "点一下球场，会出现一个圈，标出捡球鼠要去的地方。商店会显示离下一件装备还差多少。",
+              "每个球场的看台又有了自己的颜色，第三层看台、大看台和桶堆也换上了新画风。"
+            ]
+          },
           "2026-11-24-train8": {
             title: "换上新装",
             items: [
@@ -25975,6 +26046,7 @@ window.DIALOG = {
         gusPick: "古斯推荐",
         nextRangeLock: "到下一个球场开放。",
         stagedLock: "在这个球场稍后开放。",
+        gearSaved: "已攒下",
         gearHopper: "球篓{n}",
         gearSpeed: "速度{n}",
         gearReach: "范围{n}",
@@ -29500,6 +29572,15 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       return S.play(name, o);
     } catch (e) { return false; }
   }
+  // §FB feedback pass (24 Nov, the Fable review). sting(): the big moments (the deposit's chord, a
+  // goal, a trophy) play one after another, ~0.45 s apart, instead of on top of each other
+  const FB = { next: 0, tapAt: -1e9, tapT: null }; // (no opt-out: Ben, 24 Nov "just release them")
+  function sting(name, opts, hold) {
+    const now = performance.now(), at = Math.max(now, FB.next); FB.next = at + (hold || 450);
+    if (at <= now + 5) return sfx(name, opts);
+    setTimeout(() => sfx(name, opts), at - now); return true;
+  }
+  on('stockRestored', () => { if (mode === 'game') sfx('stock_refill', { volume: 0.7 }); });
   let musicTheme = null, musicNight = null;
   function music(theme) {
     musicTheme = theme;
@@ -29976,7 +30057,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       // goal row flashes gold, coins fly to the wallet, chime; the next goal slides in (goalSlideIn)
       fx.particles('goal', p.x, p.y, 14, { colors: ['#a9bd5a', '#f2c641'], speed: 60, up: 30, g: 100, life: 0.6 });
       fx.sprite('sparkle', p.x, p.y - 4);
-      sfx('achievement', { volume: 0.6 });
+      sting('achievement', { volume: 0.6 });
       if (p.el) { fx.bounce(p.el, 1.06); try { p.el.animate([{ boxShadow: '0 0 0 0 rgba(242,198,65,0)', background: '' }, { boxShadow: '0 0 0 3px rgba(242,198,65,.95)', background: 'rgba(242,198,65,.35)', offset: 0.25 }, { boxShadow: '0 0 0 0 rgba(242,198,65,0)', background: '' }], { duration: RM_() ? 500 : 750, easing: 'ease-out' }); } catch (e) { /* ignore */ } }
       fx.coinFly(p.x, p.y, 5);
       setTimeout(() => { const e2 = p.slot != null && ui_.goalEl ? ui_.goalEl(p.slot) : null; if (e2 && e2.animate && !RM_()) try { e2.animate([{ transform: 'translateX(40px)', opacity: 0 }, { transform: 'translateX(-3px)', opacity: 1, offset: 0.7 }, { transform: 'none', opacity: 1 }], { duration: 320, easing: 'ease-out' }); } catch (e) { /* ignore */ } }, 260);
@@ -32372,7 +32453,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // §JU: a bigger load sounds heavier (lower, a felt thump under it: audio.js deposit opts.weight), not higher; its ding
     // comes with the first coin into the acorns (hooks.onDeposit -> fx.coinFly o.ding)
     const mx = (o) => (mixOn() ? mixO(Object.assign(o, { full: !!full, load: +clamp(count / 36, 0, 1).toFixed(2) })) : o); // §MX: the load delivered, by its size
-    if (j) { const w = clamp(count / (feel.juice.weightBalls || 36), 0, 1); sfx('deposit', mx({ pitch: Math.round(lerp(2, -3, w)), weight: w })); return; }
+    if (j) { const w = clamp(count / (feel.juice.weightBalls || 36), 0, 1); sting('deposit', mx({ pitch: Math.round(lerp(2, -3, w)), weight: w }), 600); return; }
     sfx('deposit', mx({ pitch: Math.min(count / 6, 6) })); if (cash > 0) setTimeout(() => sfx('cash', mixO({ volume: 0.8 })), 90);
   }
   // ---- the pickup sound's ladder (playtest round 3 note 8; feel.pickupLadder). Real time (performance.now), not game time ----
@@ -32676,7 +32757,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         if (mode === 'game') {
           if (state.stock <= 0 || room <= 0) { g.t = rand(0.6, 1.4); g.barkT -= 1; if (g.barkT <= 0) { golferBark(g, 'noBalls'); g.barkT = rand(14, 30); } continue; }
           state.stock--; room--; g.reserved = true; g.left = Math.max(0, (g.left | 0) - 1); // one ball from stock, one from this critter's session
-          if (state.stock <= 0 && !world.stockEmpty) { world.stockEmpty = true; emit('stockEmpty', {}); gusBubble('stockEmpty', 30); }
+          if (state.stock <= 0 && !world.stockEmpty) { world.stockEmpty = true; emit('stockEmpty', {}); gusBubble('stockEmpty', 30); sfx('stock_empty', { volume: 0.8 }); }
         }
         g.anim = 0; g.released = false;
       }
@@ -32978,7 +33059,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
         state.goalsDone++;
         earn(reward, 'goal');
         emit('goalDone', { id: g.id, target: g.target, reward });
-        sfx('upgrade', { pitch: 5 }); setTimeout(() => sfx('cash'), 120);
+        sting('goal_done'); // §FB: its own stinger, after the deposit's
         const line = dline('toasts.goalDone', 'Goal done!');
         toast(line + ' +' + fmt(reward), { goal: reward, silent: dcOn('budget') && mode === 'game' }); // message budget: the goal card's flash and the "+X" by the rat say it (the screen reader still hears the line)
         const p = world.player || { x: 90, y: 160 };
@@ -33057,7 +33138,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     // MOMENT_HOLD_MS after that moment. The trophy is already earned and saved; only its show waits.
     const show = () => {
       ui_.trophyChips = chips;
-      sfx('achievement');
+      sting('achievement');
       const text = tpl(dstr('toasts.achievement', 'Achievement! {name}'), { name });
       if (held) { ui_.trophyChips = null; toast(text); setRatMood('proud', 1200); } // quietly: no trophy card or chest yet
       else {
@@ -40947,7 +41028,15 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (p.trapWork && p.trapWork.kind === 'bunker') drawRake(g, p); // links: the rake swish IS the progress
       else if (p.trapWork) { const f = clamp(p.trapWork.t / (p.trapWork.need || 0.5), 0, 1); g.fillStyle = '#2a1c16'; g.fillRect(Math.round(p.x) - 5, Math.round(p.y) + 2, 10, 2); g.fillStyle = '#9fd0e2'; g.fillRect(Math.round(p.x) - 5, Math.round(p.y) + 2, Math.round(10 * f), 2); }
       // pickup radius hint while moving with an empty-ish hopper
-      if (p.target && mode === 'game') { g.fillStyle = 'rgba(255,250,238,0.5)'; g.fillRect(Math.round(p.target.x), Math.round(p.target.y), 1, 1); }
+      if (p.target && mode === 'game') {
+        { // §FB: a tap answers with a ring that opens out where you tapped (0.4 s), then the old faint dot
+          if (p.target !== FB.tapT) { FB.tapT = p.target; FB.tapAt = renderMs; }
+          const k = (renderMs - FB.tapAt) / 400, tx0 = Math.round(p.target.x), ty0 = Math.round(p.target.y);
+          if (k >= 0 && k < 1) { const r = RM_() ? 3 : 1.5 + 4.5 * k, a = RM_() ? 0.7 : 0.8 * (1 - k);
+            g.globalAlpha = a; g.strokeStyle = '#fffaee'; g.lineWidth = 1; g.beginPath(); g.ellipse(tx0 + 0.5, ty0 + 0.5, r, r * 0.6, 0, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1; }
+        }
+        g.fillStyle = 'rgba(255,250,238,0.5)'; g.fillRect(Math.round(p.target.x), Math.round(p.target.y), 1, 1);
+      }
     } });
     if (mode === 'game') for (const c of world.critters || []) list.push({ y: c.perch ? c.y + 30 : c.y, d: () => drawCritter(g, c) });
     for (const gl of world.gulls || []) list.push({ y: gl.y + 40, d: () => drawSprite(g, 'gull', gl.x, gl.y, { frame: frameAt(getSprite('gull'), renderMs + gl.t), flip: gl.vx < 0 }) });
@@ -42144,6 +42233,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   // Posh Buckets tiers (DECISIONS 37): the golfers' bucket by tier [body, band, shade]. Placeholder recolours of the plain
   // bucket; hi-fi art is on art/PIXELLAB_PROMPTS.md §6 ("Posh Buckets tiers")
+  const BKT = { on: QS.get('bkt2') !== '0' }; // 24 Nov: the buckets drawn to the anchors (?bkt2=0: the old look)
   const BUCKET_PAL = [
     ['#9298a0', '#c9473b', '#565c64'], // plain
     ['#c3cad1', '#8a939c', '#6c747c'], // tin pail
@@ -42180,7 +42270,20 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     drawBucket(g, bx, y + 1, cur);
   }
   function bucketPx(g, x, y, k, t) {
-    const P = BUCKET_PAL[t | 0] || BUCKET_PAL[0];
+    const P = BUCKET_PAL[t | 0] || BUCKET_PAL[0], OUT = '#2a1c16';
+    if (BKT.on) { const P = (t | 0) ? (BUCKET_PAL[t | 0] || BUCKET_PAL[0]) : ['#7d8a6a', '#c9473b', '#56604a']; // plain: a muted range green, not grey // 24 Nov: drawn to the anchors: a fine outline, a tapered body lit from the left, the tier's band, soft cream balls
+      g.fillStyle = OUT; g.fillRect(x - 3, y - 4, 7, 0.5); g.fillRect(x - 3, y - 4, 0.5, 4.5); g.fillRect(x + 3.5, y - 4, 0.5, 4.5); g.fillRect(x - 2.5, y, 6, 0.5); // rim, sides, base
+      g.fillStyle = P[0]; g.fillRect(x - 2.5, y - 3.5, 6, 3.5);
+      g.fillStyle = P[2]; g.fillRect(x + 2, y - 3.5, 1.5, 3.5); // the shaded right side
+      g.fillStyle = 'rgba(255,250,238,0.45)'; g.fillRect(x - 2.5, y - 3.5, 0.5, 3); // lit from the left
+      g.fillStyle = P[1]; g.fillRect(x - 2.5, y - 2, 6, 1); // the tier's band
+      g.fillStyle = k ? '#d6c3a0' : '#4b3226'; g.fillRect(x - 2.5, y - 4.5, 6, 0.5); // the rim inside: balls or empty
+      const ball = (bx, by) => { g.fillStyle = OUT; g.fillRect(bx - 0.5, by - 0.5, 2, 2); g.fillStyle = '#efdfb6'; g.fillRect(bx, by, 1, 1); g.fillStyle = '#fffaee'; g.fillRect(bx, by, 0.5, 0.5); };
+      if (k >= 2) { ball(x - 1.5, y - 5.5); ball(x + 1, y - 5.5); }
+      if (k >= 3) ball(x - 0.25, y - 6.5);
+      if (k >= 4) { ball(x - 2, y - 6); ball(x + 1.5, y - 6.5); }
+      return;
+    }
     g.fillStyle = '#2a1c16'; g.fillRect(x - 3, y - 4, 7, 1); g.fillRect(x - 3, y - 3, 1, 3); g.fillRect(x + 3, y - 3, 1, 3); g.fillRect(x - 2, y, 5, 1);
     g.fillStyle = P[0]; g.fillRect(x - 2, y - 3, 5, 3); g.fillStyle = P[1]; g.fillRect(x - 2, y - 2, 5, 1); g.fillStyle = P[2]; g.fillRect(x + 2, y - 3, 1, 3);
     g.fillStyle = k ? '#fffaee' : '#4b3226'; g.fillRect(x - 2, y - 4, 5, 1);
@@ -42188,6 +42291,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (k >= 3) { g.fillStyle = '#fffaee'; g.fillRect(x - 2, y - 5, 1, 1); g.fillRect(x, y - 6, 1, 1); }
     if (k >= 4) { g.fillStyle = '#fffaee'; g.fillRect(x - 1, y - 6, 1, 1); g.fillStyle = '#efdfb6'; g.fillRect(x + 1, y - 6, 1, 1); g.fillStyle = '#fffaee'; g.fillRect(x, y - 7, 1, 1); }
   }
+
   // ===================================================================== §LOOKS visible tiers (DECISIONS 67, item 3)
   // The calm late game (Ben 16 Nov 13:37 Taipei): the "+x%" rows show on the field. BALANCE.retention.looks:
   //   the Ball Washer: every washEvery levels the ball house smartens up one step (LOOK_STEPS: a tub, bunting, steam,
@@ -42330,9 +42434,25 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     if (xs.length < 2) return;
     const X0 = Math.max(0, xs[0] - 4), W2 = Math.min(G.W, xs[xs.length - 1] + 8) - X0;
     stamp(g, 'grand:' + rangeId() + ':' + xs.join(',') + ':' + y, X0, y, 0, 8, W2 + 2, 12, (q, ax, ay) => {
-      q.fillStyle = '#2a1c16'; q.fillRect(ax + xs[0] - X0, ay - 2, xs[xs.length - 1] - xs[0] + 1, 1); // the string
-      for (let x = xs[0] + 3, i = 0; x < xs[xs.length - 1] - 1; x += 3, i++) { q.fillStyle = COLS[i % 3]; q.fillRect(ax + x - X0, ay - 1, 2, 1); q.fillRect(ax + x - X0, ay, 1, 1); }
-      xs.forEach((x, i) => { const px = ax + x - X0; q.fillStyle = '#2a1c16'; q.fillRect(px, ay - 7, 1, 7); q.fillStyle = COLS[i % COLS.length]; q.fillRect(px + 1, ay - 7, 3, 1); q.fillRect(px + 1, ay - 6, 2, 1); q.fillStyle = '#f2c641'; q.fillRect(px, ay - 8, 1, 1); });
+      // 24 Nov: drawn to the anchors (half-pixel outlines like the res-2 art, light from the top-left): banded poles with
+      // a gold finial and a pennant each, and bunting sagging between them
+      const OUT = '#2a1c16', LITE = ['#e85e4a', '#fff2a6', '#8fb0dc', '#ffffff'];
+      for (let k = 0; k + 1 < xs.length; k++) { // the bunting: a sagging string, little flags hanging off it
+        const a = xs[k], b = xs[k + 1];
+        for (let x = a + 1; x < b; x++) { const u = (x - a) / (b - a), sy = ay - 3 + Math.round(Math.sin(u * Math.PI) * 2);
+          q.fillStyle = OUT; q.fillRect(ax + x - X0, sy, 1, 0.5);
+          if (((x - a) % 3) === 1) { const c = (x + k) % 3; q.fillStyle = OUT; q.fillRect(ax + x - X0 - 0.5, sy + 0.5, 2, 2); q.fillStyle = COLS[c]; q.fillRect(ax + x - X0, sy + 0.5, 1, 1.5); q.fillStyle = LITE[c]; q.fillRect(ax + x - X0, sy + 0.5, 0.5, 0.5); }
+        }
+      }
+      xs.forEach((x, i) => { const px = ax + x - X0, c = i % COLS.length;
+        q.fillStyle = OUT; q.fillRect(px - 0.5, ay - 7, 2, 8); // the pole's outline
+        q.fillStyle = '#fffaee'; q.fillRect(px, ay - 7, 0.5, 8); q.fillStyle = '#d6c3a0'; q.fillRect(px + 0.5, ay - 7, 0.5, 8); // lit left, shaded right
+        q.fillStyle = '#c9473b'; q.fillRect(px, ay - 3, 1, 1); // a red band
+        q.fillStyle = OUT; q.fillRect(px - 0.5, ay - 9, 2, 2); q.fillStyle = '#f2c641'; q.fillRect(px, ay - 8.5, 1, 1); q.fillStyle = '#fff2a6'; q.fillRect(px, ay - 8.5, 0.5, 0.5); // the finial
+        q.fillStyle = OUT; q.fillRect(px + 1, ay - 7.5, 4, 3.5); // the pennant: outlined, tapering, lit along the top
+        q.fillStyle = COLS[c]; q.fillRect(px + 1, ay - 7, 3.5, 1); q.fillRect(px + 1, ay - 6, 2.5, 1); q.fillRect(px + 1, ay - 5, 1, 0.5);
+        q.fillStyle = LITE[c]; q.fillRect(px + 1, ay - 7, 3, 0.5);
+      });
     });
   }
   /** a beetle's basket (Beetle Baskets' tiers) with the balls it carries, and its trail (Wind-Up Springs' tiers) */
@@ -42526,6 +42646,18 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     terracePx(g, x0, x1, top, base, front);
   }
   function terracePx(g, x0, x1, top, base, front) {
+    const fl = standCA('stand_upper'), rl = standCA('stand_upper_front');
+    if (fl && rl) { // 24 Nov: the third deck from the stand's own pieces (code art), so it matches the stand behind it
+      const tile = (c, sy0, sh, y) => { for (let x = x0; x < x1; x += 30) { const w = Math.min(30, x1 - x); g.drawImage(c, 0, sy0, w * 2, sh, x, y, w, sh / 2); } };
+      if (!front) {
+        tile(fl, 51, 12, top); // the floor's lit edge, its planks and the shadow under it
+        for (let x = x0 + 3; x < x1; x += 20) g.drawImage(fl, 7, 61, 6, 2, x - 1, top + 6, 3, Math.max(0, base - top - 6)); // legs: the stand's post, stretched down
+        return;
+      }
+      tile(rl, 36, 15, top - 8); // the railing
+      tile(fl, 51, 8, top - 1); // the front board
+      return;
+    }
     if (!front) {
       g.fillStyle = '#4b3226'; g.fillRect(x0, top, x1 - x0, 3); // the floor's top edge
       g.fillStyle = '#7d5636'; g.fillRect(x0, top + 1, x1 - x0, 1);
@@ -42646,7 +42778,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   /** draw rows r0..r1 of a stand sprite (anchored at the ground, scaled by the construction pop) */
   // 24 Nov: the stand's tiles drawn by the code art in the anchor style (art/codeart stand()); ?stand=0 keeps the sprites
   const STANDCA = { on: QS.get('stand') !== '0' };
-  function standCA(name) { const A = STANDCA.on && caArt(); return A && A.stand ? caCv('stand:' + name, () => A.stand(name)) : null; }
+  function standCA(name) { const A = STANDCA.on && caArt(), rid = rangeId(); return A && A.stand ? caCv('stand:' + rid + ':' + name, () => A.stand(name, rid)) : null; } // each range its own timber and roof
   /** a stand piece on the ground at (x, base), squashed by the construction pop: the code art's, else the sprite */
   function standDraw(g, name, x, base, sy, sw) {
     const c = standCA(name); if (!c) { drawSprite(g, name, x, base, { sy, swap: sw }); return; }
@@ -44069,7 +44201,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rr-p{display:flex;flex-direction:column;gap:6px}
 .rr-p h3{margin:6px 0 2px;font-family:var(--rr-font-label);font-weight:700;font-size:calc(15px*var(--rr-fs));color:var(--rr-label);text-transform:uppercase}
 .rr-row{display:flex;align-items:center;gap:8px;padding:6px;border-radius:calc(10px*var(--rr-round));background:var(--rr-card-tx),var(--rr-card-bg);background-clip:var(--rr-card-clip);border:2px solid transparent;border-image:var(--rr-fr-card)}
-.rr-row{position:relative}.rr-row.near{border-color:rgba(169,189,90,.6)}.rr-row.near:before{content:var(--rr-almost,'Almost!');position:absolute;top:-9px;right:12px;padding:0 6px;border-radius:6px;background:#3e4a22;border:1px solid rgba(169,189,90,.6);color:#cfe08a;font-size:calc(12px*var(--rr-fs));font-weight:700;line-height:1.4;pointer-events:none}.rr-row.ready{border-color:rgba(242,198,65,.75);border-image:var(--rr-fr-hi)}.rr-row.ready:before{content:var(--rr-ready,'Ready!');position:absolute;top:-9px;left:12px;padding:0 6px;border-radius:6px;background:#f2c641;border:1px solid #b98a2c;color:#2a1c16;font-size:calc(12px*var(--rr-fs));font-weight:700;line-height:1.4;pointer-events:none}.rr-buy span{position:relative;display:inline-flex;align-items:center;gap:4px}.rr-buy .coin{width:12px;height:12px;image-rendering:pixelated}.rr-buy .sub{position:relative;display:block;white-space:nowrap;font-size:calc(12px*var(--rr-fs));font-weight:400;color:var(--rr-text2)}.rr-buy .sub b{color:inherit;font-weight:700}.rr-buy:not(.off) .sub{color:inherit}.rr-buy .eta{position:relative;display:inline}
+.rr-gearbar{height:5px;margin-top:4px;border:1px solid #2a1c16;border-radius:3px;background:rgba(20,12,8,.35);overflow:hidden}.rr-gearbar i{display:block;height:100%;background:var(--rr-gold,#f2c641);box-shadow:inset 0 1px 0 rgba(255,250,238,.45)}.rr-row{position:relative}.rr-row.near{border-color:rgba(169,189,90,.6)}.rr-row.near:before{content:var(--rr-almost,'Almost!');position:absolute;top:-9px;right:12px;padding:0 6px;border-radius:6px;background:#3e4a22;border:1px solid rgba(169,189,90,.6);color:#cfe08a;font-size:calc(12px*var(--rr-fs));font-weight:700;line-height:1.4;pointer-events:none}.rr-row.ready{border-color:rgba(242,198,65,.75);border-image:var(--rr-fr-hi)}.rr-row.ready:before{content:var(--rr-ready,'Ready!');position:absolute;top:-9px;left:12px;padding:0 6px;border-radius:6px;background:#f2c641;border:1px solid #b98a2c;color:#2a1c16;font-size:calc(12px*var(--rr-fs));font-weight:700;line-height:1.4;pointer-events:none}.rr-buy span{position:relative;display:inline-flex;align-items:center;gap:4px}.rr-buy .coin{width:12px;height:12px;image-rendering:pixelated}.rr-buy .sub{position:relative;display:block;white-space:nowrap;font-size:calc(12px*var(--rr-fs));font-weight:400;color:var(--rr-text2)}.rr-buy .sub b{color:inherit;font-weight:700}.rr-buy:not(.off) .sub{color:inherit}.rr-buy .eta{position:relative;display:inline}
 .rr-row img.ic{width:30px;height:30px;image-rendering:pixelated;flex:0 0 auto}
 .rr-row .mid{flex:1;min-width:0}
 .rr-row .nm{font-size:calc(16px*var(--rr-fs));line-height:1.2;font-weight:700;overflow-wrap:normal}
@@ -44714,6 +44846,13 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
    *  the part he's saving for and how far along the wallet is. Not during the shop introduction (Gus points at the first
    *  buys himself), not while a part can be paid (the Pay row is on top), not on a visit / in free play with nothing to pick. */
   const gusCardOn = () => !!state && mode === 'game' && !(introOn() && (state.shopIntro.n | 0) < 3);
+  /** §FB the next gear, saved up for (the Fable review: the first gear felt far off after many small buys): a thin bar of
+   *  the acorns you hold against its price. Display only, the price is the same */
+  function gearBarHTML(cost) {
+    if (!(cost > 0)) return '';
+    const k = clamp(state.cash / cost, 0, 1), pct = Math.round(k * 100);
+    return `<div class="rr-gearbar" role="progressbar" aria-label="${esc(tx('shop.gearSaved', 'Saved toward it'))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>`;
+  }
   function gusCardHTML() {
     if (!gusCardOn()) return '';
     const g = gusPick().pick; if (!g) return '';
@@ -44879,7 +45018,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
           const gd = B.gear[ni];
           const flav = dstr('gear.' + gd.id + '.flavor', '');
           const gcost = gearCost(ni);
-          h += `<div class="rr-row ${state.cash < gcost && state.cash >= gcost * nearAt() ? 'near' : ''}" data-kind="gear" data-id="${esc(gd.id)}"><img class="ic" alt="" src="${iconURL('player_' + gd.id, 2)}"><div class="mid"><div class="nm">${esc(gearName(ni))}${pickBadge('gear', gd.id)}</div><div class="ef">${(() => { const w = gearWhyText(ni); return w ? esc(w) : `<span class="stats">${esc([tx('shop.gearHopper', 'Hopper {n}', { n: gd.capacity }), tx('shop.gearSpeed', 'speed {n}', { n: gearSpeed(ni) }), tx('shop.gearReach', 'reach {n}', { n: gd.pickupRadius })].join(' · '))}</span>`; })()}${flav ? '<br><span class="flav">' + esc(flav) + '</span>' : ''}</div></div>${costBtn('gear', gd.id, gcost, { name: gearName(ni) })}</div>`;
+          h += `<div class="rr-row ${state.cash < gcost && state.cash >= gcost * nearAt() ? 'near' : ''}" data-kind="gear" data-id="${esc(gd.id)}"><img class="ic" alt="" src="${iconURL('player_' + gd.id, 2)}"><div class="mid"><div class="nm">${esc(gearName(ni))}${pickBadge('gear', gd.id)}</div><div class="ef">${(() => { const w = gearWhyText(ni); return w ? esc(w) : `<span class="stats">${esc([tx('shop.gearHopper', 'Hopper {n}', { n: gd.capacity }), tx('shop.gearSpeed', 'speed {n}', { n: gearSpeed(ni) }), tx('shop.gearReach', 'reach {n}', { n: gd.pickupRadius })].join(' · '))}</span>`; })()}${flav ? '<br><span class="flav">' + esc(flav) + '</span>' : ''}</div>${gearBarHTML(gcost)}</div>${costBtn('gear', gd.id, gcost, { name: gearName(ni) })}</div>`;
         }
         // maxed things grey out and sink to the bottom of the list (owner feedback)
         let done = '';
@@ -47034,7 +47173,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   // leave at null (null = this build). Then put a fresh { id: 'next', draft: true } on top. A draft never shows.
   const WN_LOG = [
     { id: 'next', at: null, draft: true },
-    { id: '2026-11-24-train8', at: null }, // train 8 (wip/train-1124, 24 Nov): the 2x art to the 24 Nov anchors, contact shadows, one flag, the code-drawn stand, hats worn; Steam Deck perf (DECISIONS 78-81)
+    { id: '2026-11-24-train9', at: null }, // train 9 (wip/feedback-1124, 24 Nov): the Fable review's feedback pass, per-range stands, terrace, Grandstand, buckets (DECISIONS 81-82)
+    { id: '2026-11-24-train8', at: 1795535579 }, // train 8 (wip/train-1124, 24 Nov): the 2x art to the 24 Nov anchors, contact shadows, one flag, the code-drawn stand, hats worn; Steam Deck perf (DECISIONS 78-81)
     { id: '2026-11-19-train7', at: null }, // train 7 (wip/train-1119b, 19 Nov): the Shop holds still, the sound mix, the Pro Shop early (DECISIONS 76-77; perf-deck)
     { id: '2026-11-19-train6', at: 1795039266 }, // train 6 (wip/train-1119, 19 Nov): nine holes, juice, What's new, odd happenings + gifts, UI skins B (DECISIONS 71-75)
     { id: '2026-11-18-b0889ef7', at: 1794992947 }, // b0294810, 81f5d5a6, b0889ef7: calm late game B, hopper cap, School ladders, School on one screen
@@ -50028,7 +50168,15 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   // 26, awning rows 0-5), at 2 art px per logical px, so the engine's posts, lamps and golfers line up as before.
   //   stand(name): 'stand_upper' (awning + deck floor + legs and the bays' back wall), 'stand_upper_front' (the deck railing),
   //   'stand_upper_end_l' / '_r' (+ '_front'), 'stand_stairs' (down to the left, toward the ball house)
-  const SW = RAMPS.wood, SR = RAMPS.red;
+  // each range's timber and roof (24 Nov, Ben: per-range colours; Oakridge's stand was cream club timber)
+  const STAND_PAL = {
+    county: { wood: ['#2a1c16', '#7a6a50', '#b8a47e', '#d6c3a0', '#efdfb6', '#fffaee'], roof: RAMPS.red, wall: ['#3d2a20', '#4b3226'] },
+    muni: { wood: RAMPS.wood, roof: ['#4b4d55', '#6f7680', '#9aa2aa'], wall: ['#2a1c16', '#3d2a20'] },
+    resort: { wood: ['#2a1c16', '#8a7f72', '#c9bfae', '#e6dccb', '#f6efe2', '#fffaee'], roof: ['#a85a50', '#e8a193', '#f6c8b8'], wall: ['#1a3b3c', '#24504f'] },
+    neon: { wood: ['#1a1210', '#2a1c16', '#4b3226', '#6a4a32', '#7d5636', '#a0703f'], roof: ['#3a2430', '#5a3448', '#7a4a60'], wall: ['#140d0b', '#1f1512'] },
+    links: { wood: ['#2a1c16', '#4f4a44', '#6f6a62', '#8a8478', '#a8a296', '#c8c2b4'], roof: ['#3d4a55', '#566572', '#76889a'], wall: ['#2e2b28', '#3b3733'] }
+  };
+  let SW = RAMPS.wood, SR = RAMPS.red, SWALL = [RAMPS.wood[0], RAMPS.wood[1]];
   function awning(b, x0, x1) {
     for (let x = x0; x < x1; x++) {
       b.set(x, 0, OUT); b.set(x, 1, SR[0]);
@@ -50048,7 +50196,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   function backWall(b, x0, x1) { // the bays' back boards under the deck: low and dark, so the golfers read in front of them
     for (let x = x0; x < x1; x++) {
       b.set(x, 78, OUT); b.set(x, 79, SW[3]); b.set(x, 80, SW[2]);
-      for (let y = 81; y < 116; y++) b.set(x, y, (x % 8) === 0 ? SW[0] : ((y - 81) % 12) === 0 ? SW[0] : y < 84 ? SW[1] : SW[1]);
+      for (let y = 81; y < 116; y++) b.set(x, y, (x % 8) === 0 || ((y - 81) % 12) === 0 ? SWALL[0] : SWALL[1]);
     }
   }
   function rail(b, x0, x1) {
@@ -50058,7 +50206,8 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       if (((x - x0) % 6) === 2) for (let y = 41; y < 47; y++) { b.set(x, y, SW[4]); b.set(x + 1, y, SW[2]); }
     }
   }
-  function stand(name) {
+  function stand(name, rid) {
+    const P = STAND_PAL[rid] || STAND_PAL.muni; SW = P.wood; SR = P.roof; SWALL = P.wall;
     const W2 = /_end_/.test(name) ? 8 : name === 'stand_stairs' ? 32 : 60, b = new Buf(W2, 116);
     if (name === 'stand_upper') { awning(b, 0, 60); floor(b, 0, 60); backWall(b, 0, 60); post(b, 9, 61, 116); post(b, 51, 61, 116); }
     else if (name === 'stand_upper_front') rail(b, 0, 60);

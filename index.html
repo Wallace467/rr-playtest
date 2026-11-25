@@ -14,12 +14,12 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-25-d97029ba-530cf2c3">
-<meta name="rr-pwa-built" content="1795591333">
+<meta name="rr-pwa" content="2026-11-25-86ced7ed-9fb63669">
+<meta name="rr-pwa-built" content="1795610172">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-25-d97029ba">
+<meta name="range-rat-build" content="2026-11-25-86ced7ed">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -41,10 +41,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-25-d97029ba", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-25-86ced7ed", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": null, "build": "2026-11-25-d97029ba", "builtAt": "2026-11-25T07:22:12Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": null, "build": "2026-11-25-86ced7ed", "builtAt": "2026-11-25T12:36:12Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -820,6 +820,50 @@ window.BALANCE = {
   // g0-g2 gear, x1.3-1.8): each tier at about the old speed x the boots a player had by then, capped near 140 logical px/s
   // on screen (x feel.moveSpeedMult 1.1), the most that stays easy to steer (Ben: "we move around too fast... hard to control")
   previews: {
+    // FIRST SESSION OPTIONS (docs/FIRST_SESSION_OPTIONS.md; the Fable review 24 Nov 2026, PLAN_1125 §B; DECISIONS 88). Ben 25 Nov
+    // approved gearfirst, gusgear, near, part and looks: those are `defaults`, ON. tube250 and pusher1200 (economy) he turned
+    // down: they stay preview options, off. The engine (loop/00_core.js FS, from ?fs=) and design/sim.js (RR_FS=) both read
+    // keys(spec), then play apply(): one scheme, read left to right over the defaults:
+    //   (none) / fs=1  the defaults                   fs=0          none of them: the game before DECISIONS 88
+    //   fs=-near       the defaults without near      fs=0,looks    looks alone      fs=tube250  the defaults + tube250
+    //   tube250    the Retriever Tube costs 250 (400)                                                  [economy, off]
+    //   pusher1200 the Push Picker costs 1200 (2000): a second gear change inside the first session         [economy, off]
+    //   gearrow    the shop introduction shows the Next gear row at its 2nd stage (was the 4th)         [onboarding order, off]
+    //   gearfirst  gearrow + the later cheap rows (More Balls, Posh Buckets, Washer, Friendly Wave) wait until the Tube is
+    //              bought (or gearMaxSec of play)                                                       [onboarding order, ON]
+    //   gusgear    Gus's pick is the Tube as soon as its row shows and it's within gusGearSec of income, and his card shows
+    //              it from then (loop/72_panels.js; engine only: design/sim.js's player models don't follow Gus)  [Gus's advice, ON]
+    //   looks      the first look tier comes early: the Washer's ball house at Lv 3 (10), the balls' colour at Lv 5 (25),
+    //              then every 10 / 25 levels as before                                                  [looks only, ON]
+    //   part / near: the main goal strip (ui/help.js, display only): one number "part 1/4: n / m" | the next gear first
+    //              (Gus's goalParts line and the "Buy the range" card wait for it), the range once part 1 is under
+    //              nearEtaMin away or the Push Picker is owned                                          [display, ON]
+    firstSession: {
+      defaults: ['gearfirst', 'gusgear', 'near', 'part', 'looks'],
+      /** the options in play for a spec ("0,looks", "-near", ["tube250"], null = the defaults) */
+      keys(spec) {
+        const on = new Set(this.defaults), v = Array.isArray(spec) ? spec : String(spec == null ? '' : spec).split(',');
+        for (const k0 of v) { const k = String(k0).trim(); if (!k || k === '1') continue; if (k === '0') on.clear(); else if (k[0] === '-') on.delete(k.slice(1)); else on.add(k); }
+        return Array.from(on);
+      },
+      gearMaxSec: 300, nearEtaMin: 20, gusGearSec: 240,
+      apply(B, keys) {
+        const on = new Set(keys || []), I = B.retention && B.retention.shopIntro;
+        if (on.has('tube250')) B.gear[1].cost = 250;
+        if (on.has('pusher1200')) B.gear[2].cost = 1200;
+        if (I && (on.has('gearrow') || on.has('gearfirst'))) {
+          I.stages = on.has('gearfirst')
+            ? [{ ids: ['capacity', 'speed', 'bays'] }, { ids: ['gear'], buys: 2, sec: 40 }, { ids: ['ballstock', 'price', 'cage'], gear: true, buys: 1, sec: 30 },
+              { ids: ['washer', 'tips'], buys: 3, sec: 90 }].concat(I.stages.slice(4))
+            : [{ ids: ['capacity', 'speed', 'bays'] }, { ids: ['gear', 'ballstock'], buys: 3, sec: 60 }, { ids: ['price', 'cage'], buys: 3, sec: 60 },
+              { ids: ['washer', 'tips'], buys: 3, sec: 90 }].concat(I.stages.slice(4));
+          I.gearMaxSec = this.gearMaxSec;
+        }
+        if (on.has('looks') && B.retention.looks) Object.assign(B.retention.looks, { washFirst: 3, ballFirst: 5 });
+        B.previews.firstSession.on = Array.from(on);
+        return B;
+      }
+    },
     // Odd happenings (ideas C1, Ben 18 Nov 2026 Taipei: "build before the next playtest"; DECISIONS 74, approved by Ben 19 Nov): rare,
     // authored one-offs that break a range's rules once, each once per save. loop/game.js §OG; ?odd=0 off. V1 has two a range
     // (the system takes up to `max`). On-screen play only: firstAfterSec of play before the first, then at least gapSec of
@@ -1707,9 +1751,10 @@ window.BALANCE = {
           out.push('shop');
         } else if (S.n < st.length) {
           const s = st[S.n];
-          if (s.beetle && !f.beetle) { S.t = f.t; S.k0 = S.k; }
+          if ((s.beetle && !f.beetle) || (s.gear && !f.gear && f.t < (this.gearMaxSec || 1e9))) { S.t = f.t; S.k0 = S.k; } // gear: previews.firstSession 'gearfirst' only
           else if (f.t - S.t >= this.minGap && ((S.k - (S.k0 | 0)) >= (s.buys | 0) || f.t - S.t >= s.sec)) {
-            S.n++; S.t = f.t; S.k0 = S.k; S.fresh = s.ids.filter((id) => !S.x[id]); out.push(...S.fresh);
+            S.n++; S.t = f.t; S.k0 = S.k; const keep = s.gear ? (S.fresh || []).filter((id) => S.x[id] || id === 'robots') : []; // gearfirst's held stage
+            S.fresh = s.ids.filter((id) => !S.x[id]); out.push(...S.fresh); if (keep.length) S.fresh = keep.concat(S.fresh); // opens ~5 min in, beside the gift beetle: its rows keep their "New" tags
           }
         }
         for (const id in this.early) {
@@ -9885,6 +9930,12 @@ window.DIALOG = {
       "One payment. No ads. The base game is complete."
     ],
     button: "Unlock game",
+    // Steam demo only (desktop/app/store.js; Ben 25 Nov). Wishlist before the full game is out, "Get the full game" after.
+    wishlist: "Wishlist on Steam",
+    wishlistSub: "Opens the Steam store page.",
+    getFull: "Get the full game",
+    getFullSub: "Opens the Steam store page. Your progress comes with you.",
+    carryLine: "Your progress comes with you: the full game carries on from this save.",
     priceNote: "one-off",
     notNow: "Not now",
     fine: "Not now? Keep playing Mudbank. Unlock any time in Settings.",
@@ -10084,6 +10135,14 @@ window.DIALOG = {
           title: "Coming next",
           items: [
             "Written when the next build goes out."
+          ]
+        },
+        "2026-11-25-train11": {
+          title: "A quicker start",
+          items: [
+            "Your first gear comes sooner: the shop shows the Retriever Tube early, and Gus recommends it.",
+            "In the first minutes the goal strip shows how close your next gear is, then the range goal one part at a time.",
+            "The ball house and the balls get their first new look sooner."
           ]
         },
         "2026-11-25-train10": {
@@ -10333,8 +10392,8 @@ window.DIALOG = {
       p3: "Nothing is limited-time. Seasons run on in-game time, and every item stays earnable forever.",
       p4: "No daily logins, no streaks to lose, no energy and no timers that stop you playing. Pause whenever you like.",
       p5: "While you’re away, beetles keep working at half pace for up to 8 hours.",
-      p6: "There’s a real ending, around 6–8 hours in, with credits. After that, everything is optional.",
-      p7: "Your save is yours: export it as a code at any time. Demo progress carries into the full game.",
+      p6: "There’s a real ending, around 9–12 hours in, with credits. After that, everything is optional.",
+      p7: "Your save is yours: export it as a code at any time. On the same computer, demo progress carries into the full game, and through Steam Cloud once the game is out.",
       p8: "The game never sends anything about you to us: no accounts, no analytics, no tracking.",
       p9: "Extras are optional. The soundtrack and supporter cosmetic add no gameplay. Any future expansion is new content, sold separately."
     },
@@ -11397,7 +11456,8 @@ window.DIALOG = {
       explainNearly: "You're nearly there.",
       arrive: "Your goal: save {n} acorns and {sell} in {k} parts, then move on to {next}.",
       arriveFinale: "Your goal: save {n} acorns and {sell} in {k} parts. It's the finale.",
-      aria: "Main goal: {sell}. {n} of {m} acorns saved for the next part."
+      aria: "Main goal: {sell}. {n} of {m} acorns saved for the next part.",
+      ariaGear: "Next gear: {name}. {n} of {m} acorns saved for it."
     },
     hud: {
       cash: "Acorns are your money. Golfers pay for every ball they hit, and you spend acorns in the shop.",
@@ -13788,6 +13848,11 @@ window.DIALOG = {
         "Eine Zahlung. Keine Werbung. Das Grundspiel ist komplett."
       ],
       button: "Freischalten",
+      wishlist: "Auf Steam wunschlisten",
+      wishlistSub: "Öffnet die Steam-Shopseite.",
+      getFull: "Das volle Spiel holen",
+      getFullSub: "Öffnet die Steam-Shopseite. Dein Fortschritt kommt mit.",
+      carryLine: "Dein Fortschritt kommt mit: Das volle Spiel macht mit diesem Spielstand weiter.",
       priceNote: "einmalig",
       notNow: "Jetzt nicht",
       fine: "Jetzt nicht? Spiel Mudbank weiter. Freischalten in Optionen."
@@ -13971,6 +14036,14 @@ window.DIALOG = {
             title: "Demnächst",
             items: [
               "Wird geschrieben, wenn der nächste Build erscheint."
+            ]
+          },
+          "2026-11-25-train11": {
+            title: "Ein schnellerer Start",
+            items: [
+              "Deine erste Ausrüstung kommt früher: Der Laden zeigt das Ballsammelrohr früh, und Gus empfiehlt es.",
+              "In den ersten Minuten zeigt die Zielleiste, wie nah die nächste Ausrüstung ist, danach das Ziel der Range Teil für Teil.",
+              "Das Ballhaus und die Bälle bekommen ihren ersten neuen Look früher."
             ]
           },
           "2026-11-25-train10": {
@@ -14227,8 +14300,8 @@ window.DIALOG = {
         p3: "Nichts ist zeitlich begrenzt. Jahreszeiten laufen in Spielzeit, und jedes Teil bleibt für immer erspielbar.",
         p4: "Keine täglichen Logins, keine Serien, die reißen, keine Energie und keine Timer, die dich ausbremsen. Pause, wann immer du willst.",
         p5: "Während du weg bist, arbeiten die Käfer bis zu 8 Stunden mit halbem Tempo weiter.",
-        p6: "Es gibt ein echtes Ende, nach etwa 6–8 Stunden, mit Abspann. Danach ist alles freiwillig.",
-        p7: "Dein Spielstand gehört dir: Exportier ihn jederzeit als Code. Fortschritt aus der Demo geht ins volle Spiel mit.",
+        p6: "Es gibt ein echtes Ende, nach etwa 9–12 Stunden, mit Abspann. Danach ist alles freiwillig.",
+        p7: "Dein Spielstand gehört dir: Exportier ihn jederzeit als Code. Auf demselben Computer geht der Demo-Fortschritt ins volle Spiel mit, und über Steam Cloud, sobald das Spiel erschienen ist.",
         p8: "Das Spiel schickt uns nie etwas über dich: keine Konten, keine Analyse, kein Tracking.",
         p9: "Extras sind freiwillig. Soundtrack und Unterstützer-Kosmetik ändern nichts am Spiel. Spätere Erweiterungen sind neue Inhalte, separat erhältlich."
       },
@@ -15256,7 +15329,8 @@ window.DIALOG = {
         explainNearly: "Du hast es fast geschafft.",
         arrive: "Dein Ziel: Spar {n} Eicheln und {sell} in {k} Raten. Dann geht's weiter nach {next}.",
         arriveFinale: "Dein Ziel: Spar {n} Eicheln und {sell} in {k} Raten. Das ist das Finale.",
-        aria: "Hauptziel: {sell}. {n} von {m} Eicheln für die nächste Rate."
+        aria: "Hauptziel: {sell}. {n} von {m} Eicheln für die nächste Rate.",
+        ariaGear: "Nächste Stufe: {name}. {n} von {m} Eicheln dafür gespart."
       },
       hud: {
         cash: "Eicheln sind dein Geld. Golfer zahlen für jeden Ball, den sie schlagen, und im Laden gibst du sie aus.",
@@ -17713,6 +17787,11 @@ window.DIALOG = {
         "Un solo pago. Sin anuncios. El juego base está completo."
       ],
       button: "Desbloquear",
+      wishlist: "Añadir a deseados en Steam",
+      wishlistSub: "Abre la página de Steam.",
+      getFull: "Conseguir el juego completo",
+      getFullSub: "Abre la página de Steam. Tu progreso te acompaña.",
+      carryLine: "Tu progreso te acompaña: el juego completo sigue desde esta partida.",
       priceNote: "pago único",
       notNow: "Ahora no",
       fine: "Sigue en Barrizal; desbloquea en Ajustes cuando quieras.",
@@ -17903,6 +17982,14 @@ window.DIALOG = {
             title: "Próximamente",
             items: [
               "Se escribirá cuando salga la próxima versión."
+            ]
+          },
+          "2026-11-25-train11": {
+            title: "Un comienzo más rápido",
+            items: [
+              "Tu primer equipo llega antes: la tienda muestra pronto el Tubo recogebolas, y Gus te lo recomienda.",
+              "En los primeros minutos, la barra de objetivo muestra lo cerca que está tu siguiente equipo y después el objetivo del campo parte a parte.",
+              "La caseta de bolas y las bolas estrenan su primer aspecto nuevo antes."
             ]
           },
           "2026-11-25-train10": {
@@ -18159,8 +18246,8 @@ window.DIALOG = {
         p3: "Nada es por tiempo limitado. Las estaciones avanzan con el tiempo del juego y todo se puede conseguir siempre.",
         p4: "Sin inicios de sesión diarios, sin rachas que perder, sin energía ni temporizadores que te impidan jugar. Pausa cuando quieras.",
         p5: "Mientras no estás, los escarabajos siguen trabajando a medio ritmo hasta 8 horas.",
-        p6: "Hay un final de verdad, hacia las 6–8 horas, con créditos. Después, todo es opcional.",
-        p7: "Tu partida es tuya: expórtala como código cuando quieras. El progreso de la demo pasa al juego completo.",
+        p6: "Hay un final de verdad, hacia las 9–12 horas, con créditos. Después, todo es opcional.",
+        p7: "Tu partida es tuya: expórtala como código cuando quieras. En el mismo ordenador, el progreso de la demo pasa al juego completo, y por Steam Cloud cuando el juego salga.",
         p8: "El juego nunca nos envía nada sobre ti: sin cuentas, sin analíticas, sin rastreo.",
         p9: "Los extras son opcionales. La banda sonora y el cosmético de apoyo no añaden jugabilidad. Toda expansión futura será contenido nuevo, aparte."
       },
@@ -19104,7 +19191,8 @@ window.DIALOG = {
         explainNearly: "Ya casi lo tienes.",
         arrive: "Tu meta: ahorra {n} bellotas y {sell} en {k} partes; luego, hacia {next}.",
         arriveFinale: "Tu meta: ahorra {n} bellotas y {sell} en {k} partes. Es el final.",
-        aria: "Meta principal: {sell}. {n} de {m} bellotas para la siguiente parte."
+        aria: "Meta principal: {sell}. {n} de {m} bellotas para la siguiente parte.",
+        ariaGear: "Próximo equipo: {name}. {n} de {m} bellotas ahorradas para él."
       },
       hud: {
         cash: "Las bellotas son tu dinero. Los golfistas pagan por cada bola que golpean, y tú las gastas en la tienda.",
@@ -21551,6 +21639,11 @@ window.DIALOG = {
         "Um pagamento só. Sem anúncios. O jogo-base é completo."
       ],
       button: "Desbloquear",
+      wishlist: "Lista de desejos na Steam",
+      wishlistSub: "Abre a página da loja na Steam.",
+      getFull: "Pegar o jogo completo",
+      getFullSub: "Abre a página da loja na Steam. Seu progresso vai junto.",
+      carryLine: "Seu progresso vai junto: o jogo completo continua a partir deste save.",
       priceNote: "compra única",
       notNow: "Agora não",
       fine: "Agora não? Siga no Lamaçal. Desbloqueie nas Configurações.",
@@ -21735,6 +21828,14 @@ window.DIALOG = {
             title: "Em breve",
             items: [
               "Escrito quando a próxima versão sair."
+            ]
+          },
+          "2026-11-25-train11": {
+            title: "Um começo mais rápido",
+            items: [
+              "Seu primeiro equipamento chega antes: a loja mostra o Tubo Catador cedo, e o Gus recomenda.",
+              "Nos primeiros minutos, a barra de objetivo mostra quanto falta para o próximo equipamento e depois o objetivo do campo parte por parte.",
+              "A casinha das bolinhas e as bolinhas ganham o primeiro visual novo mais cedo."
             ]
           },
           "2026-11-25-train10": {
@@ -21991,8 +22092,8 @@ window.DIALOG = {
         p3: "Nada é por tempo limitado. As estações correm no tempo do jogo, e todo item pode ser conquistado para sempre.",
         p4: "Sem login diário, sem sequência para perder, sem energia e sem timer que te impeça de jogar. Pause quando quiser.",
         p5: "Enquanto você está fora, os besouros seguem trabalhando na metade do ritmo por até 8 horas.",
-        p6: "Tem um final de verdade, por volta de 6–8 horas, com créditos. Depois disso, tudo é opcional.",
-        p7: "Seu save é seu: exporte como código quando quiser. O progresso da demo vai junto para o jogo completo.",
+        p6: "Tem um final de verdade, por volta de 9–12 horas, com créditos. Depois disso, tudo é opcional.",
+        p7: "Seu save é seu: exporte como código quando quiser. No mesmo computador, o progresso da demo vai para o jogo completo, e pela Steam Cloud quando o jogo for lançado.",
         p8: "O jogo nunca envia nada sobre você para nós: sem contas, sem análises, sem rastreamento.",
         p9: "Os extras são opcionais. A trilha sonora e o visual de apoiador não mudam o jogo. Qualquer expansão futura é conteúdo novo, vendido à parte."
       },
@@ -22942,7 +23043,8 @@ window.DIALOG = {
         explainNearly: "Falta pouco.",
         arrive: "Sua meta: junte {n} bolotas e {sell} em {k} parcelas, depois siga para {next}.",
         arriveFinale: "Sua meta: junte {n} bolotas e {sell} em {k} parcelas. É o final.",
-        aria: "Meta principal: {sell}. {n} de {m} bolotas para a próxima parcela."
+        aria: "Meta principal: {sell}. {n} de {m} bolotas para a próxima parcela.",
+        ariaGear: "Próximo equipamento: {name}. {n} de {m} bolotas guardadas para ele."
       },
       hud: {
         cash: "Bolotas são o seu dinheiro. Os golfistas pagam por cada bola que tacam, e você gasta bolotas na loja.",
@@ -25470,6 +25572,11 @@ window.DIALOG = {
         "一次买断，没有广告。本体内容完整。"
       ],
       button: "解锁完整版",
+      wishlist: "加入Steam愿望单",
+      wishlistSub: "打开Steam商店页面。",
+      getFull: "获取完整版",
+      getFullSub: "打开Steam商店页面。你的进度会一起带过去。",
+      carryLine: "进度会跟你走：完整版从这份存档接着玩。",
       priceNote: "一次性",
       notNow: "以后再说",
       fine: "现在不解锁？继续玩泥滩就好。随时可在设置里解锁。",
@@ -25660,6 +25767,14 @@ window.DIALOG = {
             title: "即将推出",
             items: [
               "下个版本发布时再写。"
+            ]
+          },
+          "2026-11-25-train11": {
+            title: "更快上手",
+            items: [
+              "第一件装备来得更早：商店会早早显示捡球筒，Gus也会推荐它。",
+              "开头几分钟，目标条会显示离下一件装备还差多少，之后再一部分一部分地显示球场目标。",
+              "球屋和球会更早换上第一个新样子。"
             ]
           },
           "2026-11-25-train10": {
@@ -25916,8 +26031,8 @@ window.DIALOG = {
         p3: "没有任何限时内容。季节按游戏内时间流转，每件物品永远都能获得。",
         p4: "没有每日签到，没有会断掉的连续登录，没有体力，也没有不让你玩的计时器。想暂停就暂停。",
         p5: "你不在时，甲虫们会以半速继续干活，最多8小时。",
-        p6: "游戏有真正的结局，大约在6–8小时，还有制作名单。之后的一切都是可选的。",
-        p7: "你的存档属于你：随时可以导出成存档码。试玩进度会带进完整版。",
+        p6: "游戏有真正的结局，大约在9–12小时，还有制作名单。之后的一切都是可选的。",
+        p7: "你的存档属于你：随时可以导出成存档码。在同一台电脑上，试玩进度会带进完整版；游戏发售后，也能通过Steam云存档带过去。",
         p8: "游戏从不向我们发送任何关于你的信息：没有账号，没有统计分析，没有追踪。",
         p9: "额外内容都是可选的。原声带和支持者装扮不影响玩法。未来的任何扩展都是新内容，单独出售。"
       },
@@ -26860,7 +26975,8 @@ window.DIALOG = {
         explainNearly: "就快到了！",
         arrive: "你的目标：攒够 {n} 橡果，分 {k} 期{sell}，然后前往{next}。",
         arriveFinale: "你的目标：攒够 {n} 橡果，分 {k} 期{sell}。这是终章。",
-        aria: "主要目标：{sell}。下一期已攒 {n} / {m} 橡果。"
+        aria: "主要目标：{sell}。下一期已攒 {n} / {m} 橡果。",
+        ariaGear: "下件工具：{name}。已攒 {n} / {m} 橡果。"
       },
       hud: {
         cash: "橡果就是你的钱。球友每打一个球都要付钱，你在商店里花橡果。",
@@ -28537,6 +28653,11 @@ window.DIALOG = {
   })();
   const DT = 1 / 60;
   const QS = (() => { try { return new URLSearchParams(W.location.search); } catch (e) { return new URLSearchParams(''); } })();
+  // the first 15 minutes (DECISIONS 88; BALANCE.previews.firstSession, docs/FIRST_SESSION_OPTIONS.md): gearfirst, gusgear, near,
+  // part and looks are ON by default (Ben 25 Nov). ?fs= edits that set, left to right: ?fs=0 none (the game before 88),
+  // ?fs=-near drops one, ?fs=0,looks only looks, ?fs=tube250 adds a preview option. Patches W.BALANCE once, before anything
+  // reads it (firstSession.keys + apply; design/sim.js reads RR_FS the same way, so both play the same defaults)
+  const FS = (() => { let v = []; try { const F = W.BALANCE && W.BALANCE.previews && W.BALANCE.previews.firstSession; if (F) { v = F.keys(QS.get('fs')); F.apply(W.BALANCE, v); } } catch (e) { /* ignore */ } return new Set(v); })();
   /** save-safety player-facing parts, ON by default (Ben 2026-11-15 21:01, after the previews; ?savesafe=0 hides them): the new player-facing parts (the corrupt-save
    *  "loaded a backup" toast, the add-to-home-screen / save-code nudge on the title, Settings > Saves > Backups). The
    *  invisible parts (rolling backups, the corrupt-load fallback, newer-build guard, import limits) run either way */
@@ -33267,7 +33388,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     const S = state.shopIntro;
     if (!introOn()) { S.done = 1; S.cta = 0; S.hl = 0; S.fresh = []; ui_.refresh && ui_.refresh(true); return; } // moved on: everything shows
     const st = state.stats, I = SI_();
-    const got = I.step(S, { t: +st.playSeconds || 0, deposited: (st.deposits | 0) > 0, afford: canAfford(upCost(I.focus)), beetle: robotCount() >= 1, stunned: (st.timesStunned | 0) > 0, night: isNight() });
+    const got = I.step(S, { t: +st.playSeconds || 0, deposited: (st.deposits | 0) > 0, afford: canAfford(upCost(I.focus)), beetle: robotCount() >= 1, stunned: (st.timesStunned | 0) > 0, night: isNight(), gear: (state.gear | 0) > 0 });
     if (!got) return;
     gusPickState.dirty = true;
     emit('shopIntro', { ids: got, stage: S.n });
@@ -33813,8 +33934,19 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   // (round 4 QA note 10), at a quarter of part 1, the first buy that visibly drops the bar (2% of the part), or 15 min in
   let bigBuyAt = -1;
   on('buy', (e) => { if (e && e.kind !== 'cosmetic' && state && (state.paid | 0) === 0 && e.cost >= 0.02 * nextPartCost()) bigBuyAt = gameT; });
+  /** the first 15 minutes 'near' (DECISIONS 88, ON; ?fs=-near off): while the range's next part is more than nearEtaMin away,
+   *  the main goal strip shows the next gear (the Tube, then the Push Picker) on a fresh game's first range. ui/help.js draws
+   *  it (R.goalNear: cheap, no getShop()); Gus's goalParts line and the "Buy the range" card wait until it hands back. The gear, or null */
+  function goalNearGear() {
+    if (!FS.has('near') || !state || mode !== 'game' || (state.gear | 0) >= 2 || !B.gear[(state.gear | 0) + 1] || !gearShown()) return null;
+    if ((state.rangeIdx | 0) !== 0 || (state.tour | 0) > 0 || state.freePlay || state.freeRoam || visiting() || parts() < 2) return null;
+    if (state.cash >= nextPartCost() || prestigeAvailable()) return null; // a part to pay: the strip makes way for the Pay row at once (the estimate eases)
+    const eta = goalEtaMin(), lim = ((B.previews && B.previews.firstSession) || {}).nearEtaMin || 20;
+    return eta != null && isFinite(eta) && eta <= lim ? null : B.gear[(state.gear | 0) + 1];
+  }
   function goalPartsTick() {
     if (state.tutorialFired.goalParts || parts() < 2 || (state.paid | 0) > 0 || state.rangeIdx !== 0 || state.tour > 0 || state.freePlay || state.freeRoam || visiting()) return;
+    if (goalNearGear()) return; // DECISIONS 88: the strip says "Next gear" for now; the parts are explained when it hands back
     if (gameT < gusHushUntil || (state.stats.playSeconds || 0) < 90 || (ui_.dialogOpen && ui_.dialogOpen()) || (ui_.gusBusy && ui_.gusBusy())) return; // it can wait for a quiet moment
     const pc = nextPartCost();
     if (state.cash >= 0.25 * pc || bigBuyAt >= 0 || (state.visitT || 0) >= 900) trigger('goalParts');
@@ -42365,24 +42497,28 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   const LOOK_STEPS = ['tub', 'bunt', 'steam', 'bubble', 'tub', 'vane', 'bunt', 'box', 'bubble', 'towel', 'tub', 'bunt', 'vane', 'box', 'steam', 'bubble', 'towel', 'tub', 'bunt', 'box', 'vane', 'bubble', 'towel', 'bunt', 'tub', 'box', 'vane'];
   /** the row whose levels colour the balls: your route's (the School), else Posh Buckets */
   const lookSig = () => (treeHere() ? ((SC_().sig || {})[schRoute() || 'club'] || 'price') : 'price');
+  // the first 15 minutes 'looks' (DECISIONS 88, ON; ?fs=-looks off; BALANCE.previews.firstSession): washFirst / ballFirst bring the first tier
+  // forward (Lv 3 / 5), then every washEvery / ballEvery levels as before. Absent (the default): floor(L / every), as always
+  const stepTier = (L, ev, first) => { ev = Math.max(1, ev | 0); return first > 0 && first < ev ? (L < first ? 0 : 1 + Math.floor((L - first) / ev)) : Math.floor(L / ev); };
+  const stepAt = (t, ev, first) => { ev = Math.max(1, ev | 0); return first > 0 && first < ev ? first + t * ev : (t + 1) * ev; };
   /** a row's look tier now (0 = the plain look), or -1 if the row has no look */
   function lookTier(id, L) {
     const K = LOOK_(); if (!K || !state) return -1;
     if (L == null) L = lvl(id);
-    if (id === 'washer') return Math.min(LOOK_STEPS.length, Math.floor(L / Math.max(1, K.washEvery | 0)));
+    if (id === 'washer') return Math.min(LOOK_STEPS.length, stepTier(L, K.washEvery, K.washFirst));
     if (id === 'robotcap') return Math.min(K.basketMax | 0, Math.floor((L + springsX()) / Math.max(1, K.basketEvery | 0)));
     if (id === 'robotspeed') return Math.min(K.trailMax | 0, Math.floor(Math.min(L, (B.upgrades.robotspeed || {}).maxLevel || 60) / Math.max(1, K.trailEvery | 0)));
-    if (id === lookSig()) return Math.min(K.ballMax | 0, Math.floor(L / Math.max(1, K.ballEvery | 0)));
+    if (id === lookSig()) return Math.min(K.ballMax | 0, stepTier(L, K.ballEvery, K.ballFirst));
     return -1;
   }
   /** the balls' colour tier: every ballEvery levels of your route's row (the Washer's house steps are a look of their own) */
-  function ballTier() { const K = LOOK_(); if (!K || !state) return 0; return Math.min(K.ballMax | 0, Math.floor(lvl(lookSig()) / Math.max(1, K.ballEvery | 0))); }
+  function ballTier() { const K = LOOK_(); if (!K || !state) return 0; return Math.min(K.ballMax | 0, stepTier(lvl(lookSig()), K.ballEvery, K.ballFirst)); }
   /** the level at which this row's look changes next, or 0 (none: no look, or the last one) */
   function lookNextAt(id) {
     const K = LOOK_(), t = lookTier(id); if (!K || t < 0) return 0;
     const ev = id === 'washer' ? K.washEvery : id === 'robotcap' ? K.basketEvery : id === 'robotspeed' ? K.trailEvery : K.ballEvery, top = id === 'washer' ? LOOK_STEPS.length : id === 'robotcap' ? K.basketMax : id === 'robotspeed' ? K.trailMax : K.ballMax;
     if (t >= (top | 0)) return 0;
-    const n = (t + 1) * Math.max(1, ev | 0) - (id === 'robotcap' ? springsX() : 0), mx = upMaxLv(id);
+    const n = (id === 'washer' ? stepAt(t, ev, K.washFirst) : id === 'robotcap' || id === 'robotspeed' ? (t + 1) * Math.max(1, ev | 0) : stepAt(t, ev, K.ballFirst)) - (id === 'robotcap' ? springsX() : 0), mx = upMaxLv(id);
     return n <= mx ? n : 0;
   }
   const upMaxLv = (id) => { try { return schMaxLv(id, up(id).maxLevel | 0); } catch (e) { return up(id).maxLevel | 0; } };
@@ -44901,7 +45037,9 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
    *  with Settings > Game > "Show Gus's pick in the shop" off (that switch adds the row badges). While Gus says save, it shows
    *  the part he's saving for and how far along the wallet is. Not during the shop introduction (Gus points at the first
    *  buys himself), not while a part can be paid (the Pay row is on top), not on a visit / in free play with nothing to pick. */
-  const gusCardOn = () => !!state && mode === 'game' && !(introOn() && (state.shopIntro.n | 0) < 3);
+  // DECISIONS 88 'gusgear' (?fs=-gusgear off): the card also shows during the introduction while Gus's pick is the Tube (its
+  // row is out from the 2nd stage with gearfirst), so a player sees what the hint bot follows
+  const gusCardOn = () => !!state && mode === 'game' && (!(introOn() && (state.shopIntro.n | 0) < 3) || (FS.has('gusgear') && (state.gear | 0) === 0 && (state.shopIntro.n | 0) >= 2 && gearShown() && ((g) => !!g && g.kind === 'gear')(gusPick().pick)));
   /** §FB the next gear, saved up for (the Fable review: the first gear felt far off after many small buys): a thin bar of
    *  the acorns you hold against its price. Display only, the price is the same */
   function gearBarHTML(cost) {
@@ -44952,6 +45090,12 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
       if (!reach || d <= base * 1e-6 || schOffSig(c)) continue; sc.push({ c, s: d / Math.max(1, bc) }); // §S: never a big row off your route (its save rule still flags it)
     }
     gusPickState.delays = delays;
+    // the first 15 minutes 'gusgear' (DECISIONS 88, ON; ?fs=-gusgear off): on a fresh game's first Mudbank visit the Retriever
+    // Tube is Gus's pick as soon as its row shows and it's within gusGearSec of income (Gus says "save for it")
+    if (FS.has('gusgear') && (state.gear | 0) === 0 && (state.rangeIdx | 0) === 0 && (state.frontier | 0) === 0 && !(state.tour | 0)) {
+      const g = cands.find((c) => c.kind === 'gear'), gs = ((B.previews && B.previews.firstSession) || {}).gusGearSec || 240;
+      if (g && g.cost <= state.cash + inc * gs) return { pick: { kind: g.kind, id: g.id, cost: g.cost, name: g.name }, side: [] };
+    }
     if (!sc.length) return { pick: any || (need > 0 && cands.length) ? { kind: 'save', id: rangeId(), cost: nextPartCost(), name: buyBtnLabel() } : null, side: [] };
     const best = sc.reduce((a, b) => (b.s > a.s ? b : a));
     const miles = sc.filter((x) => x.c.mile && x.s >= G.milestoneBias * best.s).sort((a, b) => a.c.cost - b.c.cost);
@@ -46854,14 +46998,19 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     m.querySelector('[data-no]').addEventListener('click', () => { sfx('ui_tap'); closeModal(); });
     m.querySelector('[data-ok]').addEventListener('click', () => { sfx('ui_tap'); closeModal(); sellRange(true); });
   }
+  /** Steam demo only (desktop/app/store.js, DECISIONS 89; ?demostore=0 opts out): { edition, label: 'wishlist' | 'getFull' | null }
+   *  or null on the web/phone trial and the paid game. label null = no full-game app id yet: the old toast stays. */
+  const demoStoreInfo = () => { try { if (QS.get('demostore') === '0') return null; const s = W.RR_DESKTOP && W.RR_DESKTOP.store; const i = s && typeof s.info === 'function' ? s.info() : null; return i && i.edition === 'demo' ? i : null; } catch (e) { return null; } };
   ui_.unlockScreen = () => {
+    const DS = demoStoreInfo(), dsLabel = DS && (DS.label === 'wishlist' || DS.label === 'getFull') ? DS.label : null;
     const teasers = B.ranges.slice(1).map((r) => `<div class="rr-row" style="text-align:left"><div class="mid"><div class="nm">${esc(rangeName(r.id))}</div><div class="ef">${esc((dget('ranges.' + r.id + '.intro') || [''])[0])}</div></div></div>`).join('');
     const U = (k, fb) => esc(dstr('unlock.' + k, fb)), tk = dget('unlock.ticks') || [];
-    const m = openModal(`<h2>${U('title', "That's Mudbank done!")}</h2><p>${U('gusLine', 'Not bad for a rat.')}</p><p>${U('body', 'Four more ranges await:')}</p><div class="rr-p" style="margin:8px 0">${teasers}</div>${tk.map((t) => `<p>${esc(t)}</p>`).join('')}<div class="rr-unlockacts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="rr-btn" data-no>${U('notNow', tx('unlock.later', 'Not now'))}</button><button class="rr-btn" data-ok>${U('button', 'Unlock game')}<small style="display:block">${esc(priceLabel())}</small></button></div><p><button class="rr-btn" data-promises>${esc(tx('promises.title', 'Our promises'))}</button></p><p style="color:var(--rr-text2)">${esc(isDebug() ? tx('unlock.debug', '(debug: the button unlocks instantly)') : tx('unlock.soon', 'Store coming soon.'))}</p>`, { sticky: true });
+    const m = openModal(`<h2>${U('title', "That's Mudbank done!")}</h2><p>${U('gusLine', 'Not bad for a rat.')}</p><p>${U('body', 'Four more ranges await:')}</p><div class="rr-p" style="margin:8px 0">${teasers}</div>${tk.map((t) => `<p>${esc(t)}</p>`).join('')}<div class="rr-unlockacts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="rr-btn" data-no>${U('notNow', tx('unlock.later', 'Not now'))}</button><button class="rr-btn" data-ok>${dsLabel === 'getFull' ? U('getFull', 'Get the full game') : dsLabel === 'wishlist' ? U('wishlist', 'Wishlist on Steam') : U('button', 'Unlock game')}<small style="display:block">${dsLabel === 'getFull' ? U('getFullSub', 'Opens the Steam store page. Your progress comes with you.') : dsLabel === 'wishlist' ? U('wishlistSub', 'Opens the Steam store page.') : esc(priceLabel())}</small></button></div>${DS ? `<p data-carry style="color:var(--rr-text2)">${U('carryLine', 'Your progress comes with you: the full game carries on from this save.')}</p>` : ''}<p><button class="rr-btn" data-promises>${esc(tx('promises.title', 'Our promises'))}</button></p><p style="color:var(--rr-text2)">${esc(isDebug() ? tx('unlock.debug', '(debug: the button unlocks instantly)') : dsLabel ? '' : tx('unlock.soon', 'Store coming soon.'))}</p>`, { sticky: true });
     m.querySelector('[data-no]').addEventListener('click', () => { sfx('ui_tap'); closeModal(); if (trialLocked()) trialFreePlay(); });
     { const pb = m.querySelector('[data-promises]'); if (pb) pb.addEventListener('click', (e) => { e.stopPropagation(); sfx('ui_tap'); closeModal(); showPromises(); }); }
     m.querySelector('[data-ok]').addEventListener('click', () => {
       if (isDebug()) { api.unlock(); toast(tx('toast.unlockedDebug', 'Full game unlocked (debug)')); } // api.unlock tells the range's story
+      else if (dsLabel) { sfx('ui_tap'); try { W.RR_DESKTOP.store.open(); } catch (e) { toast(tx('toast.storeClosed', 'The store isn\'t open yet.')); } } // the Steam demo: main opens the full game's store page
       else { sfx('ui_deny'); toast(tx('toast.storeClosed', 'The store isn\'t open yet.')); }
     });
   };
@@ -47194,7 +47343,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     'Nothing is limited-time. Seasons run on in-game time, and every item stays earnable forever.',
     'No daily logins, no streaks to lose, no energy and no timers that stop you playing. Pause whenever you like.',
     'While you’re away, beetles keep working at half pace for up to 8 hours.',
-    'There’s a real ending, around 6–8 hours in, with credits. After that, everything is optional.',
+    'There’s a real ending, around 9–12 hours in, with credits. After that, everything is optional.',
     'Your save is yours: export it as a code at any time. Demo progress carries into the full game.',
     'The game never sends anything about you to us: no accounts, no analytics, no tracking.', // matches site/privacy.html; playtest builds add RR_PLAYTEST.promiseNote()
     'Extras (the soundtrack, a supporter cosmetic) are optional and add no gameplay.'
@@ -47229,6 +47378,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   // leave at null (null = this build). Then put a fresh { id: 'next', draft: true } on top. A draft never shows.
   const WN_LOG = [
     { id: 'next', at: null, draft: true },
+    { id: '2026-11-25-train11', at: null }, // train 11 (wip/train-11, 25 Nov): the first 15 minutes (gear first, Gus's Tube, the goal strip on the next gear, early looks), the demo's Steam button + p6/p7 wording, store prep docs (DECISIONS 88-89)
     { id: '2026-11-25-train10', at: null }, // train 10 (wip/train-1125, 25 Nov): the duck crossing no longer freezes the golfers under a card, the goal estimate takes big good news at once, Mac test fixes (DECISIONS 85-87)
     { id: '2026-11-24-train9', at: null }, // train 9 (wip/feedback-1124, 24 Nov): the Fable review's feedback pass, per-range stands, terrace, Grandstand, buckets (DECISIONS 81-82)
     { id: '2026-11-24-train8', at: 1795535579 }, // train 8 (wip/train-1124, 24 Nov): the 2x art to the 24 Nov anchors, contact shadows, one flag, the code-drawn stand, hats worn; Steam Deck perf (DECISIONS 78-81)
@@ -49711,7 +49861,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
        *  kit (all optional): {stars, allTimeCash, runCash, cash, gear, levels:{id:n}, swarm:{type, owned:[ids]}, dodge:{owned, levels}, intro:false} */
       setRange(i, kit) {
         const k = isObj(kit) ? kit : {}; i = clamp(i | 0, 0, B.ranges.length - 1); const from = rangeId();
-        dismissDialogs(); if (modal) closeModal();
+        dismissDialogs(); if (modal) closeModal(); gusPickState.dirty = true; // (a pick worked out for the old range, e.g. gusgear's Tube, must not stick: _test.step doesn't move renderMs)
         state.freePlay = null; state.potterTour = null; state.tour = 0; state.freeRoam = false; state.rangeIdx = i;
         if (i > 0) { state.unlocked = true; state.unlockedBy = 'dev'; state.giftedBeetle = true; }
         for (let n = 0; n < i; n++) { const id = B.ranges[n].id; state.stats.rangesSold[id] = Math.max(1, state.stats.rangesSold[id] | 0); sitesOf()[id] = Object.assign(sitesOf()[id] || {}, { owned: true }); } // Escalation: earlier ranges are yours
@@ -49881,7 +50031,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     focusStart() { return startFocus(); }, focusStop() { const r = endFocus(false, Date.now(), false); if (r) showFocusCard(r); return r; }, focusPause(on) { return pauseFocus(on !== false); }, focusCollect() { return collectJar(); }, openFocus(o) { return openFocusPanel(o); }, /** §4g: the Work timer's state for the desk chip / menu (ui/desk.js) and tests; build: false on phone / web */ workTimer() { return state ? wtInfo() : null; },
     showPromises() { showPromises(); }, timeToCredits() { return { min: timeToCreditsMin(), text: timeToCreditsText(), model: timeToCreditsRaw(false) }; }, // model: the run model now, before the Journal's smoothing (ttcLive)
     /** ui/help.js: minutes of play left at this range (null in the Grand Tour / no model); start a focus block (the kettle's intro card) */
-    timeToSellMin() { return timeToCreditsMin(true); }, goalEtaMin() { return mode === 'game' ? goalEtaMin() : null; }, startFocus() { return mode === 'game' && focusState().phase === 'idle' ? startFocus() : false; },
+    timeToSellMin() { return timeToCreditsMin(true); }, goalEtaMin() { return mode === 'game' ? goalEtaMin() : null; }, goalNear() { const g = mode === 'game' ? goalNearGear() : null; if (!g) return null; const ni = (state.gear | 0) + 1; return { id: g.id, name: gearName(ni), cost: gearCost(ni), why: gearWhyText(ni) }; }, startFocus() { return mode === 'game' && focusState().phase === 'idle' ? startFocus() : false; },
     potterAbout(i) { return potterAbout(i); }, resumeTour() { return resumeTour(); }, showEndingCard() { showEndingCard(); },
     priceLabel() { return priceLabel(); },
     get freePlay() { return state && state.freePlay ? state.freePlay : null; },
@@ -51473,6 +51623,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
 .rl-fine{color:var(--rr-text2);font-size:.93em;text-align:center;margin-top:8px}
 .rl-fine .rl-link{background:none;border:0;padding:0 2px;color:var(--rr-gold)!important;text-decoration:underline;font:inherit;cursor:pointer}
 .rl-note{color:#fff2a6;text-align:center;min-height:1.2em}
+.rl-carry{color:#d8cfa0;text-align:center}
 
 `;
 
@@ -52583,6 +52734,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     if (unlockEl || !R || R.unlocked) return;
     const s = stats(); if (!s || s.unlocked) return;
     const U = (k, fb) => dget('unlock.' + k, fb);
+    // Steam demo only (desktop/app/store.js, DECISIONS 89; ?demostore=0 opts out): the button opens the full game's store page.
+    // DS null = web/phone trial or the paid game; dsLabel null = no full-game app id yet (the old "store isn't open yet" note stays)
+    const DS = (() => { try { if (new URLSearchParams(W.location.search).get('demostore') === '0') return null; const st = W.RR_DESKTOP && W.RR_DESKTOP.store; const i = st && typeof st.info === 'function' ? st.info() : null; return i && i.edition === 'demo' ? i : null; } catch (e) { return null; } })();
+    const dsLabel = DS && (DS.label === 'wishlist' || DS.label === 'getFull') ? DS.label : null;
     const rs = ranges(); const rest = rs.slice(1);
     const gusSprite = W.SPRITES && W.SPRITES.sprites && W.SPRITES.sprites.gus_portrait ? 'gus_portrait' : 'gus';
     const ticks = U('ticks', []);
@@ -52595,9 +52750,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
         <div>${esc(U('body', 'That\'s the free trial done.'))}</div>
         <div class="rl-cards">${rest.map((r, i) => teaseCard(r, i === 0)).join('')}</div><div hidden>${rest.map((r) => { const t = theme(r.id); return `<div class="rl-rc"><div class="th" style="background:repeating-linear-gradient(${t.grassA || '#888'} 0 7px, ${t.grassB || '#777'} 7px 14px)"></div><div class="nm">${esc(dget('ranges.' + r.id + '.name', r.id))}</div><div class="tw">${esc(dget('ranges.' + r.id + '.twist', ''))}</div></div>`; }).join('')}</div>
         <ul class="rl-ticks">${ticks.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+        ${DS ? `<div class="rl-carry" data-rl="carry">${esc(U('carryLine', 'Your progress comes with you: the full game carries on from this save.'))}</div>` : ''}
         <div class="rl-note" data-rl="note" aria-live="polite"></div>
       </div>
-      <div class="rl-acts"><button data-rl-u="no">${esc(U('notNow', 'Not now'))}<small>${esc(U('notNowSub', 'Keep playing Mudbank'))}</small></button><button data-rl-u="yes">${esc(U('button', 'Unlock game'))}<small>${esc(R.priceLabel ? R.priceLabel() : dget('text.unlock.priceTbd', 'Price set at launch'))}</small><small class="rl-once">${esc(U('priceNote', 'one-off'))}</small></button></div>
+      <div class="rl-acts"><button data-rl-u="no">${esc(U('notNow', 'Not now'))}<small>${esc(U('notNowSub', 'Keep playing Mudbank'))}</small></button><button data-rl-u="yes">${dsLabel ? `${esc(U(dsLabel === 'getFull' ? 'getFull' : 'wishlist', dsLabel === 'getFull' ? 'Get the full game' : 'Wishlist on Steam'))}<small>${esc(U(dsLabel === 'getFull' ? 'getFullSub' : 'wishlistSub', dsLabel === 'getFull' ? 'Opens the Steam store page. Your progress comes with you.' : 'Opens the Steam store page.'))}</small>` : `${esc(U('button', 'Unlock game'))}<small>${esc(R.priceLabel ? R.priceLabel() : dget('text.unlock.priceTbd', 'Price set at launch'))}</small><small class="rl-once">${esc(U('priceNote', 'one-off'))}</small>`}</button></div>
       <div class="rl-fine">${esc(U('fine', ''))} <button class="rl-link" data-rl-u="promises">${esc(dget('text.promises.title', 'Our promises'))}</button></div>
     </div>`;
     // first stop = Mudbank, done (trophy); the rest locked
@@ -52610,6 +52766,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     scrim.querySelector('[data-rl-u=yes]').addEventListener('click', () => {
       tap();
       if (DEBUG) { R.unlock(); closeUnlock(); return; }
+      if (dsLabel) { try { W.RR_DESKTOP.store.open(); return; } catch (e) { /* fall through to the note */ } } // the Steam demo: main opens the full game's store page
       const n = scrim.querySelector('[data-rl=note]'); if (n) n.textContent = dget('text.unlock.storeNote', "The store isn't open yet. Your progress is saved.");
     });
     scrim.addEventListener('keydown', (e) => {
@@ -52983,6 +53140,16 @@ html.dk-html .rh-scrim{padding:4px}
     const h = Math.floor(r / 60), mm = r % 60;
     return mm ? H('goal.aboutHM', { h, m: mm }) : H('goal.aboutH', { h });
   }
+  /** the first 15 minutes (DECISIONS 88; BALANCE.previews.firstSession): the options in play (?fs= edits the defaults), or null */
+  function fsOn() { try { const o = W.BALANCE.previews.firstSession.on; return o && o.length ? new Set(o) : null; } catch (e) { return null; } }
+  /** 'near': the next gear (Tube, then Push Picker) is the main goal until the range's next part is under nearEtaMin away
+   *  (the rule is the engine's, R.goalNear, which also holds Gus's goalParts line back while it shows) */
+  function nearGear(s) {
+    let g = null; try { g = R.goalNear ? R.goalNear() : null; } catch (e) { g = null; } // (not getShop(): this runs at 4 Hz)
+    if (!g || !(g.cost > 0)) return null;
+    const have = Math.min(s.cash || 0, g.cost), p = clamp(have / Math.max(1, g.cost), 0, 1), nums = H('goal.nums', { n: fmtAs(have, g.cost), m: fmt(g.cost) });
+    return { label: g.name, labelShort: null, kicker: dget('ui.nextGear', 'Next gear'), explain: g.why || '', arrive: '', p, near: true, ready: false, t: '', nums, numsCard: nums, parts: 1, name: shortName(s.range), sell: g.name, target: g.cost, run: have, part: '', partCost: 0, carryNote: false, carryFull: false };
+  }
   /** s0: a getStats() read in the same task (perf: the 4 Hz tick read the stats three times in a row) */
   function objective(s0) {
     const s = (s0 && typeof s0 === 'object' ? s0 : null) || stats(), st = (R && R.state) || {}, rs = ranges(); // (only a stats object: a stray arg reads as a fresh read)
@@ -53020,6 +53187,12 @@ html.dk-html .rh-scrim{padding:4px}
     const part = k ? H('goal.part', { n: k, m: parts }) : '', saved = fmtAs(Math.min(s.cash || 0, s.partCost || 0), s.partCost || 0);
     const nums = k ? H('goal.nums', { n: saved, m: fmt(s.partCost || 0) }) : H('goal.nums', { n: fmtAs(s.cash || 0, target), m: n });
     const numsCard = k ? H('goal.numsPart', { part, n: saved, m: fmt(s.partCost || 0) }) : nums;
+    // the first 15 minutes 'part' / 'near' (DECISIONS 88, ON; ?fs=-part / -near off; docs/FIRST_SESSION_OPTIONS.md): display only
+    const fso = fsOn();
+    if (fso && k && i === 0 && !(lap > 0) && !finale) {
+      if (fso.has('near')) { const nr = nearGear(s); if (nr) return nr; }
+      if (fso.has('part')) return { label: sellL, labelShort: null, explain, arrive, p, ready, t, nums: numsCard, numsCard, parts, name, sell: sellL, target, run: s.cash || 0, part, partCost: s.partCost || 0, carryNote, carryFull };
+    }
     return { label, labelShort: label0 !== sellL ? [parts > 1 ? H('goal.labelPrice', { sell: sellL, price: n }) : sellL, sellL] : null, explain, arrive, p, ready, t, nums, numsCard, parts, name, sell: sellL, target, run: s.cash || 0, part, partCost: s.partCost || 0, carryNote, carryFull };
   }
 
@@ -53371,7 +53544,7 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     { const cv = obj.querySelector('.cv'); if (cv && !cv.hidden) { cv.hidden = true; cv.textContent = ''; } }
     // the quarter notches of the part being saved for (loop/game.js feel.partNotches): on the phone strip (a 24-30 px bar)
     // the bar is that part alone, matching its "558T / 925T"; a Goals card keeps the whole price and notches the part's segment
-    const NQ = R.feel && R.feel.partNotches, nOn = !!(NQ && NQ.on) && !o.none && (s.partCost || 0) > 0;
+    const NQ = R.feel && R.feel.partNotches, nOn = !!(NQ && NQ.on) && !o.none && !o.near && (s.partCost || 0) > 0;
     const pp = nOn && !card ? clamp(Math.min(s.cash || 0, s.partCost) / s.partCost, 0, 1) : o.p;
     { const nq = obj.querySelector('.bar .nq'); if (nq) { if (nq.hidden === nOn) nq.hidden = !nOn;
       if (nOn) { const P = Math.max(1, o.parts || 1), l = card ? ((s.paid | 0) / P * 100).toFixed(2) + '%' : '0%', wd = card ? (100 / P).toFixed(2) + '%' : '100%';
@@ -53381,12 +53554,12 @@ h3 .rh-i,.rl-gh .rh-i{margin-top:-14px;margin-bottom:-14px;margin-left:2px} /* l
     const bar = obj.querySelector('.bar>i'), w = (pp * 100).toFixed(1) + '%'; if (bar.style.width !== w) bar.style.width = w;
     if (sig === objSig) return; objSig = sig;
     obj.classList.toggle('none', !!o.none); obj.classList.toggle('visit', !!o.visit);
-    obj.querySelector('.k').textContent = H('goal.kicker');
+    obj.querySelector('.k').textContent = o.kicker || H('goal.kicker');
     obj.querySelector('.t').textContent = o.label;
     obj.querySelector('.n').textContent = o.none ? (o.visit ? H('goal.backTo', { name: o.back }) : '') : obj.classList.contains('card') ? o.numsCard : o.nums;
     obj.style.setProperty('--parts', String(nOn && !card ? 1 : o.parts || 1)); obj.classList.toggle('nq-on', nOn && !card);
     obj.querySelector('.tm').textContent = o.t ? '· ' + o.t : '';
-    obj.setAttribute('aria-label', o.none ? H('goal.kicker') + ': ' + o.label : H('goal.aria', { sell: o.sell, n: fmt(o.run), m: fmt(o.target) }) + (o.t ? ' ' + o.t : ''));
+    obj.setAttribute('aria-label', o.none ? H('goal.kicker') + ': ' + o.label : o.near ? H('goal.ariaGear', { name: o.label, n: fmt(o.run), m: fmt(o.target) }) : H('goal.aria', { sell: o.sell, n: fmt(o.run), m: fmt(o.target) }) + (o.t ? ' ' + o.t : ''));
     obj.classList.remove('no-k', 'no-t', 'wrap');
     fitObjective(o.label, o.labelShort);
   }

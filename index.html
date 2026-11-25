@@ -14,12 +14,12 @@
   #game{top:env(safe-area-inset-top,0px) !important;bottom:env(safe-area-inset-bottom,0px) !important;left:env(safe-area-inset-left,0px) !important;right:env(safe-area-inset-right,0px) !important}
   #game>#rr-root{height:100% !important}
 }</style>
-<meta name="rr-pwa" content="2026-11-24-01ecb44b-34434163">
-<meta name="rr-pwa-built" content="1795541385">
+<meta name="rr-pwa" content="2026-11-25-d97029ba-530cf2c3">
+<meta name="rr-pwa-built" content="1795591333">
 
 <meta name="theme-color" content="#1c1410">
 <title>Range Rat</title>
-<meta name="range-rat-build" content="2026-11-24-01ecb44b">
+<meta name="range-rat-build" content="2026-11-25-d97029ba">
 <meta name="range-rat-unlock" content="full">
 <style>/* Range Rat UI fonts - embedded (base64 woff2, latin subset) so the single-file build works offline.
  * BRIEF s14 (revised): Atkinson Hyperlegible 400/700 = ALL readable text, numbers, labels, buttons.
@@ -41,10 +41,10 @@ html,body{margin:0;height:100%;background:#1c1410;color:#f3ead2}#game{position:f
 <body>
 <div id="game"></div>
 <script>/* ---- dev build config (build/build.py --dev) ---- */
-window.RR_BUILD = {"devLocked": true, "build": "2026-11-24-01ecb44b", "features": ["feedback", "dev"]};
+window.RR_BUILD = {"devLocked": true, "build": "2026-11-25-d97029ba", "features": ["feedback", "dev"]};
 </script>
 <script>/* ---- feedback config (build/build.py) ---- */
-window.RR_FEEDBACK_CONFIG = {"endpoint": null, "build": "2026-11-24-01ecb44b", "builtAt": "2026-11-24T17:29:45Z"};
+window.RR_FEEDBACK_CONFIG = {"endpoint": null, "build": "2026-11-25-d97029ba", "builtAt": "2026-11-25T07:22:12Z"};
 </script>
 <script>/* ---- ui/feedback.js ---- */
 /* Range Rat — ui/feedback.js — PLAYTEST-ONLY "Send feedback" (see PLAYTEST.md).
@@ -10086,6 +10086,13 @@ window.DIALOG = {
             "Written when the next build goes out."
           ]
         },
+        "2026-11-25-train10": {
+          title: "Two small fixes",
+          items: [
+            "If ducks start crossing while a card is open, the golfers keep playing. They only wait while the ducks are really walking.",
+            "After you come back to a late save, the goal’s time estimate is right straight away."
+          ]
+        },
         "2026-11-24-train9": {
           title: "New sounds, matching stands",
           items: [
@@ -13964,6 +13971,13 @@ window.DIALOG = {
             title: "Demnächst",
             items: [
               "Wird geschrieben, wenn der nächste Build erscheint."
+            ]
+          },
+          "2026-11-25-train10": {
+            title: "Zwei kleine Korrekturen",
+            items: [
+              "Wenn Enten losmarschieren, während eine Karte offen ist, spielen die Golfer weiter. Sie warten nur, solange die Enten wirklich laufen.",
+              "Nach der Rückkehr zu einem späten Spielstand stimmt die Zeitschätzung beim Ziel sofort."
             ]
           },
           "2026-11-24-train9": {
@@ -17891,6 +17905,13 @@ window.DIALOG = {
               "Se escribirá cuando salga la próxima versión."
             ]
           },
+          "2026-11-25-train10": {
+            title: "Dos pequeños arreglos",
+            items: [
+              "Si los patos empiezan a cruzar con una tarjeta abierta, los golfistas siguen jugando. Solo esperan mientras los patos caminan de verdad.",
+              "Al volver a una partida avanzada, la estimación del objetivo es correcta desde el principio."
+            ]
+          },
           "2026-11-24-train9": {
             title: "Sonidos nuevos y gradas a juego",
             items: [
@@ -21714,6 +21735,13 @@ window.DIALOG = {
             title: "Em breve",
             items: [
               "Escrito quando a próxima versão sair."
+            ]
+          },
+          "2026-11-25-train10": {
+            title: "Duas pequenas correções",
+            items: [
+              "Se os patos começarem a atravessar com um cartão aberto, os golfistas continuam jogando. Eles só esperam enquanto os patos estão andando de verdade.",
+              "Ao voltar para um jogo avançado, a estimativa do objetivo já aparece certa."
             ]
           },
           "2026-11-24-train9": {
@@ -25634,6 +25662,13 @@ window.DIALOG = {
               "下个版本发布时再写。"
             ]
           },
+          "2026-11-25-train10": {
+            title: "两个小修正",
+            items: [
+              "卡片打开时如果鸭子开始过路，球手会继续打球。只有鸭子真的在走时他们才会等。",
+              "回到后期存档时，目标还要多久会马上显示得对。"
+            ]
+          },
           "2026-11-24-train9": {
             title: "新声音，看台也换了新装",
             items: [
@@ -29054,7 +29089,12 @@ window.DIALOG = {
     // when we pick up balls ... better sound for dropping balls off"; DECISIONS 76, approved by Ben 19 Nov). Sound only. ON; ?mix=0 = the mix
     // before, ?mix=1 on; RANGE_RAT._test.mix(on). The game only tells the synth what it knows (opts.mix, how near the rat a shot or
     // a landing is within nearPx, where across the field, the combo, the load); audio/audio.js mixes (AUDIO.md "The sound mix")
-    mix: { on: true, nearPx: 120 },
+    mix: { on: true, nearPx: 120,
+      // beetle drops thinned like the shots (the Fable review S5; DECISIONS 7x, pending Ben, OFF until he has listened): late
+      // ranges ask for a beetle's robot_beep (+ coin_tink) 1.2-1.5 times a second and the synth's own limit lets ~1 a second
+      // through. dropThin: at most dropBudget drops a second are heard (a token bucket, dropBurst at once); the rest drop
+      // silently (the acorns are the same). ?beetlethin=1 on, ?beetlethin=0 off (the default)
+      dropThin: false, dropBudget: 0.5, dropBurst: 2 },
     reduced: { shake: 0, flash: 0, hitStop: 0.35, particles: 0.4 }
   };
   const DC_NOT_ALL = ['tipdot']; // a look ?declutter=all (and the default) leaves out: only by name, until Ben has compared it (15 Nov)
@@ -29072,6 +29112,17 @@ window.DIALOG = {
   const juiceOn = () => !!(feel.juice && feel.juice.on);
   { const q = QS.get('mix'); if (q === '0' || q === '1') feel.mix.on = q === '1'; } // §MX: ?mix=0 the sound before
   const mixOn = () => !!(feel.mix && feel.mix.on);
+  { const q = QS.get('beetlethin'); if (q === '0' || q === '1') feel.mix.dropThin = q === '1'; } // §MX: beetle drops thinned (off by default)
+  /** §MX: may this beetle drop be heard? (always, unless feel.mix.dropThin: then a token bucket of dropBudget a second, on
+   *  the page clock; draws no random number, so the sim plays the same either way) */
+  const dropB = { tok: 0, at: -1e9 };
+  function dropHeard() {
+    const M = feel.mix; if (!mixOn() || !M.dropThin) return true;
+    const now = performance.now() / 1000;
+    dropB.tok = Math.min(M.dropBurst, dropB.tok + Math.max(0, now - dropB.at) * M.dropBudget); dropB.at = now;
+    if (dropB.tok >= 1) { dropB.tok -= 1; return true; }
+    return false;
+  }
   /** §MX: o with the mix's hints (nothing when the pass is off): x, y = a golfer's shot or a ball landing (how near the rat, pan) */
   const mixO = (o, x, y) => { if (!mixOn()) return o; o.mix = 1; if (x != null) { const p = world.player, d = p ? Math.hypot(x - p.x, y - p.y) : 1e9;
     o.near = +clamp(1 - d / feel.mix.nearPx, 0, 1).toFixed(2); o.pan = +clamp(x / G.W * 2 - 1, -1, 1).toFixed(2); } return o; };
@@ -32659,7 +32710,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
     emit('deposit', { count, cash, by: asst ? robot.asst : robot ? 'robot' : 'player', full: wasFull, crate: !!at });
     if (!robot) { sfx('whiff', { pitch: -6, volume: 0.5 }); if (!hooks.onDeposit) depositPayoffSfx(count, cash, false, wasFull); } // DECISIONS 42: a soft whoosh now; the thud + coins land with the payoff (hooks.onDeposit's tEnd)
     else if (asst) sfx('pickup', { pitch: -2, volume: 0.3 });
-    else { sfx('robot_beep', mixO({ volume: 0.5 })); if (cash > 0) { if (juiceOn() && sfxHas('coin_tink')) sfx('coin_tink', { pitch: 2, volume: 0.3 }); else sfx('cash', { volume: 0.35 }); } } // §JU: a beetle's drop whispers (the rat's own deposit keeps the ding)
+    else if (dropHeard()) { sfx('robot_beep', mixO({ volume: 0.5 })); if (cash > 0) { if (juiceOn() && sfxHas('coin_tink')) sfx('coin_tink', { pitch: 2, volume: 0.3 }); else sfx('cash', { volume: 0.35 }); } } // §JU: a beetle's drop whispers (the rat's own deposit keeps the ding)
     fire('onDeposit', { x: dp.x, y: dp.y, count, cash, byPlayer: !robot, asst, full: wasFull, house: h, player: world.player, types: types.sort(() => Math.random() - 0.5) });
     if (!robot) { trigger('firstDeposit'); goalProgress('deposit'); }
     if (state.stock > 0 && world.stockEmpty) { world.stockEmpty = false; emit('stockRestored', { stock: state.stock }); }
@@ -32751,7 +32802,7 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
       if (mode === 'game' && golferLife(g, dt)) continue; // arriving / packing up / gone home (§I2)
       if (!open) continue;
       if (g.tea && mode === 'game') continue; // §4g tea time: mugs up at the tee, no swings (~20 s)
-      if (ODD.hold && mode === 'game') continue; // §OG the duck crossing: clubs down while they cross (~12 s, once a save)
+      if (mode === 'game' && oddHolding()) continue; // §OG the duck crossing: clubs down while they cross (~12 s, once a save)
       g.t -= dt;
       if (g.t <= 0) {
         if (mode === 'game') {
@@ -35512,6 +35563,11 @@ a.rr-linkbtn{display:inline-flex;align-items:center;justify-content:center;box-s
   }
   /** a running one holds (freezes) while a panel covers the field */
   const oddHeld = () => toastCovered() || !!chestScene || !!paused.user || !!paused.menu;
+  /** §OG the golfers' clubs stay down only while the ducks really walk: a crossing frozen under a card, a pause or an
+   *  unseen field must not freeze the tee line with it (a New here card left up froze every golfer for 70 min in a bot run,
+   *  24 Nov 2026). ?oddhold=0: the old always-hold */
+  const ODD_HOLD_LIVE = QS.get('oddhold') !== '0';
+  function oddHolding() { return ODD.hold && (!ODD_HOLD_LIVE || (!!ODD.cur && oddSeeing() && !oddHeld())); }
   function oddPick() {
     const S = oddState(false), rid = rangeId(), c = ODD_DEFS.filter((d) => d.r === rid && !(S && S.seen[d.id]) && (!d.ok || d.ok()));
     return c.length ? c[Math.floor(ODD.rng() * c.length)] : null;
@@ -47173,6 +47229,7 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
   // leave at null (null = this build). Then put a fresh { id: 'next', draft: true } on top. A draft never shows.
   const WN_LOG = [
     { id: 'next', at: null, draft: true },
+    { id: '2026-11-25-train10', at: null }, // train 10 (wip/train-1125, 25 Nov): the duck crossing no longer freezes the golfers under a card, the goal estimate takes big good news at once, Mac test fixes (DECISIONS 85-87)
     { id: '2026-11-24-train9', at: null }, // train 9 (wip/feedback-1124, 24 Nov): the Fable review's feedback pass, per-range stands, terrace, Grandstand, buckets (DECISIONS 81-82)
     { id: '2026-11-24-train8', at: 1795535579 }, // train 8 (wip/train-1124, 24 Nov): the 2x art to the 24 Nov anchors, contact shadows, one flag, the code-drawn stand, hats worn; Steam Deck perf (DECISIONS 78-81)
     { id: '2026-11-19-train7', at: null }, // train 7 (wip/train-1119b, 19 Nov): the Shop holds still, the sound mix, the Pro Shop early (DECISIONS 76-77; perf-deck)
@@ -47437,6 +47494,12 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
    *  twitching on every deposit. A new part / visit / range starts it afresh. */
   const etaLive = { key: '', fin: null, at: -1, raw: null };
   const ETA_TAU = 40, ETA_EVERY = 2;
+  // the smoothing eases the projected finish toward each fresh estimate, so ONE wild first estimate (a new part or a reload
+  // read while the rate model still sees an idle rat: at late Gullhaven with Hands-on lessons that is ~1e6x under the rat at
+  // work) stayed on the strip for minutes ("about 26000 h" coming down over ~5 min; qa/feel_baseline gull_late's 16403 min,
+  // the part really paid in ~2 min). Good news is never shown more than ETA_SNAP x behind: the smoothed time left is held
+  // to ETA_SNAP x the fresh one, then eases as before. DECISIONS 7x (pending Ben); ?etasnap=0 = the smoothing before
+  const ETA_SNAP = 3, ETA_SNAP_ON = QS.get('etasnap') !== '0';
   /** minutes to pay the current part at today's income (null: no price here, or nothing coming in yet) */
   function partEtaMin() {
     if (!state || state.creditsSeen || (state.tour | 0) > 0 || visiting() || state.freePlay || state.freeRoam || !isFinite(sellTarget())) return null;
@@ -47458,7 +47521,10 @@ body.rr-body{margin:0;background:var(--rr-bg);height:100vh;height:100dvh;overflo
     etaLive.raw = m;
     const F = t + m * 60;
     if (etaLive.fin == null || m <= 0) etaLive.fin = F;
-    else { const k = 1 - Math.exp(-(t - etaLive.at) / (F < etaLive.fin ? ETA_TAU / 2 : ETA_TAU)); etaLive.fin += (F - etaLive.fin) * k; } // good news lands a bit faster
+    else {
+      if (ETA_SNAP_ON && F < etaLive.fin) etaLive.fin = Math.min(etaLive.fin, t + ETA_SNAP * (F - t)); // never more than ETA_SNAP x behind good news
+      const k = 1 - Math.exp(-(t - etaLive.at) / (F < etaLive.fin ? ETA_TAU / 2 : ETA_TAU)); etaLive.fin += (F - etaLive.fin) * k; // good news lands a bit faster
+    }
     etaLive.at = t;
   }
   function goalEtaMin() { if (etaLive.fin == null) return partEtaMin(); return Math.max(0, (etaLive.fin - (state.visitT || 0)) / 60); }
